@@ -5,6 +5,7 @@ const sponsorshipSchema = new mongoose.Schema({
     submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Member' },
     
     // 1. Sponsor Information
+    fullName: { type: String, required: true },
     organizationName: { type: String, required: true },
     contactPerson: { type: String, required: true },
     email: { type: String, required: true },

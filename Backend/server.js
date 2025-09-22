@@ -1,3 +1,4 @@
+const path = require("path");
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -42,6 +43,8 @@ app.use('/api/suppliers', require('./routes/supplierRoutes'));
 // Backend/server.js
 // ... අනෙකුත් routes ...
 app.use('/api/sponsorships', require('./routes/sponsorshipRoutes'));
+// Other middlewares...
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get('/', (req, res) => {
   res.send('API is running...');

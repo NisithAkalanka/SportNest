@@ -1,14 +1,14 @@
-// backend/Controllers/playerController.js
+// Backend/controllers/playerController.js
 
 const Player = require('../models/PlayerModel');
 
-
 const registerPlayer = async (req, res) => {
-    
+    // ★ 1. Frontend-இலிருந்து அனுப்பப்படும் அனைத்துத் தரவுகளையும் இங்குப் பெறுதல்
     const { 
         sportName, 
         fullName, 
-        clubId, 
+        clubId, // ★ clubId இங்கே சேர்க்கப்பட்டுள்ளது
+        membershipId,
         dateOfBirth, 
         contactNumber,
         emergencyContactName, 
@@ -17,31 +17,24 @@ const registerPlayer = async (req, res) => {
         healthHistory 
     } = req.body;
     
+    // middleware-இலிருந்து பயனரின் member ID-யைப் பெறுதல்
     const memberId = req.user._id;
 
     try {
-        // ★★★ නිවැරදි කරන ලද කොටස ★★★
-        // Frontend එකෙන් එන "DD/MM/YYYY" ආකෘතියේ දිනය,
-        // JavaScript වලට නිසැකවම තේරුම්ගත හැකි YYYY-MM-DD ආකෘතියට හරවා Date object එක සෑදීම.
-        const dateParts = dateOfBirth.split('/'); // -> ["DD", "MM", "YYYY"]
-        const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`; // -> "YYYY-MM-DD"
-        const finalDateOfBirth = new Date(formattedDate);
-        // ★★★ නිවැරදි කිරීම අවසන් ★★★
-
-
         const existingPlayer = await Player.findOne({ member: memberId, sportName: sportName });
         
         if (existingPlayer) {
             return res.status(400).json({ message: `You are already registered for ${sportName}.` });
         }
         
-        // Player.create() is a convenient way to build and save in one step
+        // ★ 2. தரவுத்தளத்தில் புதிய விளையாட்டுப் பதிவை உருவாக்குதல்
         const player = await Player.create({
             member: memberId,
-            clubId,
+            clubId, // ★ clubId தரவுத்தளத்தில் சேமிக்கப்படும்
             fullName,
+            membershipId,
             sportName,
-            dateOfBirth: finalDateOfBirth, // නිවැරදිව format කළ දිනය යෙදීම
+            dateOfBirth: new Date(dateOfBirth), // Frontend-இலிருந்து வரும் தேதி வடிவம் சரியாக இருக்க வேண்டும்
             contactNumber,
             emergencyContactName,
             emergencyContactNumber,
@@ -57,7 +50,6 @@ const registerPlayer = async (req, res) => {
     }
 };
 
-
 const getMyProfiles = async (req, res) => {
     try {
         const playerProfiles = await Player.find({ member: req.user._id });
@@ -67,7 +59,6 @@ const getMyProfiles = async (req, res) => {
         res.status(500).json({ message: 'Server error while fetching profiles.' });
     }
 };
-
 
 const updateMyProfile = async (req, res) => {
     try {
@@ -104,12 +95,15 @@ const updateMyProfile = async (req, res) => {
     }
 };
 
-
 const deleteMyProfile = async (req, res) => {
     try {
         const profile = await Player.findById(req.params.id);
 
-        if (!profile || profile.member.toString() !== req.user._id.toString()) {
+        if (!profile) {
+             return res.status(404).json({ message: "Player profile not found." });
+        }
+
+        if (profile.member.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: "Not authorized to delete this profile." });
         }
 

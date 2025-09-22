@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  .input-field {
+    @apply w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200;
+  }
+  
+  .submit-btn {
+    @apply w-full mt-8 font-bold py-3 px-4 rounded-lg text-white transition-transform transform hover:scale-105 duration-300;
+  }
+}

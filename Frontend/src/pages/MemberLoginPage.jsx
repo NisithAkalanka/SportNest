@@ -1,8 +1,8 @@
+// Frontend/src/pages/MemberLoginPage.jsx
+
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from "react-router-dom";
-
-// ★★★ වැදගත්: '../context/MemberAuthContext' file එකෙන් 'AuthContext' කියන එක import කරනවා ★★★
 import { AuthContext } from '../context/MemberAuthContext'; 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,30 +15,38 @@ const MemberLoginPage = () => {
     const [loading, setLoading] = useState(false);
     
     const navigate = useNavigate();
-    
-    // ★★★ නිවැරදි කරන ලද කොටස: useContext hook එකට 'AuthContext' කියන නම ලබා දෙනවා ★★★
     const { user, login } = useContext(AuthContext);
 
-    // Login වුණු user කෙනෙක් මේ පිටුවට ආවොත්, එයාව member-dashboard එකට හරවනවා
+    // Login වූ පරිශීලකයෙක් මෙම පිටුවට කෙලින්ම පිවිසීමට උත්සාහ කළහොත්, ඔහුව/ඇයව අදාළ dashboard එකට යොමු කිරීම
     useEffect(() => {
         if (user) {
-            navigate('/member-dashboard');
+            if (user.role === 'Coach') {
+                navigate('/coach/dashboard');
+            } else {
+                navigate('/member-dashboard');
+            }
         }
     }, [user, navigate]);
 
+    // ★★★ යාවත්කාලීන කරන ලද handleSubmit function එක ★★★
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
         try {
-            // API request එක Member Login endpoint එකට යවනවා
             const config = { headers: { 'Content-Type': 'application/json' } };
             const { data } = await axios.post('/api/members/login', { email, password }, config);
             
-            // Member ගේ login function එක call කරලා 'userInfo' key එක යටතේ දත්ත ගබඩා කරනවා
+            // Context එක සහ LocalStorage එකේ, login වූ පරිශීලකයාගේ දත්ත ගබඩා කිරීම
             login(data);
 
-            navigate('/member-dashboard');
+            // ★ Role එක අනුව, අදාළ Dashboard එකට navigate කිරීම ★
+            if (data.role === 'Coach') {
+                navigate('/coach/dashboard');
+            } else {
+                // Member සහ Player යන දෙදෙනාම member-dashboard එකට යොමු කිරීම
+                navigate('/member-dashboard');
+            }
 
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
@@ -68,11 +76,16 @@ const MemberLoginPage = () => {
                     {loading ? 'Signing In...' : 'Sign In'}
                 </Button>
 
-                <div className="text-center mt-6">
+                <div className="text-center mt-6 space-y-2">
                     <p className="text-sm text-gray-600">
                         Don't have an account?{' '}
                         <Link to="/register" className="font-medium hover:underline" style={{color: '#0D1B2A'}}>
                             Register here
+                        </Link>
+                    </p>
+                     <p className="text-sm">
+                        <Link to="/forgot-password" className="font-medium text-gray-500 hover:underline">
+                           Forgot Password?
                         </Link>
                     </p>
                 </div>

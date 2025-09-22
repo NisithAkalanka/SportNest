@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const registerSponsorship = async (req, res) => {
     // Getting all the data sent from the frontend
     const {
-        organizationName, contactPerson, email, phoneNumber, address,
+        fullName, organizationName, contactPerson, email, phoneNumber, address,
         sponsorshipPlan, sponsorshipAmount, startDate, endDate, preferredPerks,
         website, promotionalMessage, agreedToTerms, agreedToLogoUsage
     } = req.body;
@@ -23,7 +23,7 @@ const registerSponsorship = async (req, res) => {
         
         // Preparation of a new sponsorship object according to the model
         const newSponsorship = new Sponsorship({
-            organizationName, contactPerson, email, phoneNumber, address,
+            fullName,organizationName, contactPerson, email, phoneNumber, address,
             sponsorshipPlan, sponsorshipAmount, startDate, endDate, preferredPerks,
             website, promotionalMessage, agreedToTerms, agreedToLogoUsage,
             registrationId,

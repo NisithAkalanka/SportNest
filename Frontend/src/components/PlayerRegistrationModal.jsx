@@ -1,3 +1,5 @@
+// Frontend/src/components/PlayerRegistrationModal.jsx
+
 import React, { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/MemberAuthContext';
@@ -11,9 +13,15 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
     const { user } = useContext(AuthContext); 
 
     const [formData, setFormData] = useState({
-        fullName: '', clubId: '', contactNumber: '', dateOfBirth: '',
-        emergencyContactName: '', emergencyContactNumber: '',
-        skillLevel: 'Beginner', healthHistory: ''
+        fullName: '', 
+        clubId: '', 
+        membershipId: '', // Membership ID සඳහා නව ක්ෂේත්‍රය
+        contactNumber: '', 
+        dateOfBirth: '',
+        emergencyContactName: '', 
+        emergencyContactNumber: '',
+        skillLevel: 'Beginner', 
+        healthHistory: ''
     });
 
     const [error, setError] = useState('');
@@ -24,7 +32,8 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
         if (user) {
             setFormData(prev => ({
                 ...prev,
-                fullName: user.name || '',
+                // ★★★ 'user.name' වෙනුවට 'user.firstName' සහ 'lastName' භාවිතා කිරීම
+                fullName: (user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : '',
                 clubId: user.clubId || '',
                 contactNumber: user.contactNumber || ''
             }));
@@ -44,8 +53,14 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
             setLoading(false);
             return;
         }
-
-        const registrationData = { ...formData, sportName };
+        
+        // ★★★ 'clubId' එක user object එකෙන් නැවත ලබාගැනීම (Form එකේ disabled නිසා)
+        const registrationData = { 
+            ...formData, 
+            sportName,
+            fullName: (user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : '',
+            clubId: user.clubId,
+         };
         const config = { headers: { Authorization: `Bearer ${token}` } };
         
         try {
@@ -72,11 +87,7 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
 
                 {!success && (
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        
-                        {/* ★★★ මෙන්න සම්පූර්ණ, නිවැරදි කරන ලද Form එක ★★★ */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                            
-                            {/* --- Auto-filled සහ Disabled Fields --- */}
                             <div>
                                <Label htmlFor="fullName">Full Name*</Label>
                                <Input id="fullName" name="fullName" value={formData.fullName} required className="bg-gray-100 cursor-not-allowed" disabled />
@@ -85,12 +96,15 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
                                <Label htmlFor="clubId">Club ID*</Label>
                                <Input id="clubId" name="clubId" value={formData.clubId} required className="bg-gray-100 cursor-not-allowed" disabled />
                             </div>
+                            {/* ★★★ Membership ID සඳහා නව input ක්ෂේත්‍රය ★★★ */}
+                            <div className="md:col-span-2">
+                                <Label htmlFor="membershipId">Membership ID*</Label>
+                                <Input id="membershipId" name="membershipId" value={formData.membershipId} onChange={handleChange} required placeholder="Enter your Active Membership ID"/>
+                            </div>
                             <div>
                                <Label htmlFor="contactNumber">Contact Number*</Label>
-                               <Input id="contactNumber" type="tel" name="contactNumber" value={formData.contactNumber} required className="bg-gray-100 cursor-not-allowed" disabled />
+                               <Input id="contactNumber" type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleChange} required />
                             </div>
-                            
-                            {/* --- User විසින් පිරවිය යුතු Fields --- */}
                             <div>
                                 <Label htmlFor="dateOfBirth">Date of Birth*</Label>
                                 <Input id="dateOfBirth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} required />
