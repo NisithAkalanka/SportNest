@@ -11,7 +11,15 @@ const memberSchema = new mongoose.Schema({
     email: { type: String, required: [true, 'Please provide an email'], unique: true, match: [/.+\@.+\..+/, 'Please fill a valid email address'] },
     contactNumber: { type: String, required: [true, 'Please provide a contact number'] },
     password: { type: String, required: [true, 'Please provide a password'] },
-    clubId: { type: String, unique: true, sparse: true }
+    clubId: { type: String, unique: true, sparse: true },
+    passwordResetToken: String,
+    passwordResetExpires: Date,
+    // ★★★ අලුතින් එකතු කළ ක්ෂේත්‍ර ★★★
+    profileImage: { type: String, default: '/uploads/default-avatar.png' }, // Default image path
+    membershipId: { type: String },
+    membershipPlan: { type: String },
+    membershipStatus: { type: String, default: 'Inactive' }
+
 }, {
     timestamps: true
 });
@@ -28,5 +36,5 @@ memberSchema.pre('save', async function (next) {
 memberSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
-// ✅ reuse if already compiled (prevents OverwriteModelError)
+
 module.exports = mongoose.models.Member || mongoose.model('Member', memberSchema);
