@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Preorders from '@/pages/Preorders'; // adjust alias/path if needed
 
 // Providers (Contexts)
 import { MemberAuthProvider } from '@/context/MemberAuthContext';
@@ -73,6 +74,7 @@ function App() {
                   <Route element={<AdminLayout />}>
                      <Route index element={<AdminDashboard />} />
                      <Route path="inventory" element={<ManageInventory />} />
+                     <Route path="preorders" element={<Preorders />} />
                      <Route path="suppliers" element={<ManageSuppliers />} />
                   </Route>
               </Route>

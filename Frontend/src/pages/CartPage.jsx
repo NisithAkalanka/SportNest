@@ -1,8 +1,11 @@
-
 import { useCart } from '../context/CartContext'; // අපේ CartContext එක import කරගන්නවා
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import axios from 'axios';
 
 
 const CartPage = () => {
@@ -27,6 +30,19 @@ const CartPage = () => {
       }
     }
   };
+
+  const handleRemoveItem = async (cartItemId) => {
+    if (!window.confirm("Are you sure you want to remove this item?")) return;
+    try {
+      const publicApi = axios.create({ baseURL: 'http://localhost:5002/api' });
+      await publicApi.delete(`/cart/${cartItemId}`);
+      fetchCart();
+    } catch (error) {
+      console.error('Remove failed:', error);
+      alert(`Failed to remove item: ${error.response?.data?.msg || 'Please try again.'}`);
+    }
+  };
+
   // Cart එකේ තියෙන items වල මුළු මුදල ගණනය කිරීම
   const totalAmount = cartItems.reduce((total, currentItem) => {
     // currentItem එකේ item object එකයි, quantity එකයි දෙකම තියෙනවා
@@ -48,20 +64,40 @@ const CartPage = () => {
             <Card>
               <CardContent className="p-6">
                 {cartItems.map(cartItem => (
-                  <div key={cartItem.item._id} className="flex items-center justify-between border-b pb-4 mb-4">
+                  <div key={cartItem.item?._id || cartItem._id} className="flex items-center justify-between border-b pb-4 mb-4">
                     <div>
-                      <h2 className="text-xl font-semibold">{cartItem.item.name}</h2>
+                      <h2 className="text-xl font-semibold">{cartItem.item ? cartItem.item.name : "Unknown Item"}</h2>
                       <p className="text-gray-500">Quantity: {cartItem.quantity}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-medium">
-                        Rs. {(cartItem.item.price * cartItem.quantity).toFixed(2)}
+                        Rs. {((cartItem.item ? cartItem.item.price : 0) * cartItem.quantity).toFixed(2)}
                       </p>
                       <p className="text-sm text-gray-400">
-                        (Rs. {cartItem.item.price.toFixed(2)} each)
+                        (Rs. {(cartItem.item ? cartItem.item.price : 0).toFixed(2)} each)
                       </p>
                     </div>
-                    {/* ඔබට අවශ්‍ය නම්, item එකක් cart එකෙන් remove කරන button එකක් මෙතැනට දාන්න පුළුවන් */}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700">
+                          <FontAwesomeIcon icon={faTrashAlt} />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-white text-gray-900">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Remove Item</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to remove "{cartItem.item ? cartItem.item.name : 'this item'}" from your cart?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleRemoveItem(cartItem._id)} className="bg-red-600 text-white">
+                            Remove
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 ))}
               </CardContent>

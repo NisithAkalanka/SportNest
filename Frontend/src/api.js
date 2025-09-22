@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // baseURL එක '/api' ලෙස යෙදීමෙන්, Vite proxy එක ක්‍රියාත්මක වේ
 const api = axios.create({
-  baseURL: '/api', 
+  baseURL: 'http://localhost:5002/api',
 });
 
 // Interceptor: Request එකක් Backend එකට යන්න කලින් මැදට පැනීම

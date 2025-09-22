@@ -1,28 +1,35 @@
-// Backend/routes/itemRoutes.js (සම්පූර්ණ, නිවැරදි කරන ලද කේතය)
-
 const express = require('express');
 const router = express.Router();
 
-// ★★★ ඔබගේ itemController.js එකට ගැලපෙන පරිදි functions නිවැරදිව import කිරීම ★★★
 const { 
   addItem, 
-  getItems,     // controller එකේ ඇති නියම නම
+  getItems,
   updateItem, 
   deleteItem, 
-  getShopItems 
+  getShopItems,
+  generateInventoryPdfReport
 } = require('../controllers/itemController');
 
-// Admin ට පමණක් අවසර දීමට, අපි හදපු 'adminMiddleware' එක import කරගන්නවා
 const protectAdmin = require('../middleware/adminMiddleware');
+const upload = require('../middleware/uploadMiddleware'); 
 
 
-// --- Admin ට පමණක් අදාළ Routes ('protectAdmin' මගින් ආරක්ෂා කර ඇත) ---
-router.post('/', protectAdmin, addItem);
-router.get('/', protectAdmin, getItems); // ★ 'getAllItems' වෙනුවට 'getItems' ලෙස නිවැරදි කළා
-router.put('/:id', protectAdmin, updateItem);
+
+
+router.post('/', protectAdmin, upload.single('image'), addItem);
+
+router.get('/', protectAdmin, getItems);
+
+
+router.put('/:id', protectAdmin, upload.single('image'), updateItem);
+
 router.delete('/:id', protectAdmin, deleteItem);
 
-// --- Public (ඕනෑම කෙනෙකුට පෙනෙන) Route එක ---
+// ★ PDF Report Route ★
+router.get('/report/pdf', protectAdmin, generateInventoryPdfReport);
+
+
+// --- Public Route 
 router.get('/shop', getShopItems);
 
 module.exports = router;

@@ -10,11 +10,10 @@ export default defineConfig({
   
   // path alias එක එලෙසම තියෙනවා. කිසිම වෙනසක් අවශ්‍ය නෑ.
   resolve: {
-    alias: {
-      "@": path.resolve(new URL(import.meta.url).pathname, '..', 'src'),
-    },
+  alias: {
+    '@': path.resolve(__dirname, './src'),
   },
-
+},
   // ★★★★★ අපි අලුතින් එකතු කරන Proxy Settings කොටස මෙන්න ★★★★★
   server: {
     proxy: {

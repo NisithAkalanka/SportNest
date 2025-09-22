@@ -1,11 +1,10 @@
 import React, { useContext } from 'react';
-// ★★★ අනවශ්‍ය import පේළි ඉවත් කර, එක පේළියකට ගෙන එන ලදී ★★★
 import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom'; 
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSignOutAlt, faBoxOpen, faUsers, faTachometerAlt, faStore } from '@fortawesome/free-solid-svg-icons';
+import { faSignOutAlt, faBoxOpen, faUsers, faTachometerAlt, faStore, faClipboardList } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@/components/ui/button';
-import { AdminAuthContext } from '@/context/AdminAuthContext'; // alias path එක වඩාත් හොඳයි
+import { AdminAuthContext } from '@/context/AdminAuthContext';
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -19,21 +18,20 @@ const AdminLayout = () => {
   const activeLinkStyle = { backgroundColor: '#FF6700' };
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="w-64 text-white p-5 flex flex-col" style={{ backgroundColor: '#0D1B2A' }}>
+    // ★★ මෙතන තමයි ප්‍රධානම සහ එකම වෙනස්කම: 'min-h-screen' -> 'h-screen' ★★
+    // මෙමගින් layout එකේ උස screen එකේ උසටම සීමා කර, පිටතින් scroll වීම වළක්වනවා.
+    <div className="flex h-screen">
+      
+      {/* Sidebar එක. මෙහි වෙනසක් නැහැ */}
+      <aside className="w-64 text-white p-5 flex flex-col flex-shrink-0" style={{ backgroundColor: '#0D1B2A' }}>
         <h1 className="text-2xl font-bold mb-10 text-center">SportNest Admin</h1>
         <nav className="flex-grow">
           <ul>
             <li className="mb-4">
-            
-              {/* ★★★★★ මෙන්න නිවැරදි කරන ලද වැදගත්ම කොටස ★★★★★ */}
-              {/* a href වෙනුවට, React Router එකේ <Link> component එක භාවිතා කිරීම */}
-              {/* මෙමගින් පිටුව reload වීම නතර වී, Admin ගේ login session එක ආරක්ෂා වේ */}
               <Link to="/shop" className="flex items-center p-3 rounded-lg hover:bg-gray-700 transition-colors">
                 <FontAwesomeIcon icon={faStore} className="mr-3 w-5" />
                 View Shop
               </Link>
-
             </li>
             <hr className="my-2 border-gray-600" />
             <li className="mb-4">
@@ -44,6 +42,11 @@ const AdminLayout = () => {
             <li className="mb-4">
               <NavLink to="/admin-dashboard/inventory" style={({ isActive }) => isActive ? activeLinkStyle : undefined} className="flex items-center p-3 rounded-lg hover:bg-gray-700">
                 <FontAwesomeIcon icon={faBoxOpen} className="mr-3 w-5" /> Inventory
+              </NavLink>
+            </li>
+            <li className="mb-4">
+              <NavLink to="/admin-dashboard/preorders" style={({ isActive }) => isActive ? activeLinkStyle : undefined} className="flex items-center p-3 rounded-lg hover:bg-gray-700">
+                <FontAwesomeIcon icon={faClipboardList} className="mr-3 w-5" /> Pre-orders
               </NavLink>
             </li>
             <li className="mb-4">
@@ -58,10 +61,13 @@ const AdminLayout = () => {
           Logout
         </Button>
       </aside>
+
+      {/* Main Content Area: මෙහි ඇති 'overflow-auto' class එක දැන් නිවැරදිව ක්‍රියාත්මක වේවි */}
       <main className="flex-1 p-10 overflow-auto bg-gray-100">
         <Outlet />
       </main>
     </div>
   );
 };
+
 export default AdminLayout;
