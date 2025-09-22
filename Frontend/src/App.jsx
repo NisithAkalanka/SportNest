@@ -1,6 +1,7 @@
 // Frontend/src/App.jsx
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Preorders from '@/pages/Preorders'; // adjust alias/path if needed
 
 // Providers (Contexts)
 import { MemberAuthProvider } from '@/context/MemberAuthContext';
@@ -97,23 +98,24 @@ function App() {
                 </Route>
               </Route>
               
-              {/* --- 2. Coach සඳහා වන වෙන්වූ Route කාණ්ඩය --- */}
+              {/* --- 2. Coach Routes --- */}
               <Route path="/coach" element={<MemberRoute />}>
                 <Route element={<CoachLayout />}>
-                    <Route path="dashboard" element={<CoachDashboard />} /> 
-                    <Route path="feedbacks" element={<FeedbacksPage />} />
-                    <Route path="training" element={<TrainingSessionsPage />} />
+                  <Route path="dashboard" element={<CoachDashboard />} />
+                  <Route path="feedbacks" element={<FeedbacksPage />} />
+                  <Route path="training" element={<TrainingSessionsPage />} />
                 </Route>
               </Route>
 
-              {/* --- 3. Admin සඳහා වන Route කාණ්ඩය --- */}
-             <Route path="/admin-dashboard" element={<AdminRoute />}>
-  <Route element={<AdminLayout />}>
-     <Route index element={<AdminDashboard />} /> 
-     <Route path="inventory" element={<ManageInventory />} />
-     <Route path="suppliers" element={<ManageSuppliers />} />
-  </Route>
-</Route>
+              {/* --- 3. Admin Routes --- */}
+              <Route path="/admin-dashboard" element={<AdminRoute />}>
+                <Route element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="inventory" element={<ManageInventory />} />
+                  <Route path="preorders" element={<Preorders />} />
+                  <Route path="suppliers" element={<ManageSuppliers />} />
+                </Route>
+              </Route>
 
 
             {/* ★★★ දෝෂය තිබූ ස්ථානය. '</Route>s' වෙනුවට '</Routes>' ලෙස නිවැරදි කර ඇත ★★★ */}

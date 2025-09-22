@@ -1,20 +1,29 @@
-const path = require("path");
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose');
+const connectDB = require('./config/db');
 require('dotenv').config();
 
+// Debug (optional): mask JWT secret length
+const jwtSecret = process.env.JWT_SECRET || process.env.JWTSECRET || null;
+if (!jwtSecret) {
+  console.error('FATAL: JWT_SECRET not set in environment');
+} else {
+  const masked = jwtSecret.length > 6 ? `${jwtSecret.slice(0,3)}...${jwtSecret.slice(-3)}` : '***';
+  console.log('JWT_SECRET loaded (masked):', masked);
+}
+
 const app = express();
-const PORT = process.env.PORT || 5002;
+
+// DB Connection
+connectDB();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-//mongoose.connect(process.env.MONGO_URI);
-// DB Connection
-const connectDB = require('./config/db');
-connectDB();
+// Static uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 const adminRoutes = require('./routes/adminRoutes');
@@ -27,8 +36,9 @@ const playerRoutes = require('./routes/playerRoutes');
 const sponsorshipRoutes = require('./routes/sponsorshipRoutes');
 const sportRoutes = require('./routes/sportRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
+const preorderRoutes = require('./routes/preorderRoutes');
 
-// Use routes
+// Use Routes
 app.use('/api/admin', adminRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/dashboard', dashboardRoutes);
@@ -39,17 +49,7 @@ app.use('/api/players', playerRoutes);
 app.use('/api/sponsorships', sponsorshipRoutes);
 app.use('/api/sports', sportRoutes);
 app.use('/api/suppliers', supplierRoutes);
-app.use('/api/suppliers', require('./routes/supplierRoutes'));
-// Backend/server.js
-// ... අනෙකුත් routes ...
-app.use('/api/sponsorships', require('./routes/sponsorshipRoutes'));
-// Other middlewares...
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use('/api/preorders', preorderRoutes);
 
-app.get('/', (req, res) => {
-  res.send('API is running...');
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const PORT = process.env.PORT || 5002;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

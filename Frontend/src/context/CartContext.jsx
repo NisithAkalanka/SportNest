@@ -3,44 +3,62 @@ import axios from 'axios';
 
 const CartContext = createContext();
 
-const publicApi = axios.create({
-  baseURL: 'http://localhost:5002/api',
-});
+const publicApi = axios.create({ baseURL: 'http://localhost:5002/api' });
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
+  const [cart, setCart] = useState(null); // cart එකේ සම්පූර්ණ object එකම තියාගන්නවා
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchCart = async () => {
+    setIsLoading(true);
     try {
       const res = await publicApi.get('/cart');
-      setCartItems(res.data.items || []);
+      setCart(res.data);
     } catch (error) {
       console.error("Failed to fetch cart", error);
-      setCartItems([]);
+      setCart({ items: [] }); // Error එකක් ආවොත්, හිස් cart එකක් set කරනවා
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // App එක load වෙනකොටම cart එක fetch කරගන්නවා
-  useEffect(() => {
-    fetchCart();
-  }, []);
+  useEffect(() => { fetchCart(); }, []);
 
-  // අලුතින් item එකක් add කළාම, cart එක නැවත fetch කරගන්න
   const addToCartAndUpdate = async (itemId, quantity) => {
     await publicApi.post('/cart/add', { itemId, quantity });
-    await fetchCart(); // Re-fetch to update the cart count
+    await fetchCart();
   };
 
+  // ★★★ මෙන්න අලුතින් එකතු කළ Remove Function එක ★★★
+  const removeFromCartAndUpdate = async (cartItemId) => {
+    // Backend එකට කියනවා, මේ cartItem ID එක අයින් කරන්න කියලා
+    await publicApi.delete(`/cart/${cartItemId}`);
+    // Backend එකෙන්ම අලුත් cart එක එන නිසා, අපි ඒක පාවිච්චි නොකර, නැවත fetch කරනවා.
+    // මේකෙන් UI එකේ 100% ක් consistency එක රැකෙනවා.
+    await fetchCart();
+  };
+  
+  // Cart එකේ තියෙන items list එක
+  const cartItems = cart ? cart.items : [];
+  // මුළු item ගණන
   const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ cartItems, cartItemCount, addToCartAndUpdate, fetchCart }}>
+    <CartContext.Provider 
+        value={{ 
+            cartItems: cartItems, // CartPage එකේදී පාවිච්චි කරන්න 'cartItems' නමින් items ටික දෙනවා
+            cartItemCount, 
+            isLoading,
+            fetchCart,
+            addToCartAndUpdate,
+            removeFromCartAndUpdate // අලුත් function එකත් export කරනවා
+        }}
+    >
       {children}
     </CartContext.Provider>
   );
 };
 
-// Custom Hook එකක්, මේකෙන් අපිට ඕනම component එකක ඉඳන් Cart එකේ දත්ත ගන්න පුළුවන්
 export const useCart = () => {
   return useContext(CartContext);
 };

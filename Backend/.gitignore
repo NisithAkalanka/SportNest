@@ -1,6 +1,9 @@
+<<<<<<< HEAD
 node_modules
 .env
 dist/
+=======
+>>>>>>> Nisi
 # --- OS / Editors ---
 .DS_Store
 Thumbs.db
