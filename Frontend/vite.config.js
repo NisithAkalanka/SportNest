@@ -1,4 +1,4 @@
-// Frontend/vite.config.js (සම්පූර්ණ නිවැරදි කරන ලද කේතය)
+// Frontend/vite.config.js (cleaned and conflict‑free)
 
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -15,16 +15,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  // ★★★★★ අපි අලුතින් එකතු කරන Proxy Settings කොටස මෙන්න ★★★★★
+  // ★★★★★ Proxy settings ★★★★★
   server: {
     proxy: {
-      // '/api' වලින් පටන්ගන්න ඕනෑම request එකක්...
+      // Any request starting with /api → forward to backend
       '/api': {
-        // ...මෙන්න මේ ලිපිනයට (ඔබේ Backend server එකට) යොමු කරන්න
-        target: 'http://localhost:5002', 
-        
-        // CORS (Cross-Origin Resource Sharing) වැනි ගැටළු මගහරවා ගැනීමට
-        changeOrigin: true, 
+        target: 'http://localhost:5002',
+        changeOrigin: true,
       },
     },
   },
