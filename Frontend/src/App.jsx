@@ -1,4 +1,4 @@
-// Frontend/src/App.jsx
+// Frontend/src/App.jsx (CORRECTED)
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
@@ -10,7 +10,7 @@ import { CartProvider } from '@/context/CartContext';
 // Layouts
 import PublicLayout from '@/components/layout/PublicLayout';
 import AdminLayout from '@/components/layout/AdminLayout';
-import CoachLayout from '@/components/layout/CoachLayout';
+import CoachLayout from '@/components/layout/CoachLayout'; // Teammate's layout (the "Frame")
 
 // Route Protection
 import AdminRoute from '@/components/AdminRoute';
@@ -48,7 +48,11 @@ import SubscriptionSuccessPage from './pages/SubscriptionSuccessPage';
 import CoachDashboard from './pages/CoachDashboard';
 
 // Coach-specific pages
-const FeedbacksPage = () => <div className="container mx-auto p-8"><h1 className="text-3xl font-bold">Manage Feedbacks</h1></div>;
+// ★★★ 1. DELETE the temporary definition from here ★★★
+// const FeedbacksPage = () => ...; // This line is now removed.
+
+// ★★★ 2. INSTEAD, IMPORT YOUR REAL COMPONENT FROM ITS FILE ★★★
+import FeedbacksPage from './pages/FeedbacksPage'; 
 const TrainingSessionsPage = () => <div className="container mx-auto p-8"><h1 className="text-3xl font-bold">Manage Training Sessions</h1></div>;
 
 // Admin (Protected) Pages
@@ -64,9 +68,9 @@ function App() {
           <Router>
             <Routes>
               
-              {/* --- 1. Public සහ සාමාන්‍ය Member Routes කාණ්ඩය --- */}
+              {/* --- Public and Member Routes --- */}
               <Route path="/" element={<PublicLayout />}>
-                
+                {/* ... your public and member routes are perfect, no changes needed ... */}
                 <Route index element={<HomePage />} />
                 <Route path="shop" element={<Shop />} />
                 <Route path="cart" element={<CartPage />} />
@@ -80,15 +84,11 @@ function App() {
                 <Route path="sponsorship" element={<SponsorshipPage />} />
                 <Route path="membership-plans" element={<MembershipPlansPage />} />
                 <Route path="confirm-membership/:planName" element={<ConfirmMembershipPage />} />
-                
-                {/* ක්‍රීඩා විස්තර පිටු සඳහා වන Routes */}
                 <Route path="sports/tennis" element={<TennisPage />} />
                 <Route path="sports/cricket" element={<CricketPage />} />
                 <Route path="sports/badminton" element={<BadmintonPage />} />
                 <Route path="sports/netball" element={<NetballPage />} />
                 <Route path="sports/swimming" element={<SwimmingPage />} />
-                 
-                {/* Member සහ Player සඳහා වන Private Routes */}
                 <Route element={<MemberRoute />}>
                   <Route path="member-dashboard" element={<MemberDashboard />} />
                   <Route path="subscription-success" element={<SubscriptionSuccessPage />} />
@@ -97,7 +97,8 @@ function App() {
                 </Route>
               </Route>
               
-              {/* --- 2. Coach සඳහා වන වෙන්වූ Route කාණ්ඩය --- */}
+              {/* --- Coach Routes --- */}
+              {/* This structure is already correct. No changes needed. */}
               <Route path="/coach" element={<MemberRoute />}>
                 <Route element={<CoachLayout />}>
                     <Route path="dashboard" element={<CoachDashboard />} /> 
@@ -106,19 +107,16 @@ function App() {
                 </Route>
               </Route>
 
-              {/* --- 3. Admin සඳහා වන Route කාණ්ඩය --- */}
+              {/* --- Admin Routes --- */}
+              {/* This structure is correct. No changes needed. */}
              <Route path="/admin-dashboard" element={<AdminRoute />}>
-  <Route element={<AdminLayout />}>
-     <Route index element={<AdminDashboard />} /> 
-     <Route path="inventory" element={<ManageInventory />} />
-     <Route path="suppliers" element={<ManageSuppliers />} />
-  </Route>
-</Route>
-
-
-            {/* ★★★ දෝෂය තිබූ ස්ථානය. '</Route>s' වෙනුවට '</Routes>' ලෙස නිවැරදි කර ඇත ★★★ */}
+                <Route element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} /> 
+                  <Route path="inventory" element={<ManageInventory />} />
+                  <Route path="suppliers" element={<ManageSuppliers />} />
+                </Route>
+              </Route>
             </Routes>
-
           </Router>
         </CartProvider>
       </MemberAuthProvider>
