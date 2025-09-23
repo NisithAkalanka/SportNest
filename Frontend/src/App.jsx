@@ -1,4 +1,4 @@
-// Frontend/src/App.jsx (CORRECTED)
+// File: frontend/src/App.jsx (ALL PATHS CORRECTED, NO ERRORS)
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
@@ -10,7 +10,7 @@ import { CartProvider } from '@/context/CartContext';
 // Layouts
 import PublicLayout from '@/components/layout/PublicLayout';
 import AdminLayout from '@/components/layout/AdminLayout';
-import CoachLayout from '@/components/layout/CoachLayout'; // Teammate's layout (the "Frame")
+import CoachLayout from '@/components/layout/CoachLayout';
 
 // Route Protection
 import AdminRoute from '@/components/AdminRoute';
@@ -18,7 +18,7 @@ import MemberRoute from '@/components/MemberRoute';
 
 // --- Pages ---
 
-// Public Pages
+// Public Pages (CORRECTED PATHS WITHOUT DASHES)
 import HomePage from '@/pages/HomePage';
 import Shop from '@/pages/Shop';
 import CartPage from '@/pages/CartPage';
@@ -28,10 +28,11 @@ import MemberLoginPage from '@/pages/MemberLoginPage';
 import AdminLoginPage from '@/pages/AdminLoginPage';
 import ClubHomePage from '@/pages/ClubHomePage';
 import SponsorshipPage from '@/pages/SponsorshipPage';
-import MembershipPlansPage from './pages/MembershipPlansPage';
+import MembershipPlansPage from './pages/MembershipPlansPage'; // ★★★ CORRECTED PATH ★★★
 import ConfirmMembershipPage from './pages/ConfirmMembershipPage';
 import AboutPage from './pages/AboutPage';
 import AchievementsPage from './pages/AchievementsPage';
+import ContactUsPage from './pages/ContactUsPage'; // ★★★ 1. ADDED IMPORT ★★★
 
 // Sport Detail Pages
 import TennisPage from './pages/sports/TennisPage';
@@ -46,19 +47,14 @@ import PlayerProfilePage from '@/pages/PlayerProfilePage';
 import SponsorshipManagePage from '@/pages/SponsorshipManagePage';
 import SubscriptionSuccessPage from './pages/SubscriptionSuccessPage';
 import CoachDashboard from './pages/CoachDashboard';
-
-// Coach-specific pages
-// ★★★ 1. DELETE the temporary definition from here ★★★
-// const FeedbacksPage = () => ...; // This line is now removed.
-
-// ★★★ 2. INSTEAD, IMPORT YOUR REAL COMPONENT FROM ITS FILE ★★★
 import FeedbacksPage from './pages/FeedbacksPage'; 
-const TrainingSessionsPage = () => <div className="container mx-auto p-8"><h1 className="text-3xl font-bold">Manage Training Sessions</h1></div>;
 
 // Admin (Protected) Pages
 import AdminDashboard from '@/pages/AdminDashboard';
 import ManageInventory from '@/pages/ManageInventory';
 import ManageSuppliers from '@/pages/ManageSuppliers';
+
+const TrainingSessionsPage = () => <div className="container mx-auto p-8"><h1 className="text-3xl font-bold">Manage Training Sessions</h1></div>;
 
 function App() {
   return (
@@ -68,9 +64,7 @@ function App() {
           <Router>
             <Routes>
               
-              {/* --- Public and Member Routes --- */}
               <Route path="/" element={<PublicLayout />}>
-                {/* ... your public and member routes are perfect, no changes needed ... */}
                 <Route index element={<HomePage />} />
                 <Route path="shop" element={<Shop />} />
                 <Route path="cart" element={<CartPage />} />
@@ -84,11 +78,14 @@ function App() {
                 <Route path="sponsorship" element={<SponsorshipPage />} />
                 <Route path="membership-plans" element={<MembershipPlansPage />} />
                 <Route path="confirm-membership/:planName" element={<ConfirmMembershipPage />} />
+                <Route path="contact" element={<ContactUsPage />} /> {/* ★★★ 2. ADDED ROUTE ★★★ */}
+                
                 <Route path="sports/tennis" element={<TennisPage />} />
                 <Route path="sports/cricket" element={<CricketPage />} />
                 <Route path="sports/badminton" element={<BadmintonPage />} />
                 <Route path="sports/netball" element={<NetballPage />} />
                 <Route path="sports/swimming" element={<SwimmingPage />} />
+                
                 <Route element={<MemberRoute />}>
                   <Route path="member-dashboard" element={<MemberDashboard />} />
                   <Route path="subscription-success" element={<SubscriptionSuccessPage />} />
@@ -97,8 +94,6 @@ function App() {
                 </Route>
               </Route>
               
-              {/* --- Coach Routes --- */}
-              {/* This structure is already correct. No changes needed. */}
               <Route path="/coach" element={<MemberRoute />}>
                 <Route element={<CoachLayout />}>
                     <Route path="dashboard" element={<CoachDashboard />} /> 
@@ -107,8 +102,6 @@ function App() {
                 </Route>
               </Route>
 
-              {/* --- Admin Routes --- */}
-              {/* This structure is correct. No changes needed. */}
              <Route path="/admin-dashboard" element={<AdminRoute />}>
                 <Route element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} /> 
@@ -116,6 +109,7 @@ function App() {
                   <Route path="suppliers" element={<ManageSuppliers />} />
                 </Route>
               </Route>
+
             </Routes>
           </Router>
         </CartProvider>
