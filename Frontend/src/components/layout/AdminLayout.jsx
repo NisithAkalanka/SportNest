@@ -17,8 +17,8 @@ const AdminLayout = () => {
 
   const activeLinkStyle = { backgroundColor: '#FF6700' };
 
+  // Keep the container height constrained to the viewport to avoid outer scroll
   return (
-    // Keep the container height constrained to the viewport to avoid outer scroll
     <div className="flex h-screen">
       
       {/* Sidebar */}

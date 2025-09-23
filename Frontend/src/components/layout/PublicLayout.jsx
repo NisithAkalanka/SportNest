@@ -52,12 +52,12 @@ const PublicLayout = () => {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
-                  <Link to="/events">
-                    <DropdownMenuItem className="cursor-pointer">Events</DropdownMenuItem>
-                  </Link>
-                  <Link to="/training">
-                    <DropdownMenuItem className="cursor-pointer">Training</DropdownMenuItem>
-                  </Link>
+                  <DropdownMenuItem asChild className="cursor-pointer">
+                    <Link to="/events">Events</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer">
+                    <Link to="/training">Training</Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -81,11 +81,11 @@ const PublicLayout = () => {
                       <p className="text-xs text-muted-foreground">{loggedInUser.email}</p>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <Link to={loggedInUser.role === 'admin' ? '/admin-dashboard' : '/member-dashboard'}>
-                      <DropdownMenuItem className="cursor-pointer">
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link to={loggedInUser.role === 'admin' ? '/admin-dashboard' : '/member-dashboard'}>
                         {loggedInUser.role === 'admin' ? 'Admin Dashboard' : 'My Profile'}
-                      </DropdownMenuItem>
-                    </Link>
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="text-red-500 cursor-pointer">
                       Logout
