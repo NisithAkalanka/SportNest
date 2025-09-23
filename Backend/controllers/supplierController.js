@@ -1,4 +1,6 @@
-const Supplier = require('../models/Supplier'); // <-- match folder casing
+const Supplier = require('../models/Supplier');
+const Preorder = require('../models/Preorder');
+const { Parser } = require('json2csv'); // ★★★ CSV හදන්න අවශ්‍ය library එක import කිරීම ★★★
 
 // POST /api/suppliers  (Admin only)
 const addSupplier = async (req, res) => {
@@ -19,11 +21,23 @@ const addSupplier = async (req, res) => {
 };
 
 // GET /api/suppliers (Admin only)
-const getSuppliers = async (_req, res) => {
-  try {
-    const suppliers = await Supplier.find().sort({ name: 1 });
+const getSuppliers = async (req, res) => {
+  try { // ★ try-catch block එකක් එකතු කිරීම වඩාත් සුරක්ෂිතයි ★
+    const suppliers = await Supplier.aggregate([
+      { $match: {} },
+      {
+        $lookup: {
+          from: 'preorders',      // make sure collection name is correct
+          localField: '_id',
+          foreignField: 'supplier',
+          as: 'preorders'
+        }
+      },
+      { $project: { name:1, email:1, phone:1, contactPerson:1, address:1, preorders: { $slice: ['$preorders', 20] } } },
+      { $sort: { name: 1 } }
+    ]);
     return res.json(suppliers);
-  } catch (err) {
+  } catch(err) {
     console.error('Get Suppliers Error:', err.message);
     return res.status(500).send('Server Error');
   }
@@ -70,10 +84,49 @@ const getAllSuppliers = async (_req, res) => {
   }
 };
 
+// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+// ★★★ මෙන්න අලුතින් එකතු කළ CSV Report හදන Function එක ★★★
+// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+
+const generateSupplierCsvReport = async (req, res) => {
+    try {
+        const suppliers = await Supplier.find().sort({ name: 1 });
+
+        if (suppliers.length === 0) {
+            return res.status(404).json({ msg: 'No suppliers found to generate a report.' });
+        }
+
+        const fields = [
+            { label: 'Supplier Name', value: 'name' },
+            { label: 'Contact Person', value: 'contactPerson' },
+            { label: 'Email Address', value: 'email' },
+            { label: 'Phone Number', value: 'phone' },
+            { label: 'Address', value: 'address' }
+        ];
+
+        const json2csvParser = new Parser({ fields });
+        const csv = json2csvParser.parse(suppliers);
+
+        const date = new Date().toISOString().split('T')[0];
+        const fileName = `suppliers-report-${date}.csv`;
+
+        res.header('Content-Type', 'text/csv');
+        res.attachment(fileName);
+        return res.status(200).send(csv);
+
+    } catch (err) {
+        console.error('Supplier CSV Report Error:', err.message);
+        return res.status(500).send('Server Error while generating report');
+    }
+};
+
+
+// ★★★ module.exports එකට අලුත් function එකේ නම එකතු කිරීම ★★★
 module.exports = {
   addSupplier,
   getSuppliers,
   updateSupplier,
   deleteSupplier,
   getAllSuppliers,
+  generateSupplierCsvReport
 };

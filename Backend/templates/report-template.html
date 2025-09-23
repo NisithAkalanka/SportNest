@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Inventory Report</title>
+    <style>
+        /* --- නවීන, පිළිවෙළ සහ Professional CSS Styles (Blue Theme - Final Version) --- */
+        @page {
+            margin: 15mm;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-size: 9px;
+            color: #34495e;
+        }
+
+        /* Header and Title */
+        .header {
+            text-align: left;
+            margin-bottom: 25px;
+        }
+        .club-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+        }
+        .main-title {
+            font-size: 18px;
+            font-weight: 300;
+            color: #2980b9;
+            margin: 5px 0 0;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        
+        /* Meta Info Box */
+        .meta-info {
+            background-color: #ecf0f1;
+            border-left: 4px solid #3498db;
+            padding: 10px 15px;
+            font-size: 10px;
+            margin: 25px 0;
+            line-height: 1.6;
+        }
+
+        /* Section Title Styles */
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8.5px;
+        }
+        th {
+            background-color: #34495e;
+            color: #ffffff;
+            font-weight: 600;
+            text-align: left;
+            padding: 8px 10px;
+            text-transform: uppercase;
+        }
+        td {
+            border-bottom: 1px solid #ecf0f1;
+            padding: 7px 10px;
+        }
+        tr:last-child td { border-bottom: none; }
+        td.align-right { text-align: right; }
+        td.align-center { text-align: center; }
+        
+        /* Summary ಮತ್ತು Approval කොටස් එකම පේළියේ තැබීමට flexbox භාවිතා කිරීම */
+        .bottom-section {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            width: 100%;
+            page-break-inside: avoid;
+        }
+
+        /* Summary Box Styles */
+        .summary-box {
+            width: 40%;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            padding: 6px 0;
+        }
+        .summary-total {
+            font-weight: bold;
+            font-size: 12px;
+            color: #2980b9;
+            border-top: 2px solid #bdc3c7;
+            padding-top: 8px;
+            margin-top: 5px;
+        }
+        
+        
+        .approval-section {
+            width: 100%; 
+            margin-top: 80px; 
+            page-break-inside: avoid;
+        }
+        .signatures-container {
+            display: flex;
+            justify-content: space-between; 
+        }
+        .signature-box {
+            text-align: center;
+            width: 35%; /* ಪ್ರತಿ ಬಾಕ್ಸ್‌ನ चौड़ाई */
+        }
+        .signature-line {
+            border-top: 1px solid #7f8c8d;
+            margin-bottom: 8px; /* ಸಹಿಗೂ ಮತ್ತು ಹೆಸರಿಗೂ ಮಧ್ಯೆ ಜಾಗ */
+            margin-top: 50px; /* ಸಹಿಗೂ ಮತ್ತು ಸಾಲಿಗೂ ಮಧ್ಯೆ ಜಾಗ */
+        }
+        .signature-name { font-weight: bold; font-size: 10px; }
+        .signature-title { font-size: 9px; color: #7f8c8d; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="club-name">SportNest</h1>
+        <h2 class="main-title">Inventory Report</h2>
+    </div>
+
+    <div class="meta-info">
+        <strong>Prepared by:</strong> J. I. Nisith Akalanka <br>
+        <strong>Report Date:</strong> {{reportDate}} (Generated At: {{reportTime}})
+    </div>
+
+    <div class="section-title">Inventory Overview</div>
+
+    <table>
+        <!-- Table content ... -->
+        <thead>
+            <tr>
+                <th style="width: 26%;">Item Description</th>
+                <th style="width: 14%;">Category</th>
+                <th style="width: 18%;">Supplier</th>
+                <th class="align-center" style="width: 8%;">Quantity</th>
+                <th class="align-right" style="width: 17%;">Unit Price (Rs.)</th>
+                <th class="align-right" style="width: 17%;">Total Value (Rs.)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each items}}
+            <tr>
+                <td>{{this.name}}</td>
+                <td>{{this.category}}</td>
+                <td>{{this.supplierName}}</td>
+                <td class="align-center">{{this.quantity}}</td>
+                <td class="align-right">{{this.priceFormatted}}</td>
+                <td class="align-right">{{this.totalValueFormatted}}</td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <div class="bottom-section">
+        <div class="summary-box">
+             <div class="summary-row">
+                <span>Total Distinct Items:</span>
+                <span>{{items.length}}</span>
+            </div>
+             <div class="summary-row summary-total">
+                <span>Total Inventory Value:</span>
+                <span>Rs. {{totalValueFormatted}}</span>
+            </div>
+        </div>
+    </div>
+    
+    
+    <div class="approval-section">
+         <div class="signatures-container">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-name">J. I. Nisith Akalanka</div>
+                <div class="signature-title">Inventory Manager</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-name">J. I. Sujan Lakdin</div>
+                <div class="signature-title">Director</div>
+            </div>
+        </div>
+    </div>
+    
+</body>
+</html>

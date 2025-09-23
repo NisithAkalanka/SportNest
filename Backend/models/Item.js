@@ -4,10 +4,18 @@ const ItemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   category: { type: String, required: true },
   quantity: { type: Number, required: true, default: 0 },
-  reorderPoint: { type: Number, default: 10 }, // ROP
+
+  // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+  // ★★★ මෙන්න නිවැරදි කරන ලද reorderPoint Field එක ★★★
+  // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+  reorderPoint: {
+    type: Number,
+    required: true, // ★ අනිවාර්ය කිරීම (data consistency එකට) ★
+    default: 10     // ★ Default අගයක් දීමෙන්, null/undefined වීම වළක්වනවා ★
+  },
+
   supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' },
   
-  // --- අලුතින් එකතු කළ Fields ---
   price: {
     type: Number,
     required: true,
@@ -20,11 +28,20 @@ const ItemSchema = new mongoose.Schema({
   expiryDate: {
     type: Date,
   },
-  // --- /අලුතින් එකතු කළ Fields ---
-
-  grn: { type: String }, // Goods Received Note (optional)
+  
+  grn: { type: String },
+  
+  imageUrl: {
+    type: String,
+    default: ''
+  },
+  imagePublicId: {
+    type: String,
+    default: ''
+  }
+  
 }, {
-  timestamps: true // Automatically adds createdAt and updatedAt fields
+  timestamps: true
 });
 
 module.exports = mongoose.model('Item', ItemSchema);

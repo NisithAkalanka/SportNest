@@ -1,58 +1,121 @@
+// Backend/Controllers/dashboardController.js (සම්පූර්ණ, වඩාත් ආරක්ෂිත කේතය)
+
 const Order = require('../models/Order');
 const Item = require('../models/Item');
-const Supplier = require('../models/Supplier'); // <-- Supplier model එක import කරගන්න
+const Supplier = require('../models/Supplier');
+const Preorder = require('../models/Preorder');
 
-// @route   GET /api/dashboard/stats
-// @desc    Get key statistics for the admin dashboard
-// @access  Private (Admin Only)
 const getStats = async (req, res) => {
   try {
-    // --- දැනටමත් තිබූ Stats ---
-    const totalRevenue = await Order.aggregate([
-      { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+    // aggregate basic totals in parallel
+    const results = await Promise.all([
+      Order.aggregate([{ $group: { _id: null, total: { $sum: '$totalAmount' } } }]),
+      Order.aggregate([{ $unwind: '$items' }, { $group: { _id: null, total: { $sum: '$items.quantity' } } }]),
+      Item.aggregate([{ $group: { _id: null, total: { $sum: '$quantity' } } }]),
+      Order.countDocuments(),
+      Supplier.countDocuments(),
+      Preorder.countDocuments({ status: { $in: ['requested', 'ordered'] } })
     ]);
 
-    const totalItemsSold = await Order.aggregate([
-      { $unwind: '$items' },
-      { $group: { _id: null, total: { $sum: '$items.quantity' } } }
-    ]);
-    
-    const totalInventoryItems = await Item.aggregate([
-        { $group: { _id: null, total: { $sum: '$quantity' } } }
-    ]);
-    const totalOrders = await Order.countDocuments();
-
-    // --- අලුතින් එකතු කළ Summaries ---
-    const today = new Date();
-    const next30Days = new Date();
-    next30Days.setDate(today.getDate() + 30);
-
-    // ඊළඟ දවස් 30 ඇතුලත expire වන items
-    const expiringSoonItems = await Item.find({
-      expiryDate: { $gte: today, $lte: next30Days }
-    }).select('name expiryDate').sort({ expiryDate: 1 }).limit(5); // ළඟම expire වෙන 5 දෙනවා
-    
-    // suppliers ලාගේ summary එක
-    const totalSuppliers = await Supplier.countDocuments();
-    const recentSuppliers = await Supplier.find().select('name phone').sort({ createdAt: -1 }).limit(3); // අලුතෙන්ම add කරපු 3 දෙනවා
+    const [totalRevenueResult, totalItemsSoldResult, totalInventoryItemsResult, totalOrders, totalSuppliers, preorderCount] = results;
 
     const stats = {
-      totalRevenue: totalRevenue.length > 0 ? totalRevenue[0].total : 0,
-      totalItemsSold: totalItemsSold.length > 0 ? totalItemsSold[0].total : 0,
-      totalInventoryItems: totalInventoryItems.length > 0 ? totalInventoryItems[0].total : 0,
-      totalOrders: totalOrders,
-      
-      // අලුත් දත්ත ටික response එකට එකතු කරනවා
-      expiringSoonItems: expiringSoonItems,
-      totalSuppliers: totalSuppliers,
-      recentSuppliers: recentSuppliers
+      totalRevenue: totalRevenueResult[0]?.total || 0,
+      totalItemsSold: totalItemsSoldResult[0]?.total || 0,
+      totalInventoryItems: totalInventoryItemsResult[0]?.total || 0,
+      totalOrders: totalOrders || 0,
+      totalSuppliers: totalSuppliers || 0,
+      preorderCount: preorderCount || 0,
+      expiringSoonItems: [],
+      lowStockItems: []
     };
-    
-    res.json(stats);
 
+    // compute low-stock and expiring-soon items
+    const now = new Date();
+    const soon = new Date();
+    soon.setDate(soon.getDate() + 14);
+
+    const [lowStockItems, expiringSoonItems] = await Promise.all([
+      // low stock: quantity < reorderPoint (treat missing reorderPoint as 0)
+      Item.aggregate([
+        {
+          $match: {
+            $expr: { $lt: ['$quantity', { $ifNull: ['$reorderPoint', 0] }] }
+          }
+        },
+        {
+          $lookup: {
+            from: 'suppliers',
+            localField: 'supplier',
+            foreignField: '_id',
+            as: 'supplier'
+          }
+        },
+        { $unwind: { path: '$supplier', preserveNullAndEmptyArrays: true } },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            quantity: 1,
+            reorderPoint: 1,
+            supplier: {
+              _id: '$supplier._id',
+              name: '$supplier.name',
+              phone: '$supplier.phone',
+              email: '$supplier.email',
+              contactPerson: '$supplier.contactPerson'
+            }
+          }
+        },
+        { $sort: { quantity: 1 } },
+        { $limit: 50 }
+      ]),
+
+      // expiring soon: expiryDate between now and soon (inclusive)
+      Item.aggregate([
+        {
+          $match: {
+            expiryDate: { $gte: now, $lte: soon }
+          }
+        },
+        {
+          $lookup: {
+            from: 'suppliers',
+            localField: 'supplier',
+            foreignField: '_id',
+            as: 'supplier'
+          }
+        },
+        { $unwind: { path: '$supplier', preserveNullAndEmptyArrays: true } },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            expiryDate: 1,
+            quantity: 1,
+            reorderPoint: 1,
+            supplier: {
+              _id: '$supplier._id',
+              name: '$supplier.name',
+              phone: '$supplier.phone',
+              email: '$supplier.email',
+              contactPerson: '$supplier.contactPerson'
+            }
+          }
+        },
+        { $sort: { expiryDate: 1 } },
+        { $limit: 50 }
+      ])
+    ]);
+
+    stats.lowStockItems = lowStockItems;
+    stats.lowStockCount = lowStockItems.length;
+    stats.expiringSoonItems = expiringSoonItems;
+
+    return res.json(stats);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    console.error('Dashboard Stats Error:', err);
+    return res.status(500).json({ msg: 'Server Error' });
   }
 };
 

@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
+const Preorder = require('../models/Preorder');
 
 // @route   POST /api/orders/checkout
 // @desc    Create an order from the cart
@@ -34,6 +35,16 @@ const checkout = async (req, res) => {
     // Order එක සෑදූ පසු, Cart එක හිස් කිරීම
     cart.items = [];
     await cart.save();
+
+    // after creating order, update preorders for same item (optional: match qty or partial)
+    try {
+      await Preorder.updateMany(
+        { item: { $in: order.items.map(it => it.item) }, status: { $ne: 'received' } },
+        { $set: { status: 'received' } }
+      );
+    } catch (e) {
+      console.error('Preorder auto-update failed', e);
+    }
 
     res.status(201).json({ msg: 'Order placed successfully!', order });
 

@@ -70,8 +70,45 @@ const getCartItems = async (req, res) => {
   }
 };
 
-// (Cart එකේ දත්ත පෙන්වන function එක පසුව හදමු)
+
+const removeCartItem = async (req, res) => {
+  try {
+    const cart = await Cart.findOne();
+    if (!cart) {
+      return res.status(404).json({ msg: 'Cart not found' });
+    }
+
+    // Cart එකෙන් අයින් කරන item එක මොකක්ද, quantity එක කීයද කියලා හොයාගන්නවා
+    const itemToRemove = cart.items.find(i => i._id.toString() === req.params.id);
+    if (!itemToRemove) {
+      return res.status(404).json({ msg: 'Item not found in cart' });
+    }
+    
+    // Inventory එකේ අදාළ Item එක හොයාගන්නවා
+    const inventoryItem = await Item.findById(itemToRemove.item);
+    if (inventoryItem) {
+      // Inventory එකේ quantity එක, cart එකෙන් අයින් කරපු ගානෙන් වැඩි කරනවා
+      inventoryItem.quantity += itemToRemove.quantity;
+      await inventoryItem.save();
+    }
+    
+    // Cart එකෙන් item එක remove කරනවා
+    cart.items = cart.items.filter(i => i._id.toString() !== req.params.id);
+    await cart.save();
+    
+    // Update වෙච්ච අලුත් cart එකම populate කරලා, response එකේ යවනවා
+    const updatedCart = await Cart.findOne().populate('items.item', 'name price imageUrl');
+    res.json(updatedCart);
+
+  } catch (err) {
+    console.error("Remove from cart error:", err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+
 module.exports = {
   addToCart,
-  getCartItems // <-- අලුතින් එකතු කළ නම
+  getCartItems,
+  removeCartItem
 };
