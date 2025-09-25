@@ -1,75 +1,86 @@
-import React, { useContext } from 'react';
-// Link වෙනුවට NavLink පාවිච්චි කරන්න, active page එක style කරන්න ලේසියි
-import { NavLink, Link, useNavigate } from 'react-router-dom'; 
-import { MemberAuthContext } from '../../context/MemberAuthContext'; 
-import { Button } from "@/components/ui/button"; // Button component එක import කිරීම
-
-// Navbar.jsx file එක ඇතුලට App.jsx, index.css import කරන්නේ නෑ. ඒ නිසා මම ඒවා අයින් කලා.
+import React, { useContext, useState } from 'react';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { MemberAuthContext } from '@/context/MemberAuthContext';
+import { Button } from '@/components/ui/button';
+import { FaCalendarAlt, FaDumbbell } from 'react-icons/fa';
 
 const Navbar = () => {
-    const navigate = useNavigate();
-    
-    // මේක දැන් හරි: MemberAuthContext එක පාවිච්චි කරනවා
-    const { user, logout } = useContext(MemberAuthContext);
+  const navigate = useNavigate();
+  const { user, logout } = useContext(MemberAuthContext);
+  const [openDropdown, setOpenDropdown] = useState(false);
 
-    const logoutHandler = () => {
-        logout(); 
-        navigate('/login');
-    };
+  const logoutHandler = () => {
+    logout();
+    navigate('/login');
+  };
 
-    // Active link එකට දෙන්න ඕන style එක (කොළ පාට)
-    const activeLinkStyle = {
-        color: '#28a745', // Green color
-        fontWeight: 'bold',
-    };
+  const linkClass = ({ isActive }) =>
+    `transition-colors ${isActive ? 'text-emerald-400 font-semibold' : 'text-gray-300 hover:text-emerald-400'}`;
 
-    return (
-        // මම Background පාට ටිකක් තද කලා (bg-gray-900), ලස්සනට පේන්න
-        <nav className="bg-gray-900 p-4 shadow-lg sticky top-0 z-50"> 
-            <div className="container mx-auto flex justify-between items-center">
-                {/* Logo */}
-                <Link to="/" className="text-white text-2xl font-bold">
-                    Sport<span className="text-green-500">Nest</span>
+  return (
+    <nav className="bg-[#0D1B2A] p-4 shadow-lg sticky top-0 z-50 border-b border-white/10">
+      <div className="container mx-auto flex justify-between items-center">
+        {/* Logo */}
+        <Link to="/" className="text-white text-2xl font-bold">
+          Sport<span className="text-emerald-400">Nest</span>
+        </Link>
+
+        {/* Navigation Links */}
+        <div className="hidden md:flex items-center space-x-6">
+          <NavLink to="/" end className={linkClass}>Home</NavLink>
+          <NavLink to="/club" className={linkClass}>The Club</NavLink>
+          <NavLink to="/sports" className={linkClass}>Sports</NavLink>
+
+          {/* Dropdown: Event & Training */}
+          <div
+            className="relative"
+            onMouseEnter={() => setOpenDropdown(true)}
+            onMouseLeave={() => setOpenDropdown(false)}
+          >
+            <button className="text-gray-300 hover:text-emerald-400 transition-colors">
+              Event &amp; Training ▾
+            </button>
+            {openDropdown && (
+              <div className="absolute left-0 mt-2 w-56 rounded-md shadow-lg overflow-hidden bg-emerald-600 text-white z-50">
+                <Link to="/events" className="flex items-center px-4 py-2 hover:bg-emerald-700">
+                  <FaCalendarAlt className="mr-2" /> Events
                 </Link>
+                <Link to="/training" className="flex items-center px-4 py-2 hover:bg-emerald-700">
+                  <FaDumbbell className="mr-2" /> Training
+                </Link>
+              </div>
+            )}
+          </div>
 
-                {/* --- Navigation Links (කොළ පාට hover effect එකත් එක්ක) --- */}
-                <div className="hidden md:flex items-center space-x-6 text-gray-300">
-                    <NavLink to="/" style={({ isActive }) => isActive ? activeLinkStyle : undefined} className="hover:text-green-500 transition-colors duration-300">Home</NavLink>
-                    <NavLink to="/club" style={({ isActive }) => isActive ? activeLinkStyle : undefined} className="hover:text-green-500 transition-colors duration-300">The Club</NavLink>
-                    <NavLink to="/sports" style={({ isActive }) => isActive ? activeLinkStyle : undefined} className="hover:text-green-500 transition-colors duration-300">Sports</NavLink>
-                    <NavLink to="/events" style={({ isActive }) => isActive ? activeLinkStyle : undefined} className="hover:text-green-500 transition-colors duration-300">Event & Training</NavLink>
-                    <NavLink to="/store" style={({ isActive }) => isActive ? activeLinkStyle : undefined} className="hover:text-green-500 transition-colors duration-300">Store</NavLink>
-                    <NavLink to="/feedback" style={({ isActive }) => isActive ? activeLinkStyle : undefined} className="hover:text-green-500 transition-colors duration-300">Feedback</NavLink>
-                </div>
+          <NavLink to="/shop" className={linkClass}>Shop</NavLink>
+          <NavLink to="/feedback" className={linkClass}>Feedback</NavLink>
+        </div>
 
-                {/* --- Conditional Login/Profile/Logout Buttons --- */}
-                <div className="flex items-center space-x-4">
-                    {user ? (
-                        // --- User ලොග් වෙලා ඉන්නකොට පේන Buttons (මේ ටිකත් හරිගැස්සුවා) ---
-                        <>
-                            <Button asChild className="bg-green-600 text-white hover:bg-green-700">
-                                <Link to="/dashboard">My Profile</Link>
-                            </Button>
-                            <Button onClick={logoutHandler} variant="secondary" className="bg-gray-600 text-white hover:bg-gray-700">
-                                Logout
-                            </Button>
-                        </>
-                    ) : (
-                        // --- User ලොග් වෙලා නැතිකොට පේන Buttons (ඔයා මේ ටික හදලා තිබ්බේ හරි) ---
-                        <>
-                            <Button asChild className="bg-orange-500 text-white hover:bg-orange-600">
-                                <Link to="/login">Login</Link>
-                            </Button>
-                            
-                            <Button asChild className="bg-green-500 text-white hover:bg-green-600">
-                                <Link to="/register">Register</Link>
-                            </Button>
-                        </>
-                    )}
-                </div>
-            </div>
-        </nav>
-    );
+        {/* Conditional Login/Profile/Logout Buttons */}
+        <div className="flex items-center space-x-3">
+          {user ? (
+            <>
+              <Button asChild className="bg-emerald-600 text-white hover:bg-emerald-700">
+                <Link to="/member-dashboard">My Profile</Link>
+              </Button>
+              <Button onClick={logoutHandler} variant="outline" className="text-white border-white/20 hover:bg-white/10">
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild className="bg-emerald-600 text-white hover:bg-emerald-700">
+                <Link to="/login">Login</Link>
+              </Button>
+              <Button asChild className="bg-emerald-600 text-white hover:bg-emerald-700">
+                <Link to="/register">Register</Link>
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
 };
 
 export default Navbar;

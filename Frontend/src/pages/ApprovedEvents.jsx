@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { listApproved, registerEvent } from "@/services/eventsApi";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 
 export default function ApprovedEvents() {
   const [items, setItems] = useState([]);
@@ -24,7 +23,10 @@ export default function ApprovedEvents() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
+
   const onKeyDown = (e) => e.key === "Enter" && load();
 
   // Sort items client-side for a better browsing experience
@@ -55,13 +57,13 @@ export default function ApprovedEvents() {
         </div>
       </div>
 
-      {/* Controls (lifted above content; buttons “pop up”) */}
+      {/* Controls */}
       <div className="container mx-auto px-4">
         <div className="relative z-10 -mt-10 flex flex-col md:flex-row md:items-center gap-3">
           {/* Search input card */}
-          <div className="flex-1 bg-white rounded-2xl shadow-lg ring-1 ring-gray-200 p-2 pl-3 focus-within:ring-2 focus-within:ring-emerald-500">
+          <div className="flex-1 bg-white rounded-2xl shadow-lg ring-1 ring-gray-200 p-2 pl-3 focus-within:ring-2 focus-within:ring-emerald-500 flex items-center">
             <input
-              className="w-full bg-transparent outline-none placeholder:text-gray-400"
+              className="flex-1 bg-transparent outline-none placeholder:text-gray-400"
               placeholder="Search events by name or venue…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -80,16 +82,14 @@ export default function ApprovedEvents() {
             )}
           </div>
 
-          {/* Filter button — outlined with brand accent & lift */}
+          {/* Filter button */}
           <button
             onClick={load}
-            className="inline-flex items-center gap-2 h-12 px-5 rounded-2xl border-2 border-emerald-600 bg-white text-emerald-700
-               shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition
-               hover:bg-emerald-600 hover:text-white"
+            className="inline-flex items-center gap-2 h-12 px-5 rounded-2xl border-2 border-emerald-600 bg-white text-emerald-700 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition hover:bg-emerald-600 hover:text-white"
             title="Apply current filters"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M3 6h18M6 12h12M10 18h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M3 6h18M6 12h12M10 18h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
             Filter
           </button>
@@ -106,11 +106,9 @@ export default function ApprovedEvents() {
             <option value="name-asc">Name: A–Z</option>
           </select>
 
-          {/* Create button — bright/raised with gradient + ring */}
+          {/* Create button */}
           <Link to="/events/submit" title="Create a new event">
-            <button
-              className="h-12 px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition"
-            >
+            <button className="h-12 px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition">
               + Create Event
             </button>
           </Link>
@@ -118,7 +116,9 @@ export default function ApprovedEvents() {
 
         {/* Messages */}
         <div className="mt-6">
-          {msg && <div className="text-sm mb-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl px-3 py-2">{msg}</div>}
+          {msg && (
+            <div className="text-sm mb-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl px-3 py-2">{msg}</div>
+          )}
           {loading && (
             <div className="inline-flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -150,8 +150,7 @@ export default function ApprovedEvents() {
   );
 }
 
-/* ---------- Pieces ---------- */
-
+/* ---------- Event Card ---------- */
 function EventRow({ ev, reload }) {
   const date = ev.date ? new Date(ev.date).toLocaleDateString() : "—";
   const d = ev.date ? new Date(ev.date) : null;
@@ -164,9 +163,12 @@ function EventRow({ ev, reload }) {
   const left = cap > 0 ? Math.max(0, cap - reg) : 0;
 
   return (
-    <div className="rounded-2xl border bg-white shadow-sm hover:shadow-md transition">
+    <div
+      className="rounded-2xl border shadow-sm hover:shadow-lg transition-transform hover:-translate-y-1"
+      style={{ background: "linear-gradient(135deg, #E6F0FF 0%, #F8FBFF 100%)" }}
+    >
       <div className="p-5 md:p-6 grid md:grid-cols-3 gap-6">
-        {/* Left: info */}
+        {/* Left side info */}
         <div className="md:col-span-2 min-w-0">
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-lg font-semibold leading-tight truncate">{ev.name}</h3>
@@ -178,7 +180,7 @@ function EventRow({ ev, reload }) {
           </div>
           {ev.description && <p className="text-gray-600 mt-1 line-clamp-2">{ev.description}</p>}
 
-          <div className="mt-3 flex flex-wrap gap-2 text-sm text-gray-700">
+          <div className="mt-3 flex flex-wrap gap-2 text-sm text-gray-800">
             <InfoPill label="Venue" value={ev.venue || "—"} />
             <InfoPill label="Date" value={date} />
             <InfoPill label="Time" value={time} />
@@ -208,7 +210,7 @@ function EventRow({ ev, reload }) {
           </div>
         </div>
 
-        {/* Right: quick register */}
+        {/* Right: Quick Register */}
         <div>
           <RegisterInline ev={ev} onDone={reload} />
         </div>
@@ -217,6 +219,7 @@ function EventRow({ ev, reload }) {
   );
 }
 
+/* ---------- Info Pills ---------- */
 function InfoPill({ label, value }) {
   return (
     <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 bg-white">
@@ -226,6 +229,7 @@ function InfoPill({ label, value }) {
   );
 }
 
+/* ---------- Quick Register ---------- */
 function RegisterInline({ ev, onDone }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -233,20 +237,38 @@ function RegisterInline({ ev, onDone }) {
   const [msg, setMsg] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // ✅ validation helpers
+  const validateEmail = (email) => /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);
+  const validatePhone = (phone) => /^\\d{10}$/.test(phone); // exactly 10 digits
+
   const click = async () => {
     setMsg("");
-    if (!name || !email) {
-      setMsg("Please enter your name and email");
+
+    if (!name.trim()) {
+      setMsg("⚠️ Please enter your name");
       return;
     }
+
+    if (!validateEmail(email)) {
+      setMsg("⚠️ Please enter a valid email");
+      return;
+    }
+
+    if (!validatePhone(phone)) {
+      setMsg("⚠️ Phone number must be 10 digits");
+      return;
+    }
+
     try {
       setSaving(true);
       const { data } = await registerEvent(ev._id, { name, email, phone });
-      setMsg(`Registered! (${data.registeredCount}/${data.capacity})`);
-      setName(""); setEmail(""); setPhone("");
+      setMsg(`✅ Registered! (${data.registeredCount}/${data.capacity})`);
+      setName("");
+      setEmail("");
+      setPhone("");
       onDone?.();
     } catch (e) {
-      setMsg(e?.response?.data?.error || "Failed");
+      setMsg(e?.response?.data?.error || "❌ Registration failed");
     } finally {
       setSaving(false);
     }
@@ -276,8 +298,7 @@ function RegisterInline({ ev, onDone }) {
       <button
         onClick={click}
         disabled={saving}
-        className="w-full rounded-2xl px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-60 shadow
-                   hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition"
+        className="w-full rounded-2xl px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-60 shadow hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition"
       >
         {saving ? "Registering…" : "Register"}
       </button>
@@ -286,6 +307,7 @@ function RegisterInline({ ev, onDone }) {
   );
 }
 
+/* ---------- Skeletons ---------- */
 function EventSkeleton() {
   return (
     <div className="rounded-2xl border bg-white shadow-sm p-5 md:p-6 animate-pulse">
@@ -319,6 +341,7 @@ function SkeletonList() {
   );
 }
 
+/* ---------- Empty State ---------- */
 function EmptyState({ title, subtitle, cta }) {
   return (
     <div className="border-2 border-dashed rounded-2xl p-10 text-center bg-white">

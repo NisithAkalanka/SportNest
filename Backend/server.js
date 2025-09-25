@@ -44,6 +44,8 @@ const preorderRoutes      = require('./routes/preorderRoutes');
 
 const eventsRoutes        = require('./routes/eventsRoutes');         // general events API
 const eventsReportRoutes  = require('./routes/eventsReportRoutes');   // reports only
+const trainingRoutes = require('./routes/trainingRoutes');
+
 
 // --- Mount order matters! ---
 // Put the more specific /report routes BEFORE the generic /events routes.
@@ -51,17 +53,18 @@ app.use('/api/events/report', eventsReportRoutes);
 app.use('/api/events',        eventsRoutes);
 
 // Other APIs
-app.use('/api/admin',         adminRoutes);
-app.use('/api/cart',          cartRoutes);
-app.use('/api/dashboard',     dashboardRoutes);
-app.use('/api/items',         itemRoutes);
-app.use('/api/members',       memberRoutes);
-app.use('/api/orders',        orderRoutes);
-app.use('/api/players',       playerRoutes);
-app.use('/api/sponsorships',  sponsorshipRoutes);
-app.use('/api/sports',        sportRoutes);
-app.use('/api/suppliers',     supplierRoutes);
-app.use('/api/preorders',     preorderRoutes);
+app.use('/api/admin',        adminRoutes);
+app.use('/api/cart',         cartRoutes);
+app.use('/api/dashboard',    dashboardRoutes);
+app.use('/api/items',        itemRoutes);
+app.use('/api/members',      memberRoutes);
+app.use('/api/orders',       orderRoutes);
+app.use('/api/players',      playerRoutes);
+app.use('/api/sponsorships', sponsorshipRoutes);
+app.use('/api/sports',       sportRoutes);
+app.use('/api/suppliers',    supplierRoutes);
+app.use('/api/preorders',    preorderRoutes);
+app.use('/api/trainings',    trainingRoutes);
 
 // --- Health check ---
 app.get('/', (req, res) => {

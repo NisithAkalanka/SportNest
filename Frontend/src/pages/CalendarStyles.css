@@ -1,0 +1,31 @@
+/* Calendar custom styles */
+.rbc-calendar {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Vibrate animation keyframes */
+@keyframes vibrate {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+/* --- My Created Sessions Cards Hover --- */
+.session-card:hover {
+  animation: vibrate 0.25s linear 1;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  transform: scale(1.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* --- Calendar Events Hover --- */
+.calendar-event:hover {
+  animation: vibrate 0.25s linear 1;
+  transform: scale(1.05);
+  z-index: 5;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
