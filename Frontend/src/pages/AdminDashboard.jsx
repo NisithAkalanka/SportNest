@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClipboardList, faDollarSign, faExclamationTriangle, faRedo, faBoxOpen, faShoppingCart, faUsers, faWarehouse } from '@fortawesome/free-solid-svg-icons';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -39,6 +40,20 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchStats();
   }, []);
+
+  // --- Inventory pie data (safe fallbacks) ---
+  const lowCount = stats?.lowStockItems?.length || 0;
+  const expCount = stats?.expiringSoonItems?.length || 0;
+  const totalItems = (stats?.totalItems ?? stats?.totalActiveItems ?? stats?.totalUniqueItems);
+  const healthyCount = typeof totalItems === 'number' ? Math.max(0, totalItems - lowCount - expCount) : null;
+
+  const inventoryPieData = [
+    ...(healthyCount !== null ? [{ name: 'Healthy', value: healthyCount }] : []),
+    { name: 'Low Stock', value: lowCount },
+    { name: 'Expiring Soon', value: expCount },
+  ].filter(d => d.value > 0);
+
+  const PIE_COLORS = ['#10B981', '#F59E0B', '#EF4444']; // emerald, amber, red
 
   const openPreorder = (item) => {
     setSelectedItem(item);
@@ -120,6 +135,43 @@ const AdminDashboard = () => {
          <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Total Suppliers</CardTitle><FontAwesomeIcon icon={faUsers} className="h-4 w-4 text-gray-400" /></CardHeader>
           <CardContent><div className="text-2xl font-bold">{stats.totalSuppliers}</div></CardContent>
+        </Card>
+      </div>
+
+      {/* Inventory Overview (Pie) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader>
+            <CardTitle>Inventory Overview</CardTitle>
+            <CardDescription>Current stock status</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {inventoryPieData.length > 0 ? (
+              <div className="w-full h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={inventoryPieData}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={50}
+                      outerRadius={100}
+                      paddingAngle={2}
+                      label
+                    >
+                      {inventoryPieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">No inventory data to display.</div>
+            )}
+          </CardContent>
         </Card>
       </div>
       
