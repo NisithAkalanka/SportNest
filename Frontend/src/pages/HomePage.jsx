@@ -83,6 +83,12 @@ const HomePage = () => {
                     <FaStar /> 4.8/5 member rating
                   </span>
                 </div>
+              </div>
+
+              {/* Right: Glassmorphism promo card (hidden on small screens) */}
+              <div className="relative z-10 hidden md:block px-4 md:px-10">
+                <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 shadow-2xl text-white max-w-md ml-auto">
+                  <p className="text-sm uppercase tracking-wider text-white/80">This week at SportNest</p>
                   <h3 className="text-2xl font-bold mt-1">Train smarter. Play harder.</h3>
                   <p className="text-white/90 mt-2">
                     Book coaching sessions, explore membership perks, and grab exclusive merch deals.
