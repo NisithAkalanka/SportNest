@@ -9,11 +9,16 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 export default function EventDetails() {
   const { id } = useParams();
   const [ev, setEv] = useState(null);
+
+  // form states
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [msg, setMsg] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // modal state
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -27,14 +32,33 @@ export default function EventDetails() {
     })();
   }, [id]);
 
+  const validateForm = () => {
+    if (!name || !email || !phone) {
+      setMsg("❌ All fields are required");
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setMsg("❌ Invalid email format");
+      return false;
+    }
+    if (!/^\d{10}$/.test(phone)) {
+      setMsg("❌ Phone number must be 10 digits");
+      return false;
+    }
+    return true;
+  };
+
   const onRegister = async () => {
+    if (!validateForm()) return;
+
     try {
       setSaving(true);
       const { data } = await registerEvent(id, { name, email, phone });
       setMsg(`✅ Registered (${data.registeredCount}/${data.capacity})`);
       setName(""); setEmail(""); setPhone("");
     } catch (e) {
-      setMsg(e?.response?.data?.error || "Failed");
+      setMsg(e?.response?.data?.error || "❌ Failed to register");
     } finally {
       setSaving(false);
     }
@@ -69,7 +93,8 @@ export default function EventDetails() {
 
       <h1 className="text-2xl font-semibold mb-2">{ev.name}</h1>
       <div className="opacity-70 mb-4">
-        {ev.venue || "—"} • {ev.date ? new Date(ev.date).toLocaleDateString() : "—"} • {ev.startTime}-{ev.endTime}
+        {ev.venue || "—"} • {ev.date ? new Date(ev.date).toLocaleDateString() : "—"} •{" "}
+        {ev.startTime}-{ev.endTime}
       </div>
       <p className="mb-4">{ev.description}</p>
 
@@ -78,32 +103,67 @@ export default function EventDetails() {
         Capacity: <b>{ev.capacity}</b> • Registered: <b>{ev.registrations?.length || 0}</b>
       </div>
 
-      {/* Inline register form */}
-      <div className="border rounded p-3 grid gap-2 max-w-md">
-        <div className="font-medium">Register</div>
-        <input
-          className="border p-2 rounded"
-          placeholder="Name"
-          value={name}
-          onChange={e => setName(e.target.value)}
-        />
-        <input
-          className="border p-2 rounded"
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-        />
-        <input
-          className="border p-2 rounded"
-          placeholder="Phone"
-          value={phone}
-          onChange={e => setPhone(e.target.value)}
-        />
-        <Button onClick={onRegister} disabled={saving}>
-          {saving ? "Registering..." : "Register"}
-        </Button>
-        {msg && <div className="text-sm">{msg}</div>}
-      </div>
+      {/* Register button */}
+      <Button onClick={() => setOpen(true)} className="bg-green-600 hover:bg-green-700">
+        Register Now
+      </Button>
+
+      {/* ✅ Popup Modal */}
+      {open && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-green-50 rounded-lg shadow-lg p-6 w-full max-w-md relative">
+            {/* Close button */}
+            <button
+              onClick={() => setOpen(false)}
+              className="absolute top-2 right-2 text-gray-600 hover:text-black"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-lg font-bold mb-4 text-green-800">Register for Event</h2>
+
+            {/* Form */}
+            <div className="grid gap-3">
+              <input
+                className="border p-2 rounded focus:ring-2 focus:ring-green-500"
+                placeholder="Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <input
+                className="border p-2 rounded focus:ring-2 focus:ring-green-500"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <input
+                className="border p-2 rounded focus:ring-2 focus:ring-green-500"
+                placeholder="Phone (10 digits)"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+
+              <Button
+                onClick={onRegister}
+                disabled={saving}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {saving ? "Registering..." : "Register"}
+              </Button>
+
+              {msg && (
+                <div
+                  className={`text-sm mt-1 ${
+                    msg.startsWith("✅") ? "text-green-700" : "text-red-600"
+                  }`}
+                >
+                  {msg}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

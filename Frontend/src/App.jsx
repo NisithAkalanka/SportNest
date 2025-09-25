@@ -1,3 +1,8 @@
+<<<<<<< Updated upstream
+=======
+// File: Frontend/src/App.jsx
+
+>>>>>>> Stashed changes
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 
@@ -29,6 +34,27 @@ import SponsorshipPage from '@/pages/SponsorshipPage';
 import MemberDashboard from '@/pages/MemberDashboard';
 import PlayerProfilePage from '@/pages/PlayerProfilePage';
 import SponsorshipManagePage from '@/pages/SponsorshipManagePage';
+<<<<<<< Updated upstream
+=======
+import SubscriptionSuccessPage from './pages/SubscriptionSuccessPage';
+import CoachDashboard from './pages/CoachDashboard';
+import ManageTrainingsPage from './pages/ManageTrainingsPage';
+
+// ★ NEW: Member-side trainings page
+import TrainingsPage from '@/pages/TrainingsPage';
+
+// Coach-specific pages (placeholders; replace with real pages if available)
+const FeedbacksPage = () => (
+  <div className="container mx-auto p-8">
+    <h1 className="text-3xl font-bold">Manage Feedbacks</h1>
+  </div>
+);
+const TrainingSessionsPage = () => (
+  <div className="container mx-auto p-8">
+    <h1 className="text-3xl font-bold">Manage Training Sessions</h1>
+  </div>
+);
+>>>>>>> Stashed changes
 
 // --- Admin (Protected) Pages ---
 import AdminDashboard from '@/pages/AdminDashboard';
@@ -88,10 +114,26 @@ function App() {
                     <Route path="my-events" element={<MyEvents />} />
                     {/* IMPORTANT: member edit route that matches MyEventsInline link */}
                     <Route path="events/:id/edit-my" element={<EditMyEvent />} />
+
+                    {/* ★ NEW Member: view all training sessions */}
+                    <Route path="training" element={<TrainingsPage />} />
                   </Route>
                 </Route>
 
+<<<<<<< Updated upstream
                 {/* --- Admin shell (protected) --- */}
+=======
+                {/* --- 2. Coach Routes (protected by MemberRoute) --- */}
+                <Route path="/coach" element={<MemberRoute />}>
+                  <Route element={<CoachLayout />}>
+                    <Route path="dashboard" element={<CoachDashboard />} />
+                    <Route path="feedbacks" element={<FeedbacksPage />} />
+                    <Route path="training-sessions" element={<ManageTrainingsPage />} />
+                  </Route>
+                </Route>
+
+                {/* --- 3. Admin Routes (protected) --- */}
+>>>>>>> Stashed changes
                 <Route path="/admin-dashboard" element={<AdminRoute />}>
                   <Route element={<AdminLayout />}>
                     <Route index element={<AdminDashboard />} />

@@ -115,7 +115,11 @@ export default function EditMyEvent() {
     f.requestedItems.forEach((it, i) => {
       if (!it.item?.trim()) e[`req-${i}`] = "Item name required";
       const q = Number(it.qty);
-      if (!Number.isFinite(q) || q < 1) e[`reqqty-${i}`] = "Qty ≥ 1";
+      if (!Number.isFinite(q) || q < 1) {
+        e[`reqqty-${i}`] = "Qty must be at least 1";
+      } else if (q > 50) {
+        e[`reqqty-${i}`] = "Qty cannot exceed 50";
+      }
     });
 
     setVErr(e);
@@ -126,7 +130,6 @@ export default function EditMyEvent() {
     e.preventDefault();
     setMsg("");
 
-    // block edits on approved
     if (status === "approved") {
       setMsg("Approved events cannot be edited by members.");
       return;
@@ -136,7 +139,6 @@ export default function EditMyEvent() {
 
     try {
       setSaving(true);
-      // normalize payload
       const capClamped = Math.max(registeredCount, Math.min(500, Number(form.capacity)));
       const payload = {
         ...form,
@@ -195,52 +197,61 @@ export default function EditMyEvent() {
       {msg && <div className="mb-3 text-sm text-red-600">{msg}</div>}
 
       <form onSubmit={onSubmit} className="grid gap-3">
+        {/* Event Name */}
         <div>
+          <label className="text-sm font-medium">Event Name *</label>
           <input
             className={`border p-2 rounded w-full ${vErr.name ? "border-rose-400" : ""}`}
-            placeholder="Event name *"
             value={form.name}
             onChange={(e) => setF("name", e.target.value)}
           />
           {vErr.name && <p className="text-xs text-rose-600 mt-1">{vErr.name}</p>}
         </div>
 
-        <textarea
-          className="border p-2 rounded w-full"
-          placeholder="Description"
-          value={form.description}
-          onChange={(e) => setF("description", e.target.value)}
-        />
-
+        {/* Description */}
         <div>
+          <label className="text-sm font-medium">Description</label>
+          <textarea
+            className="border p-2 rounded w-full"
+            value={form.description}
+            onChange={(e) => setF("description", e.target.value)}
+          />
+        </div>
+
+        {/* Venue */}
+        <div>
+          <label className="text-sm font-medium">Venue *</label>
           <input
             className={`border p-2 rounded w-full ${vErr.venue ? "border-rose-400" : ""}`}
-            placeholder="Venue *"
             value={form.venue}
             onChange={(e) => setF("venue", e.target.value)}
           />
           {vErr.venue && <p className="text-xs text-rose-600 mt-1">{vErr.venue}</p>}
         </div>
 
-        <input
-          className="border p-2 rounded"
-          placeholder="Venue facilities (comma separated)"
-          value={
-            Array.isArray(form.venueFacilities)
-              ? form.venueFacilities.join(", ")
-              : form.venueFacilities
-          }
-          onChange={(e) =>
-            setF(
-              "venueFacilities",
-              e.target.value
-                .split(",")
-                .map((s) => s.trim())
-                .filter(Boolean)
-            )
-          }
-        />
+        {/* Facilities */}
+        <div>
+          <label className="text-sm font-medium">Venue Facilities (comma separated)</label>
+          <input
+            className="border p-2 rounded w-full"
+            value={
+              Array.isArray(form.venueFacilities)
+                ? form.venueFacilities.join(", ")
+                : form.venueFacilities
+            }
+            onChange={(e) =>
+              setF(
+                "venueFacilities",
+                e.target.value
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+              )
+            }
+          />
+        </div>
 
+        {/* Items */}
         <div className="border p-3 rounded">
           <div className="font-medium mb-2">Items needed from admin</div>
           {form.requestedItems.map((r, idx) => (
@@ -264,6 +275,7 @@ export default function EditMyEvent() {
                 <input
                   type="number"
                   min={1}
+                  max={50}
                   className={`border p-2 rounded w-24 ${vErr[`reqqty-${idx}`] ? "border-rose-400" : ""}`}
                   value={r.qty}
                   onChange={(e) => {
@@ -291,13 +303,14 @@ export default function EditMyEvent() {
           </button>
         </div>
 
+        {/* Capacity */}
         <div>
+          <label className="text-sm font-medium">Capacity *</label>
           <input
             type="number"
             min={registeredCount}
             max={500}
             className={`border p-2 rounded w-full ${vErr.capacity ? "border-rose-400" : ""}`}
-            placeholder="Capacity *"
             title={`Must be between ${registeredCount} and 500`}
             value={form.capacity}
             onChange={(e) => {
@@ -312,8 +325,10 @@ export default function EditMyEvent() {
           {vErr.capacity && <p className="text-xs text-rose-600 mt-1">{vErr.capacity}</p>}
         </div>
 
+        {/* Date & Times */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <div>
+            <label className="text-sm font-medium">Date</label>
             <input
               type="date"
               className={`border p-2 rounded w-full ${vErr.date ? "border-rose-400" : ""}`}
@@ -325,6 +340,7 @@ export default function EditMyEvent() {
             {vErr.date && <p className="text-xs text-rose-600 mt-1">{vErr.date}</p>}
           </div>
           <div>
+            <label className="text-sm font-medium">Start Time</label>
             <input
               type="time"
               className={`border p-2 rounded w-full ${vErr.startTime ? "border-rose-400" : ""}`}
@@ -334,6 +350,7 @@ export default function EditMyEvent() {
             {vErr.startTime && <p className="text-xs text-rose-600 mt-1">{vErr.startTime}</p>}
           </div>
           <div>
+            <label className="text-sm font-medium">End Time</label>
             <input
               type="time"
               className={`border p-2 rounded w-full ${vErr.endTime ? "border-rose-400" : ""}`}
@@ -344,6 +361,7 @@ export default function EditMyEvent() {
           </div>
         </div>
 
+        {/* Save / Cancel */}
         <div className="flex gap-2">
           <button
             type="submit"

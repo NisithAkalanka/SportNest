@@ -61,18 +61,27 @@ export default function SubmitEvent() {
   }, []);
   const toISO = (d) => d.toISOString().slice(0, 10);
 
-  const addReq = () =>
+  // 🔸 Word count for description
+  const descWords = form.description.trim().split(/\s+/).filter(Boolean).length;
+
+  const addReq = () => {
+    if (form.requestedItems.length >= 5) {
+      setMsg({ type: "error", text: "You can add up to 5 items only." });
+      return;
+    }
     setForm((f) => ({
       ...f,
       requestedItems: [...f.requestedItems, { item: "", qty: 1 }],
     }));
+  };
+
   const removeReq = (idx) =>
     setForm((f) => ({
       ...f,
       requestedItems: f.requestedItems.filter((_, i) => i !== idx),
     }));
 
-  /** 🔸 When a venue is selected, auto-fill facilities and (smart) defaults */
+  /** 🔸 Auto-fill facilities & defaults when venue is selected */
   const onVenueSelect = (id) => {
     setSelectedVenueId(id);
     const v = VENUES.find((x) => x.id === id);
@@ -86,7 +95,6 @@ export default function SubmitEvent() {
     setFacilitiesText(v.facilities.join(", "));
     setField("venueFacilities", v.facilities);
 
-    // If user hasn't typed custom items yet, preload venue defaults
     const noCustomItems =
       form.requestedItems.length === 1 &&
       (!form.requestedItems[0].item || form.requestedItems[0].item.trim() === "");
@@ -111,9 +119,15 @@ export default function SubmitEvent() {
     if (form.startTime >= form.endTime)
       return "Start time must be before end time.";
 
+    if (descWords > 60) return "Description cannot exceed 60 words.";
+    if (form.requestedItems.length > 5)
+      return "You cannot request more than 5 items.";
+
     for (const r of form.requestedItems) {
-      if ((r.item && r.item.trim().length > 0) && (!r.qty || r.qty < 1))
-        return "Item quantities must be at least 1.";
+      if ((r.item && r.item.trim().length > 0)) {
+        if (!r.qty || r.qty < 1) return "Item quantities must be at least 1.";
+        if (r.qty > 50) return "Each item quantity cannot exceed 50.";
+      }
     }
     return null;
   };
@@ -218,12 +232,16 @@ export default function SubmitEvent() {
             <label className="text-sm font-medium">Description</label>
             <textarea
               className="mt-1 border rounded-md p-2 w-full min-h-24"
-              placeholder="Add a short description..."
+              placeholder="Add a short description (max 60 words)..."
               value={form.description}
               onChange={(e) => setField("description", e.target.value)}
             />
-            <div className="text-xs text-gray-500 mt-1">
-              Optional, but helps admins understand your event.
+            <div
+              className={`text-xs mt-1 ${
+                descWords > 60 ? "text-rose-600" : "text-gray-500"
+              }`}
+            >
+              {descWords}/60 words
             </div>
           </div>
 
@@ -238,13 +256,12 @@ export default function SubmitEvent() {
                   onChange={(e) => onVenueSelect(e.target.value)}
                 >
                   <option value="">— Select venue —</option>
-                  {VENUES.map(v => (
-                    <option key={v.id} value={v.id}>{v.name}</option>
+                  {VENUES.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name}
+                    </option>
                   ))}
                 </select>
-                <div className="text-xs text-gray-500 mt-1">
-                  Selecting a venue will auto-fill facilities and suggest items.
-                </div>
               </div>
               <div>
                 <label className="text-sm font-medium">Or type custom Venue</label>
@@ -260,30 +277,6 @@ export default function SubmitEvent() {
                 />
               </div>
             </div>
-          </div>
-
-          {/* Venue facilities */}
-          <div>
-            <label className="text-sm font-medium">Venue Facilities (comma separated)</label>
-            <input
-              className="mt-1 border rounded-md p-2 w-full"
-              placeholder="parking, washroom, drinks counter"
-              value={facilitiesText}
-              onChange={(e) => setFacilitiesText(e.target.value)}
-            />
-            {facilitiesText && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {facilitiesText
-                  .split(",")
-                  .map((s) => s.trim())
-                  .filter(Boolean)
-                  .map((f, i) => (
-                    <span key={i} className="px-2 py-1 text-xs rounded-full bg-gray-100">
-                      {f}
-                    </span>
-                  ))}
-              </div>
-            )}
           </div>
 
           {/* Requested items */}
@@ -305,11 +298,14 @@ export default function SubmitEvent() {
                   <input
                     type="number"
                     min={1}
+                    max={50}
                     className="border rounded-md p-2 w-24"
                     value={r.qty}
                     onChange={(e) => {
+                      let val = Number(e.target.value || 1);
+                      if (val > 50) val = 50;
                       const a = [...form.requestedItems];
-                      a[idx] = { ...a[idx], qty: Number(e.target.value || 1) };
+                      a[idx] = { ...a[idx], qty: val };
                       setField("requestedItems", a);
                     }}
                   />
@@ -325,9 +321,17 @@ export default function SubmitEvent() {
                 </div>
               ))}
             </div>
-            <button type="button" onClick={addReq} className="mt-2 text-sm underline">
+            <button
+              type="button"
+              onClick={addReq}
+              className="mt-2 text-sm underline"
+              disabled={form.requestedItems.length >= 5}
+            >
               + Add item
             </button>
+            <div className="text-xs mt-1 text-gray-500">
+              {form.requestedItems.length}/5 items (each qty ≤ 50)
+            </div>
           </div>
 
           {/* Capacity + Date + Times */}
@@ -342,7 +346,6 @@ export default function SubmitEvent() {
                 value={form.capacity}
                 onChange={(e) => {
                   const v = Number(e.target.value || 1);
-                  // clamp 1–500 on the fly
                   const clamped = Math.max(1, Math.min(500, v));
                   setField("capacity", clamped);
                 }}
@@ -361,9 +364,6 @@ export default function SubmitEvent() {
                 onChange={(e) => setField("date", e.target.value)}
                 required
               />
-              <div className="text-xs text-gray-500 mt-1">
-                Must be between {toISO(today)} and {toISO(maxDate)}.
-              </div>
             </div>
             <div className="sm:col-span-1">
               <label className="text-sm font-medium">Start</label>
