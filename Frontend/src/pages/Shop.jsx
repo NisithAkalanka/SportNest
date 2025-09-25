@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -7,13 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { useCart } from '../context/CartContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faShoppingCart, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import api from '@/api';
 
 // ===== Optional Hero Background Image (leave empty for clean gradient) =====
-const HERO_BG_URL = ""; // e.g. "/assets/shop-hero.jpg" or an external URL
-
-const publicApi = axios.create({
-  baseURL: 'http://localhost:5002/api',
-});
+const HERO_BG_URL = "/assets/shop-hero.jpg"; // optional hero background
 
 const Shop = () => {
   const [shopItems, setShopItems] = useState([]);
@@ -23,13 +19,12 @@ const Shop = () => {
   const [addingItemId, setAddingItemId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const HERO_BG_URL = "/assets/shop-hero.jpg";
 
   useEffect(() => {
     const fetchShopItems = async () => {
       setIsLoading(true);
       try {
-        const response = await publicApi.get('/items/shop');
+        const response = await api.get('/items/shop');
         setShopItems(response.data);
         setFilteredItems(response.data);
       } catch (error) {
@@ -184,12 +179,12 @@ const Shop = () => {
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   </Link>
-                  {item.category === 'Supplements' && (
-                    <div className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-center items-center p-4 text-center">
-                      <p className="mb-2 font-semibold">Stock: {item.stockQuantity ?? 'N/A'}</p>
-                      <p>Expiry: {item.expiryDate ? new Date(item.expiryDate).toLocaleDateString() : 'N/A'}</p>
-                    </div>
-                  )}
+                  {/* Description Hover Overlay */}
+                  <div className="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/70 transition-colors duration-300 flex items-center justify-center p-4">
+                    <p className="text-white text-center text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 line-clamp-4">
+                      {item.description || 'The finest quality product for your needs.'}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="p-4 flex flex-col flex-grow">
@@ -205,24 +200,15 @@ const Shop = () => {
                   <p className="text-xl font-semibold text-gray-800">
                     Rs. {item.price ? item.price.toFixed(2) : '0.00'}
                   </p>
-                  <div className="flex items-center gap-2">
-                    <Link
-                      to={`/product/${item._id}`}
-                      className="rounded-xl border border-slate-300 bg-white text-sm font-medium px-4 py-2 hover:bg-slate-50"
-                      aria-label={`View details of ${item.name}`}
-                    >
-                      View Details
-                    </Link>
-                    <Button
-                      onClick={() => handleAddToCart(item._id)}
-                      disabled={addingItemId === item._id}
-                      className={`text-white rounded-xl px-4 ${addingItemId === item._id ? 'bg-[#0D1B2A]/80' : 'bg-[#0D1B2A] hover:bg-[#0b1622]'}`}
-                    >
-                      {addingItemId === item._id
-                        ? <FontAwesomeIcon icon={faSpinner} spin />
-                        : <><FontAwesomeIcon icon={faShoppingCart} className="mr-2" /> Add to Cart</>}
-                    </Button>
-                  </div>
+                  <Button
+                    onClick={() => handleAddToCart(item._id)}
+                    disabled={addingItemId === item._id}
+                    className="rounded-xl px-4 border border-emerald-600 text-emerald-700 bg-white hover:bg-emerald-50 disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {addingItemId === item._id
+                      ? <FontAwesomeIcon icon={faSpinner} spin className="text-emerald-600" />
+                      : <><FontAwesomeIcon icon={faShoppingCart} className="mr-2 text-emerald-600" /> Add to Cart</>}
+                  </Button>
                 </CardFooter>
               </Card>
             ))}
@@ -235,10 +221,10 @@ const Shop = () => {
       {/* Floating cart summary button */}
       <Link
         to="/cart"
-        className="fixed bottom-6 right-6 bg-orange-600 hover:bg-orange-700 text-white rounded-full p-4 shadow-lg flex items-center space-x-2 z-50"
+        className="fixed bottom-6 right-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full p-4 shadow-lg flex items-center space-x-2 z-50"
         aria-label="Go to Cart"
       >
-        <FontAwesomeIcon icon={faShoppingCart} className="text-xl" />
+        <FontAwesomeIcon icon={faShoppingCart} className="text-xl text-emerald-500" />
         {cartItemCount > 0 && (
           <span className="ml-1 font-bold text-lg">{cartItemCount}</span>
         )}

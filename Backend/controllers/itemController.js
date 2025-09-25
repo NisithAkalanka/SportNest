@@ -8,7 +8,7 @@ const path = require('path');
 // @route   POST api/items
 const addItem = async (req, res) => {
   // Destructure all text fields from the body
-  const { name, category, quantity, reorderPoint, supplier, grn, price, batchNumber, expiryDate } = req.body;
+  const { name, category, quantity, reorderPoint, supplier, grn, price, batchNumber, expiryDate, description } = req.body;
   
   if (price === undefined) {
     return res.status(400).json({ msg: 'Please add a price for the item' });
@@ -16,7 +16,7 @@ const addItem = async (req, res) => {
 
   try {
     const newItemData = { 
-        name, category, quantity, reorderPoint, supplier, grn, price, batchNumber, expiryDate 
+        name, category, quantity, reorderPoint, supplier, grn, price, batchNumber, expiryDate, description
     };
 
     // Check if an image file was uploaded by multer
@@ -38,7 +38,7 @@ const addItem = async (req, res) => {
 
 // @route   PUT api/items/:id
 const updateItem = async (req, res) => {
-  const { name, category, quantity, reorderPoint, supplier, grn, price, batchNumber, expiryDate } = req.body;
+  const { name, category, quantity, reorderPoint, supplier, grn, price, batchNumber, expiryDate, description } = req.body;
   
   const itemFields = {};
   if (name) itemFields.name = name;
@@ -50,6 +50,7 @@ const updateItem = async (req, res) => {
   if (price !== undefined) itemFields.price = price;
   if (batchNumber) itemFields.batchNumber = batchNumber;
   if (expiryDate === '' || expiryDate) itemFields.expiryDate = expiryDate; // Handle clearing the date
+  if (description === '' || description) itemFields.description = description; // Allow clearing or updating description
 
   try {
     let item = await Item.findById(req.params.id);
@@ -121,7 +122,7 @@ const getItems = async (req, res) => {
 const getShopItems = async (req, res) => {
   try {
     // imageUrl එකත් shop එකට යවනවා
-    const items = await Item.find({ quantity: { $gt: 0 } }).select('name category price imageUrl');
+    const items = await Item.find({ quantity: { $gt: 0 } }).select('name category price imageUrl description');
     res.json(items);
   } catch (err) {
     console.error(err.message);
