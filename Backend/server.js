@@ -29,18 +29,19 @@ app.use(express.json());
 // --- Static uploads ---
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// --- Route modules ---
-const adminRoutes         = require('./routes/adminRoutes');
-const cartRoutes          = require('./routes/cartRoutes');
-const dashboardRoutes     = require('./routes/dashboardRoutes');
-const itemRoutes          = require('./routes/itemRoutes');
-const memberRoutes        = require('./routes/memberRoutes');
-const orderRoutes         = require('./routes/orderRoutes');
-const playerRoutes        = require('./routes/playerRoutes');
-const sponsorshipRoutes   = require('./routes/sponsorshipRoutes');
-const sportRoutes         = require('./routes/sportRoutes');
-const supplierRoutes      = require('./routes/supplierRoutes');
-const preorderRoutes      = require('./routes/preorderRoutes');
+// Routes
+const adminRoutes = require('./routes/adminRoutes');
+const cartRoutes = require('./routes/cartRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
+const itemRoutes = require('./routes/itemRoutes');
+const memberRoutes = require('./routes/memberRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+const playerRoutes = require('./routes/playerRoutes');
+const sponsorshipRoutes = require('./routes/sponsorshipRoutes');
+const sportRoutes = require('./routes/sportRoutes');
+const supplierRoutes = require('./routes/supplierRoutes');
+const feedbackRoutes = require("./routes/feedbackRoutes");
+const contactRoutes = require('./routes/contactRoutes');
 
 const eventsRoutes        = require('./routes/eventsRoutes');         // general events API
 const eventsReportRoutes  = require('./routes/eventsReportRoutes');   // reports only
@@ -61,10 +62,16 @@ app.use('/api/members',      memberRoutes);
 app.use('/api/orders',       orderRoutes);
 app.use('/api/players',      playerRoutes);
 app.use('/api/sponsorships', sponsorshipRoutes);
-app.use('/api/sports',       sportRoutes);
-app.use('/api/suppliers',    supplierRoutes);
-app.use('/api/preorders',    preorderRoutes);
-app.use('/api/trainings',    trainingRoutes);
+app.use('/api/sports', sportRoutes);
+app.use('/api/suppliers', supplierRoutes);
+app.use("/api/feedbacks", feedbackRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/suppliers', require('./routes/supplierRoutes'));
+// Backend/server.js
+// ... අනෙකුත් routes ...
+app.use('/api/sponsorships', require('./routes/sponsorshipRoutes'));
+// Other middlewares...
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // --- Health check ---
 app.get('/', (req, res) => {

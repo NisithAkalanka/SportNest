@@ -1,4 +1,4 @@
-// Frontend/src/App.jsx
+// Frontend/src/App.jsx — CLEAN MERGED
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 
@@ -16,14 +16,13 @@ import CoachLayout from '@/components/layout/CoachLayout';
 import AdminRoute from '@/components/AdminRoute';
 import MemberRoute from '@/components/MemberRoute';
 
-//Trainings
+// Trainings
 // --- Member (Protected) ---
 import TrainingsPage from '@/pages/TrainingsPage';
-
 // --- Coach (Protected) ---
 import ManageTrainingsPage from '@/pages/ManageTrainingsPage';
 
-// --- Public Pages ---
+// Public Pages
 import HomePage from '@/pages/HomePage';
 import Shop from '@/pages/Shop';
 import CartPage from '@/pages/CartPage';
@@ -51,10 +50,6 @@ import PlayerProfilePage from '@/pages/PlayerProfilePage';
 import SponsorshipManagePage from '@/pages/SponsorshipManagePage';
 import SubscriptionSuccessPage from '@/pages/SubscriptionSuccessPage';
 import CoachDashboard from '@/pages/CoachDashboard';
-
-// (Optional) If you have these pages in your repo, keep the imports; otherwise comment out.
-// import ManageTrainingsPage from '@/pages/ManageTrainingsPage';
-// import TrainingsPage from '@/pages/TrainingsPage';
 
 // --- Admin (Protected) Pages ---
 import AdminDashboard from '@/pages/AdminDashboard';
@@ -121,7 +116,6 @@ function App() {
                     <Route path="sponsorship/manage/:id" element={<SponsorshipManagePage />} />
                     <Route path="my-events" element={<MyEvents />} />
                     <Route path="events/:id/edit-my" element={<EditMyEvent />} />
-                    {/* If Trainings pages exist, uncomment below */}
                     <Route path="training" element={<TrainingsPage />} />
                   </Route>
                 </Route>
@@ -130,8 +124,9 @@ function App() {
                 <Route path="/coach" element={<MemberRoute />}> 
                   <Route element={<CoachLayout />}> 
                     <Route path="dashboard" element={<CoachDashboard />} />
-                    {/* If ManageTrainingsPage exists, use the real page */}
                     <Route path="training-sessions" element={<ManageTrainingsPage />} />
+                    {/* If you later add a FeedbacksPage, enable the line below */}
+                    {/* <Route path="feedbacks" element={<FeedbacksPage />} /> */}
                   </Route>
                 </Route>
 

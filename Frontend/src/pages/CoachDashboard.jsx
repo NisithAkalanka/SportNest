@@ -1,4 +1,4 @@
-// Frontend/src/pages/CoachDashboard.jsx
+// Frontend/src/pages/CoachDashboard.jsx — MERGED CLEAN VERSION
 import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/MemberAuthContext";
 import axios from "axios";
@@ -15,14 +15,19 @@ import {
   Legend,
   LineChart,
   Line,
+  CartesianGrid,
 } from "recharts";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { getCoachFeedbackSummary } from "../api/feedbacks";
 
 // Emerald-first palette
 const COLORS = ["#10B981", "#2563EB", "#F59E0B"]; // emerald, blue, amber
 
 const CoachDashboard = () => {
   const { user } = useContext(AuthContext);
+  const token = user?.token || user?.userInfo?.token;
 
+  // ---- Training summary state ----
   const [summary, setSummary] = useState({
     total: 0,
     upcoming: 0,
@@ -33,18 +38,19 @@ const CoachDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Fetch summary from backend
+  // ---- Feedback summary state ----
+  const [fb, setFb] = useState(null); // { totalFeedbacks, averageRating, chartData }
+  const [fbLoading, setFbLoading] = useState(true);
+  const [fbError, setFbError] = useState("");
+
+  // Fetch training summary
   useEffect(() => {
     const fetchSummary = async () => {
       try {
         setLoading(true);
         setError("");
-        const config = user?.token
-          ? { headers: { Authorization: `Bearer ${user.token}` } }
-          : undefined;
+        const config = token ? { headers: { Authorization: `Bearer ${token}` } } : undefined;
         const { data } = await axios.get("/api/trainings/coach/summary", config);
-
-        // guard against bad shapes
         setSummary({
           total: Number(data?.total) || 0,
           upcoming: Number(data?.upcoming) || 0,
@@ -55,16 +61,35 @@ const CoachDashboard = () => {
       } catch (err) {
         console.error("Failed to fetch summary", err);
         setError(
-          err?.response?.data?.error ||
-            err?.message ||
-            "Failed to load coach summary"
+          err?.response?.data?.error || err?.message || "Failed to load coach summary"
         );
       } finally {
         setLoading(false);
       }
     };
     fetchSummary();
-  }, [user]);
+  }, [token]);
+
+  // Fetch feedback summary (ratings distribution)
+  useEffect(() => {
+    const loadFb = async () => {
+      if (!token) { setFbLoading(false); return; }
+      try {
+        setFbLoading(true);
+        setFbError("");
+        const res = await getCoachFeedbackSummary(token);
+        // some backends use { data: { data: {...} } }
+        const payload = res?.data?.data || res?.data || null;
+        setFb(payload);
+      } catch (e) {
+        console.error("Failed to load feedback summary", e);
+        setFbError("Could not load feedback summary.");
+      } finally {
+        setFbLoading(false);
+      }
+    };
+    loadFb();
+  }, [token]);
 
   const barData = [
     { name: "Total", value: summary.total },
@@ -83,7 +108,7 @@ const CoachDashboard = () => {
       <div className="bg-[#0D1B2A] text-white border-b border-white/10">
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-            Welcome, Coach {user?.firstName || "Coach"}!
+            Welcome, Coach {user?.firstName || user?.userInfo?.firstName || "Coach"}!
           </h1>
           <p className="text-white/80 mt-1">
             Manage teams, training schedules, and player progress at a glance.
@@ -106,21 +131,15 @@ const CoachDashboard = () => {
           </div>
           <div className="bg-white shadow-sm rounded-2xl p-5 ring-1 ring-slate-200">
             <h3 className="text-sm font-medium text-slate-600">Upcoming</h3>
-            <p className="text-3xl font-bold text-emerald-600 mt-1">
-              {summary.upcoming}
-            </p>
+            <p className="text-3xl font-bold text-emerald-600 mt-1">{summary.upcoming}</p>
           </div>
           <div className="bg-white shadow-sm rounded-2xl p-5 ring-1 ring-slate-200">
             <h3 className="text-sm font-medium text-slate-600">Completed</h3>
-            <p className="text-3xl font-bold text-blue-600 mt-1">
-              {summary.completed}
-            </p>
+            <p className="text-3xl font-bold text-blue-600 mt-1">{summary.completed}</p>
           </div>
           <div className="bg-white shadow-sm rounded-2xl p-5 ring-1 ring-slate-200">
             <h3 className="text-sm font-medium text-slate-600">Avg Attendance</h3>
-            <p className="text-3xl font-bold text-amber-600 mt-1">
-              {summary.avgAttendance}%
-            </p>
+            <p className="text-3xl font-bold text-amber-600 mt-1">{summary.avgAttendance}%</p>
           </div>
         </div>
 
@@ -144,13 +163,7 @@ const CoachDashboard = () => {
             <h2 className="text-lg font-semibold mb-4">Sessions Distribution</h2>
             <ResponsiveContainer width="100%" height={260}>
               <PieChart>
-                <Pie
-                  data={pieData}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={100}
-                  label
-                >
+                <Pie data={pieData} dataKey="value" nameKey="name" outerRadius={100} label>
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
@@ -176,8 +189,59 @@ const CoachDashboard = () => {
           </div>
         </div>
 
+        {/* Feedback Summary */}
+        <Card className="w-full shadow-lg border-t-4 border-t-slate-800">
+          <CardHeader>
+            <CardTitle className="text-2xl font-semibold text-gray-700">Feedback At a Glance</CardTitle>
+            <CardDescription>Recent player ratings & distribution</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {fbLoading && <p className="text-center text-gray-500 p-8">Loading feedback summary...</p>}
+            {fbError && <p className="text-center text-red-500 p-8">{fbError}</p>}
+            {!fbLoading && !fbError && fb && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+                {/* Simple Stats Cards */}
+                <div className="lg:col-span-1 space-y-4">
+                  <Card className="bg-slate-100">
+                    <CardHeader>
+                      <CardTitle className="text-base font-medium">Total Feedbacks Given</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-5xl font-bold text-slate-800">{fb.totalFeedbacks ?? 0}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-slate-100">
+                    <CardHeader>
+                      <CardTitle className="text-base font-medium">Average Player Rating</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-5xl font-bold text-slate-800">
+                        {fb.averageRating ?? "-"} <span className="text-yellow-500">★</span>
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Bar Chart: Rating Distribution */}
+                <div className="lg:col-span-2 bg-slate-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold mb-4 text-center text-gray-600">Rating Distribution</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={fb.chartData || []} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="rating" />
+                      <YAxis allowDecimals={false} label={{ value: 'No. of Feedbacks', angle: -90, position: 'insideLeft' }} />
+                      <Tooltip cursor={{ fill: 'rgba(239, 246, 255, 0.7)' }} />
+                      <Bar dataKey="count" name="Count" fill="#2d3748" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {loading && (
-          <div className="text-sm text-slate-600">Loading dashboard…</div>
+          <div className="text-sm text-slate-600 mt-6">Loading dashboard…</div>
         )}
       </div>
     </div>
