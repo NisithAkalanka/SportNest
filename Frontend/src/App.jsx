@@ -53,6 +53,9 @@ import PlayerProfilePage from '@/pages/PlayerProfilePage';
 import SponsorshipManagePage from '@/pages/SponsorshipManagePage';
 import SubscriptionSuccessPage from '@/pages/SubscriptionSuccessPage';
 
+import FeedbacksPage from './pages/FeedbacksPage'; 
+
+
 // Coach pages
 import CoachDashboard from '@/pages/CoachDashboard';
 
@@ -136,6 +139,8 @@ function App() {
                   <Route element={<CoachLayout />}> 
                     <Route path="dashboard" element={<CoachDashboard />} />
                     <Route path="training-sessions" element={<ManageTrainingsPage />} />
+                      <Route path="feedbacks" element={<FeedbacksPage />} />
+                   
                     {/* If you later add a FeedbacksPage, enable the line below */}
                     {/* <Route path="feedbacks" element={<FeedbacksPage />} /> */}
                   </Route>

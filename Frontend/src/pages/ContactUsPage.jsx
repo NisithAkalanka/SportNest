@@ -1,53 +1,35 @@
-// File: frontend/src/pages/ContactUsPage.jsx (FINAL VERSION WITH NEW BACKGROUND IMAGE & CONTENT)
+// File: frontend/src/pages/ContactUsPage.jsx (EMERALD / GLASS UI)
 
 import React, { useState, useMemo } from 'react';
-import contactService from '../api/contactService'; // Assuming the path is correct
-import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope } from 'react-icons/fa'; // Icons for contact info
+import contactService from '../api/contactService';
+import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
 
 const ContactUsPage = () => {
   // --- Form Logic ---
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    message: '',
-  });
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [status, setStatus] = useState({ message: '', type: '' });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const wordCount = useMemo(() => {
-    return formData.message.trim() === '' ? 0 : formData.message.trim().split(/\s+/).length;
-  }, [formData.message]);
+  const wordCount = useMemo(() => (formData.message.trim() === '' ? 0 : formData.message.trim().split(/\s+/).length), [formData.message]);
 
   const handleChange = (e) => {
     let { name, value } = e.target;
-    if (name === 'email') {
-        value = value.toLowerCase();
-    }
+    if (name === 'email') value = value.toLowerCase();
     setFormData({ ...formData, [name]: value });
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: null });
-    }
+    if (errors[name]) setErrors({ ...errors, [name]: null });
   };
 
   const validate = () => {
-    let tempErrors = {};
-    if (!formData.name.trim()) {
-        tempErrors.name = "Full Name is required.";
-    }
+    const temp = {};
+    if (!formData.name.trim()) temp.name = 'Full Name is required.';
     const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
-    if (!formData.email.trim()) {
-      tempErrors.email = "Email is required.";
-    } else if (!emailRegex.test(formData.email)) {
-      tempErrors.email = "Please enter a valid email with lowercase letters only.";
-    }
-    if (!formData.message.trim()) {
-      tempErrors.message = "Message is required.";
-    } else if (wordCount > 50) {
-      tempErrors.message = "Message must not exceed 50 words.";
-    }
-    setErrors(tempErrors);
-    return Object.keys(tempErrors).length === 0;
+    if (!formData.email.trim()) temp.email = 'Email is required.';
+    else if (!emailRegex.test(formData.email)) temp.email = 'Please enter a valid email with lowercase letters only.';
+    if (!formData.message.trim()) temp.message = 'Message is required.';
+    else if (wordCount > 50) temp.message = 'Message must not exceed 50 words.';
+    setErrors(temp);
+    return Object.keys(temp).length === 0;
   };
 
   const handleSubmit = async (e) => {
@@ -56,8 +38,8 @@ const ContactUsPage = () => {
     setLoading(true);
     setStatus({ message: '', type: '' });
     try {
-      console.log("Submitting:", formData);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // If you later wire the backend: await contactService.submitContactForm(formData);
+      await new Promise((r) => setTimeout(r, 1000));
       setStatus({ message: 'Thank you! Your message has been sent.', type: 'success' });
       setFormData({ name: '', email: '', message: '' });
       setErrors({});
@@ -68,54 +50,69 @@ const ContactUsPage = () => {
     }
   };
 
-  return (
-    <div 
-      className="relative min-h-screen bg-cover bg-center text-white"
-      // ★★★ 1. Background Image එක සඳහා නව, විශ්වාසදායක link එකක් ★★★
-      style={{ backgroundImage: "url('https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=1935&auto=format&fit=crop')" }}
-    >
-      <div className="absolute inset-0 bg-slate-900 bg-opacity-70"></div>
-      <div className="relative z-10 container mx-auto px-6 py-16 lg:py-24">
+  // Use the same ground image used elsewhere for visual consistency
+  const backgroundImageUrl = '/assets/ground.jpeg';
 
-        <div className="text-center mb-16 max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">Contact Us</h1>
-          <p className="mt-4 text-lg text-slate-300">
-            We're here to help! Whether you have a question about our clubs, training sessions, membership, or anything else, our team is ready to answer all your questions. Fill out the form below or use our contact details to get in touch.
+  return (
+    <div
+      className="relative min-h-screen bg-cover bg-center bg-fixed bg-no-repeat text-white"
+      style={{ backgroundImage: `url(${backgroundImageUrl})` }}
+    >
+      {/* dark tint */}
+      <div className="absolute inset-0 bg-slate-950/60"></div>
+
+      <div className="relative z-10 container mx-auto px-6 py-16 lg:py-24">
+        {/* Header */}
+        <div className="text-center mb-14 max-w-3xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
+            Get in <span className="text-emerald-300">Touch</span>
+          </h1>
+          <p className="mt-4 text-lg text-white/80">
+            We're here to help! Ask about the club, training sessions, memberships—or anything else.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start max-w-6xl mx-auto">
-          
-          <div className="space-y-10 mt-2">
-            <ContactInfoItem icon={<FaMapMarkerAlt size={22} />} title="Address" details="No.07, Padukka, Colombo, Sri Lanka" />
-            <ContactInfoItem icon={<FaPhoneAlt size={22} />} title="Phone" details="070 303 6840" />
-            <ContactInfoItem icon={<FaEnvelope size={22} />} title="Email" details="contact@sportnest.com" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-start max-w-6xl mx-auto">
+          {/* Contact info (glass cards) */}
+          <div className="space-y-6">
+            <InfoCard icon={<FaMapMarkerAlt size={22} />} title="Address" details="No.07, Padukka, Colombo, Sri Lanka" />
+            <InfoCard icon={<FaPhoneAlt size={22} />} title="Phone" details="070 303 6840" />
+            <InfoCard icon={<FaEnvelope size={22} />} title="Email" details="contact@sportnest.com" />
           </div>
-          
-          <div className="bg-white text-slate-800 p-8 rounded-lg shadow-2xl">
-            <h2 className="text-3xl font-bold mb-6">Send Message</h2>
-            
+
+          {/* Form (glass) */}
+          <div className="bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md border border-white/30 dark:border-zinc-800 rounded-2xl shadow-lg p-8">
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 text-slate-900">Send Message</h2>
+
             {status.message && (
-                <p className={`p-3 mb-4 rounded-md text-center text-sm ${status.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {status.message}
-                </p>
+              <p
+                className={`p-3 mb-5 rounded-md text-center text-sm ${
+                  status.type === 'success' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                }`}
+              >
+                {status.message}
+              </p>
             )}
-            
-            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-              <FormInput name="name" value={formData.name} onChange={handleChange} placeholder="Full Name" error={errors.name} />
-              <FormInput name="email" value={formData.email} onChange={handleChange} placeholder="Email" error={errors.email} type="email"/>
-              <FormInput 
-                name="message" 
-                value={formData.message} 
-                onChange={handleChange} 
-                placeholder="Type your Message..." 
-                error={errors.message} 
-                isTextarea={true}
+
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+              <InputField name="name" value={formData.name} onChange={handleChange} placeholder="Full Name" error={errors.name} />
+              <InputField name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Email" error={errors.email} />
+              <InputField
+                name="message"
+                isTextarea
+                value={formData.message}
+                onChange={handleChange}
+                placeholder="Type your message..."
+                error={errors.message}
                 wordCount={wordCount}
                 maxWords={50}
               />
 
-              <button type="submit" disabled={loading} className="w-full bg-cyan-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-cyan-600 transition duration-300 disabled:bg-cyan-300">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white font-semibold py-3 px-6 rounded-xl shadow-sm transition"
+              >
                 {loading ? 'Sending...' : 'Send'}
               </button>
             </form>
@@ -126,35 +123,48 @@ const ContactUsPage = () => {
   );
 };
 
-const ContactInfoItem = ({ icon, title, details }) => (
-  <div className="flex items-center gap-5">
-    <div className="bg-white text-slate-800 p-4 rounded-full">
-      {icon}
-    </div>
+const InfoCard = ({ icon, title, details }) => (
+  <div className="bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md rounded-2xl p-6 border border-white/30 dark:border-zinc-800 shadow-lg flex items-start gap-4">
+    <div className="shrink-0 w-11 h-11 rounded-full grid place-content-center bg-emerald-600 text-white">{icon}</div>
     <div>
-      <h3 className="text-xl font-bold text-cyan-400">{title}</h3>
-      <p className="text-slate-200 mt-1">{details}</p>
+      <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+      <p className="text-slate-600 mt-1">{details}</p>
     </div>
   </div>
 );
 
-const FormInput = ({ name, value, onChange, placeholder, error, type = 'text', isTextarea = false, wordCount, maxWords }) => (
-  <div className="relative pb-5">
+const InputField = ({ name, value, onChange, placeholder, error, type = 'text', isTextarea = false, wordCount, maxWords }) => (
+  <div className="relative">
     {isTextarea ? (
-      <textarea name={name} value={value} onChange={onChange} placeholder={placeholder} rows="4" className={`w-full bg-transparent border-b-2 p-2 transition focus:outline-none ${error ? 'border-red-500' : 'border-slate-300 focus:border-cyan-500'}`} />
+      <textarea
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        rows={5}
+        className={`w-full rounded-xl border bg-white/95 text-slate-900 placeholder:text-gray-400 border-slate-200 p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
+          error ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : ''
+        }`}
+      />
     ) : (
-      <input type={type} name={name} value={value} onChange={onChange} placeholder={placeholder} className={`w-full bg-transparent border-b-2 p-2 transition focus:outline-none ${error ? 'border-red-500' : 'border-slate-300 focus:border-cyan-500'}`} />
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className={`w-full rounded-xl border bg-white/95 text-slate-900 placeholder:text-gray-400 border-slate-200 p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
+          error ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : ''
+        }`}
+      />
     )}
-    <div className="absolute w-full flex justify-between items-center mt-1">
-        {error ? <p className="text-red-500 text-xs">{error}</p> : <div />}
-        {isTextarea && (
-             <p className={`text-xs font-medium ${wordCount > maxWords ? 'text-red-500' : 'text-slate-400'}`}>
-                 {wordCount}/{maxWords}
-             </p>
-        )}
+    <div className="mt-1 flex justify-between items-center">
+      {error ? <p className="text-red-600 text-xs">{error}</p> : <span />}
+      {isTextarea && (
+        <p className={`text-xs font-medium ${wordCount > maxWords ? 'text-red-600' : 'text-slate-500'}`}>{wordCount}/{maxWords}</p>
+      )}
     </div>
   </div>
 );
-
 
 export default ContactUsPage;

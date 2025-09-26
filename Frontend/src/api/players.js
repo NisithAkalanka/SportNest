@@ -2,7 +2,7 @@
 
 // ★★★ 1. ඔබගේ මධ්‍යගත 'api.js' ගොනුව import කිරීම ★★★
 // (මෙහි ඇති Interceptor එක මගින් token එක ස්වයංක්‍රීයව එකතු කරයි)
-import api from './api';
+import api from '@/api';
 
 /**
  * Coaches/Admins සඳහා dropdown menus වලට අවශ්‍ය ක්‍රීඩකයින්ගේ සරල list එකක් ගෙන එයි.
