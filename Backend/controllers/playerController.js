@@ -1,53 +1,9 @@
-<<<<<<< Updated upstream
-// Backend/controllers/playerController.js
-=======
-// File: backend/controllers/playerController.js (FINAL MERGED VERSION)
->>>>>>> Stashed changes
+// File: backend/controllers/playerController.js (FINAL CLEANED VERSION)
 
 const Player = require('../models/PlayerModel');
 
 // ================== Register Player ==================
 const registerPlayer = async (req, res) => {
-<<<<<<< Updated upstream
-    // ★ 1. Frontend-இலிருந்து அனுப்பப்படும் அனைத்துத் தரவுகளையும் இங்குப் பெறுதல்
-    const { 
-        sportName, 
-        fullName, 
-        clubId, // ★ clubId இங்கே சேர்க்கப்பட்டுள்ளது
-        membershipId,
-        dateOfBirth, 
-        contactNumber,
-        emergencyContactName, 
-        emergencyContactNumber, 
-        skillLevel, 
-        healthHistory 
-    } = req.body;
-    
-    // middleware-இலிருந்து பயனரின் member ID-யைப் பெறுதல்
-    const memberId = req.user._id;
-
-    try {
-        const existingPlayer = await Player.findOne({ member: memberId, sportName: sportName });
-        
-        if (existingPlayer) {
-            return res.status(400).json({ message: `You are already registered for ${sportName}.` });
-        }
-        
-        // ★ 2. தரவுத்தளத்தில் புதிய விளையாட்டுப் பதிவை உருவாக்குதல்
-        const player = await Player.create({
-            member: memberId,
-            clubId, // ★ clubId தரவுத்தளத்தில் சேமிக்கப்படும்
-            fullName,
-            membershipId,
-            sportName,
-            dateOfBirth: new Date(dateOfBirth), // Frontend-இலிருந்து வரும் தேதி வடிவம் சரியாக இருக்க வேண்டும்
-            contactNumber,
-            emergencyContactName,
-            emergencyContactNumber,
-            skillLevel,
-            healthHistory
-        });
-=======
   const {
     sportName,
     fullName,
@@ -62,7 +18,6 @@ const registerPlayer = async (req, res) => {
   } = req.body;
 
   const memberId = req.user._id; // from protect middleware
->>>>>>> Stashed changes
 
   try {
     // Prevent duplicate registration for the same sport
@@ -177,14 +132,6 @@ const deleteMyProfile = async (req, res) => {
   }
 };
 
-<<<<<<< Updated upstream
-module.exports = {
-    registerPlayer,
-    getMyProfiles,
-    updateMyProfile,
-    deleteMyProfile
-};
-=======
 // ================== Get Simple Player List ==================
 const getSimplePlayerList = async (req, res) => {
   try {
@@ -223,4 +170,3 @@ module.exports = {
   deleteMyProfile,
   getSimplePlayerList,
 };
->>>>>>> Stashed changes

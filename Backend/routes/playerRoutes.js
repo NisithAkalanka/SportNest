@@ -1,45 +1,34 @@
-<<<<<<< Updated upstream
+// File: backend/routes/playerRoutes.js (FINAL CLEAN VERSION)
 
-=======
-// File: backend/routes/playerRoutes.js
->>>>>>> Stashed changes
 const express = require('express');
 const router = express.Router();
 
 const protect = require('../middleware/authMiddleware');
- const { registerPlayer, getMyProfiles, updateMyProfile, deleteMyProfile } = require('../controllers/playerController'); // path එක 'controllers' ද 'Controllers' ද බලන්න
 
-<<<<<<< Updated upstream
-
-=======
-// ★★★ IMPORT CONTROLLER FUNCTIONS ★★★
+// ★★★ Controller functions import කරනවා ★★★
 const {
   registerPlayer,
   getMyProfiles,
   updateMyProfile,
   deleteMyProfile,
-  getSimplePlayerList
+  getSimplePlayerList,
 } = require('../controllers/playerController');
 
-// ─── Player Registration ────────────────────────────────
->>>>>>> Stashed changes
+// ─── Routes ────────────────────────────────
+
+// 🔸 Player Registration (login protect)
 router.post('/register', protect, registerPlayer);
 
+// 🔸 Get my profiles
+router.get('/my-profiles', protect, getMyProfiles);
 
-router.get('/my-profiles', protect, getMyProfiles); 
-
-
+// 🔸 Update profile (by ID)
 router.put('/profile/:id', protect, updateMyProfile);
-<<<<<<< Updated upstream
 
-
+// 🔸 Delete profile (by ID)
 router.delete('/profile/:id', protect, deleteMyProfile);
 
-=======
-router.delete('/profile/:id', protect, deleteMyProfile); // ✅ Delete by ID only
+// 🔸 Simple player list (coach/admin only)
+router.get('/simple-list', protect, getSimplePlayerList);
 
-// ─── Simple list for coach dropdown ─────────────────────
-router.get('/simple', protect, getSimplePlayerList);
-
->>>>>>> Stashed changes
 module.exports = router;

@@ -59,7 +59,7 @@ const RegisterPage = () => {
         setFormData(prev => ({ ...prev, age: calculatedAge ? calculatedAge.toString() : '' }));
     }, [formData.nic]);
 
-    // ක්ෂේත්‍ර වලංගුකරණය (Validation) - යාවත්කාලීන කරන ලදී
+    // ක්ෂේත්‍ර වලංගුකරණය (Validation)
     const validateField = (name, value) => {
         switch (name) {
             case 'firstName':
@@ -77,9 +77,6 @@ const RegisterPage = () => {
                 }
                 return '';
             case 'email':
-                // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-                // ★★★ ඔබගේ අවශ්‍යතාවය පරිදි යාවත්කාලීන කළ කොටස මෙන්න ★★★
-                // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
                 if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(value)) {
                     return 'Please use only lowercase letters (e.g., yourname@example.com).';
                 }
@@ -114,8 +111,11 @@ const RegisterPage = () => {
         }
     };
     
+    // Form එක submit කිරීමේ ක්‍රියාවලිය
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // 1. submit කිරීමට පෙර සියලුම ක්ෂේත්‍ර (fields) වලංගු දැයි පරීක්ෂා කිරීම
         let formIsValid = true;
         const validationErrors = Object.keys(formData).reduce((acc, name) => {
             const errorMessage = validateField(name, formData[name]);
@@ -130,11 +130,18 @@ const RegisterPage = () => {
         
         setIsSubmitting(true);
         try {
+            // 2. සියල්ල නිවැරදි නම්, member ව ලියාපදිංචි කිරීමට එක් API ඇමතුමක් පමණක් යැවීම
             const { data } = await axios.post('/api/members/register', formData);
+
+            // ★★ කිසිදු ක්‍රීඩාවකට ලියාපදිංචි කිරීමට දෙවන API ඇමතුමක් මෙහි නොමැත. මෙය නිවැරදියි! ★★
+            
+            // 3. ලියාපදිංචි වීම සාර්ථක වූ පසු, පරිශීලකයාව login කර dashboard එකට යොමු කිරීම
             login(data);
             alert('Registration Successful! Redirecting to your dashboard...');
             navigate(data.role === 'Coach' ? '/coach-dashboard' : '/member-dashboard');
+
         } catch (err) {
+            // 4. ලියාපදිංචි වීම අසාර්ථක වුවහොත් දෝෂ පණිවිඩයක් පෙන්වීම
             setErrors({ form: err.response?.data?.message || 'Registration failed.' });
         } finally {
             setIsSubmitting(false);

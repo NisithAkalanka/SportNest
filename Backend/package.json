@@ -16,7 +16,7 @@
     "dotenv": "^17.2.1",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "6.13.0",
+    "mongoose": "^6.13.8",
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.6"

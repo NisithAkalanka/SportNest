@@ -3,7 +3,7 @@
 const Order = require('../models/Order');
 const Item = require('../models/Item');
 const Supplier = require('../models/Supplier');
-const Member = require('../models/MemberModel');
+const Member = require('../models/memberModel');
 const Player = require('../models/PlayerModel');
 
 // --- 1. Membership statistics ---

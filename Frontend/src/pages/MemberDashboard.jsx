@@ -1,4 +1,4 @@
-// File: frontend/src/pages/MemberDashboard.jsx (FINAL FULL VERSION)
+// File: frontend/src/pages/MemberDashboard.jsx
 
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import api from '../api/axiosConfig'; // ✅ shared axios instance with interceptors
@@ -21,6 +21,7 @@ import {
   faCheckCircle,
   faExclamationTriangle,
   faPenToSquare,
+  faTrashAlt, // ✅ added for Remove Photo
 } from '@fortawesome/free-solid-svg-icons';
 import PlayerEditModal from '../components/PlayerEditModal';
 
@@ -62,7 +63,6 @@ const MemberDashboard = () => {
       const { data } = await api.get('/members/my-profile');
 
       setMemberDetails(data.memberDetails);
-
       const { playerProfiles } = data;
 
       const initialData = {
@@ -162,7 +162,7 @@ const MemberDashboard = () => {
     }
   };
 
-  // ✅ Updated Delete Sport Registration
+  // ✅ Delete Sport Registration
   const handleDeleteSport = async (profileId) => {
     if (window.confirm('Are you sure you want to delete this sport registration?')) {
       try {
@@ -171,6 +171,27 @@ const MemberDashboard = () => {
         setSportRegistrations((prev) => prev.filter((p) => p._id !== profileId));
       } catch (err) {
         alert(err.response?.data?.message || 'Failed to delete registration.');
+      }
+    }
+  };
+
+  // ✅ Remove Profile Photo
+  const handleRemovePhoto = async () => {
+    if (window.confirm('Are you sure you want to remove your profile photo?')) {
+      setSaving(true);
+      setError('');
+      setSuccess('');
+      try {
+        const { data } = await api.delete('/members/my-profile/photo');
+        login(data);
+        setProfileImage(data.profileImage);
+        setOriginalData((prev) => ({ ...prev, profileImage: data.profileImage }));
+        setSuccess('Profile photo removed successfully!');
+        setIsEditing(false);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to remove photo.');
+      } finally {
+        setSaving(false);
       }
     }
   };
@@ -264,6 +285,19 @@ const MemberDashboard = () => {
                     <span className="capitalize">{user?.role}</span>
                   </p>
                 </div>
+
+                {/* ✅ Remove Photo Button */}
+                {isEditing && originalData?.profileImage !== '/uploads/default-avatar.png' && (
+                  <Button
+                    variant="link"
+                    className="text-red-500 mt-2"
+                    onClick={handleRemovePhoto}
+                    disabled={saving}
+                  >
+                    <FontAwesomeIcon icon={faTrashAlt} className="mr-2" />
+                    Remove Photo
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </div>

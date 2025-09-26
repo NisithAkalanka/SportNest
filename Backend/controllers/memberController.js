@@ -1,4 +1,5 @@
-// backend/controllers/memberController.js
+// File: backend/controllers/memberController.js
+
 const Member = require('../models/memberModel');
 const Player = require('../models/PlayerModel');
 const jwt = require('jsonwebtoken');
@@ -29,29 +30,10 @@ const generateNextClubId = async () => {
 // ===================== MEMBERSHIP PLANS =====================
 const getMembershipPlans = async (req, res) => {
     try {
-        // Updated plans with new prices
         const plans = [
-            {
-                id: 1,
-                name: 'Student Membership',
-                price: 20000,
-                duration: '6 Months',
-                features: ['Access to all clubs', 'Online booking system', 'Basic support']
-            },
-            {
-                id: 2,
-                name: 'Ordinary Membership',
-                price: 60000,
-                duration: '1 Year',
-                features: ['All Student features', 'Priority booking', 'Monthly newsletter']
-            },
-            {
-                id: 3,
-                name: 'Life Time Membership',
-                price: 100000,
-                duration: 'life',
-                features: ['All Features Included']
-            }
+            { id: 1, name: 'Student Membership', price: 20000, duration: '6 Months', features: ['Access to all clubs', 'Online booking system', 'Basic support'] },
+            { id: 2, name: 'Ordinary Membership', price: 60000, duration: '1 Year', features: ['All Student features', 'Priority booking', 'Monthly newsletter'] },
+            { id: 3, name: 'Life Time Membership', price: 100000, duration: 'life', features: ['All Features Included'] }
         ];
         res.json(plans);
     } catch (error) {
@@ -60,7 +42,7 @@ const getMembershipPlans = async (req, res) => {
 };
 
 // =================================================================================
-// 1. CREATE a new member (Register)
+// 1. Register a new member
 const registerMember = async (req, res) => {
     const { firstName, lastName, age, nic, gender, role, email, contactNumber, password, confirmPassword } = req.body;
 
@@ -82,6 +64,7 @@ const registerMember = async (req, res) => {
         });
 
         const savedMember = await newMember.save();
+
         if (savedMember) {
             res.status(201).json({
                 _id: savedMember._id,
@@ -109,11 +92,6 @@ const loginMember = async (req, res) => {
     try {
         const member = await Member.findOne({ email });
         if (member && (await member.matchPassword(password))) {
-            // ★★★ DEBUGGING: Token සෑදීමට පෙර පරීක්ෂා කිරීම ★★★
-            console.log("\n--- BACKEND LOGIN CHECK ---");
-            console.log("User found in DB. ID to be used in token:", member._id);
-            console.log("-------------------------\n");
-
             res.status(200).json({
                 _id: member._id,
                 clubId: member.clubId,
@@ -126,7 +104,7 @@ const loginMember = async (req, res) => {
                 membershipId: member.membershipId,
                 membershipPlan: member.membershipPlan,
                 membershipStatus: member.membershipStatus,
-                token: generateToken(member._id) // ✅ fixed: direct call with member._id
+                token: generateToken(member._id)
             });
         } else {
             res.status(401).json({ message: 'Login failed. Please check your credentials.' });
@@ -146,8 +124,9 @@ const getMyUserProfile = async (req, res) => {
         const memberDetails = await Member.findById(userId).select('-password');
         if (!memberDetails) return res.status(404).json({ message: 'User not found.' });
 
-        const playerProfiles = await Player.find({ member: userId });
+        const playerProfiles = await Player.find({ memberId: userId }); 
         res.status(200).json({ memberDetails, playerProfiles });
+
     } catch (error) {
         console.error('Error fetching user profile:', error);
         res.status(500).json({ message: 'Server error while fetching profile data.' });
@@ -195,12 +174,46 @@ const updateMyUserProfile = async (req, res) => {
     }
 };
 
-// 5. Delete the logged-in user's account
+// 4.1 Remove profile photo (NEW)
+const removeProfilePhoto = async (req, res) => {
+    try {
+        const member = await Member.findById(req.user.id);
+
+        if (!member) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        // Reset to default avatar
+        member.profileImage = '/uploads/default-avatar.png';
+        const updatedMember = await member.save();
+
+        res.status(200).json({
+            _id: updatedMember._id,
+            firstName: updatedMember.firstName,
+            lastName: updatedMember.lastName,
+            email: updatedMember.email,
+            role: updatedMember.role,
+            clubId: updatedMember.clubId,
+            contactNumber: updatedMember.contactNumber,
+            profileImage: updatedMember.profileImage,
+            membershipId: updatedMember.membershipId,
+            membershipPlan: updatedMember.membershipPlan,
+            membershipStatus: updatedMember.membershipStatus,
+            token: generateToken(updatedMember._id),
+        });
+
+    } catch (error) {
+        console.error('Error removing profile photo:', error);
+        res.status(500).json({ message: 'Server error while removing photo.' });
+    }
+};
+
+// 5. Delete logged-in user's account
 const deleteMyUserProfile = async (req, res) => {
     try {
         const member = await Member.findById(req.user.id);
         if (!member) return res.status(404).json({ message: "User not found." });
-        await Player.deleteMany({ member: req.user.id });
+        await Player.deleteMany({ memberId: req.user.id });
         await member.deleteOne();
         res.status(200).json({ message: "Account has been permanently deleted." });
     } catch (error) {
@@ -267,7 +280,7 @@ const deleteMember = async (req, res) => {
     try {
         const member = await Member.findById(id);
         if (!member) { return res.status(404).json({ message: 'Member not found' }); }
-        await Player.deleteMany({ member: id });
+        await Player.deleteMany({ memberId: id });
         await member.deleteOne();
         res.status(200).json({ message: "Member has been permanently deleted." });
     } catch (error) {
@@ -275,7 +288,7 @@ const deleteMember = async (req, res) => {
     }
 };
 
-// Password Reset Functions
+// ===================== PASSWORD RESET =====================
 const forgotPassword = async (req, res) => {
     const member = await Member.findOne({ email: req.body.email });
     if (!member) return res.status(404).json({ message: 'No user with that email.' });
@@ -327,7 +340,7 @@ const resetPassword = async (req, res) => {
     res.status(200).json({ message: "Password reset successfully. You can now login." });
 };
 
-// Membership Subscription
+// ===================== MEMBERSHIP FUNCTIONS =====================
 const subscribeToMembership = async (req, res) => {
     const userId = req.user._id;
     const { clubId, planName } = req.body;
@@ -369,7 +382,7 @@ const cancelMembership = async (req, res) => {
             return res.status(404).json({ message: "Member not found." });
         }
         member.membershipId = undefined;
-        member.membershipPlan = undefined;
+        member.membershipPlan = 'None';
         member.membershipStatus = 'Cancelled';
         const updatedMember = await member.save();
         res.status(200).json({
@@ -441,6 +454,7 @@ module.exports = {
     loginMember,
     getMyUserProfile,
     updateMyUserProfile,
+    removeProfilePhoto,   // ✅ NEW FUNCTION EXPORTED
     deleteMyUserProfile,
     getAllMembers,
     getMemberById,

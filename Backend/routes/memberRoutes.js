@@ -1,3 +1,5 @@
+// File: backend/routes/memberRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const protect = require('../middleware/authMiddleware'); 
@@ -8,6 +10,7 @@ const {
     loginMember,
     getMyUserProfile,
     updateMyUserProfile,
+    removeProfilePhoto,   // ✅ NEW IMPORT
     deleteMyUserProfile,
     forgotPassword,
     resetPassword,
@@ -18,7 +21,7 @@ const {
     subscribeToMembership,
     cancelMembership,
     renewMembership,
-    getMembershipPlans   // ★★★ නව function එක import කරනවා ★★★
+    getMembershipPlans
 } = require('../controllers/memberController'); 
 
 // --- PUBLIC ROUTES (ඕනෑම කෙනෙකුට පිවිසිය හැකි මාර්ග) ---
@@ -34,17 +37,18 @@ router.patch('/reset-password/:token', resetPassword);
 // ★★★ PUBLIC ROUTE: Membership plans එක ලබාගැනීම (Login අවශ්‍ය නෑ) ★★★
 router.get('/membership-plans', getMembershipPlans);
 
-
 // --- PROTECTED ROUTES (ලොග් වූ අයට පමණක්) ---
 router.route('/my-profile')
     .get(protect, getMyUserProfile)
     .put(protect, upload.single('profileImage'), updateMyUserProfile)
     .delete(protect, deleteMyUserProfile);
 
+// ★★★ Profile Photo එක මකා දැමීම සඳහා නව Route එක ★★★
+router.delete('/my-profile/photo', protect, removeProfilePhoto);
+
 router.post('/subscribe', protect, subscribeToMembership);
 router.delete('/membership', protect, cancelMembership);
 router.post('/renew', protect, renewMembership);
-
 
 // --- ADMIN ONLY ROUTES ---
 router.route('/')

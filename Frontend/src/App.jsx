@@ -1,8 +1,4 @@
-<<<<<<< Updated upstream
-// Frontend/src/App.jsx
-=======
 // File: frontend/src/App.jsx
->>>>>>> Stashed changes
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
@@ -20,24 +16,7 @@ import CoachLayout from "@/components/layout/CoachLayout";
 import AdminRoute from "@/components/AdminRoute";
 import MemberRoute from "@/components/MemberRoute";
 
-// --- Pages ---
-<<<<<<< Updated upstream
-
-// Public Pages
-import HomePage from '@/pages/HomePage';
-import Shop from '@/pages/Shop';
-import CartPage from '@/pages/CartPage';
-import SportsHomePage from '@/pages/SportsHomePage';
-import RegisterPage from '@/pages/RegisterPage';
-import MemberLoginPage from '@/pages/MemberLoginPage';
-import AdminLoginPage from '@/pages/AdminLoginPage';
-import ClubHomePage from '@/pages/ClubHomePage';
-import SponsorshipPage from '@/pages/SponsorshipPage';
-import MembershipPlansPage from './pages/MembershipPlansPage';
-import ConfirmMembershipPage from './pages/ConfirmMembershipPage';
-import AboutPage from './pages/AboutPage';
-import AchievementsPage from './pages/AchievementsPage';
-=======
+// --- Public Pages ---
 import HomePage from "@/pages/HomePage";
 import Shop from "@/pages/Shop";
 import CartPage from "@/pages/CartPage";
@@ -54,7 +33,6 @@ import AchievementsPage from "./pages/AchievementsPage";
 import ContactUsPage from "./pages/ContactUsPage";
 import RenewPage from "./pages/RenewPage";
 import RenewalSuccessPage from "./pages/RenewalSuccessPage";
->>>>>>> Stashed changes
 
 // Sport Detail Pages
 import TennisPage from "./pages/sports/TennisPage";
@@ -64,47 +42,31 @@ import NetballPage from "./pages/sports/NetballPage";
 import SwimmingPage from "./pages/sports/SwimmingPage";
 
 // Member & Coach (Protected) Pages
-<<<<<<< Updated upstream
-import MemberDashboard from '@/pages/MemberDashboard';
-import PlayerProfilePage from '@/pages/PlayerProfilePage';
-import SponsorshipManagePage from '@/pages/SponsorshipManagePage';
-import SubscriptionSuccessPage from './pages/SubscriptionSuccessPage';
-import CoachDashboard from './pages/CoachDashboard';
-
-// Coach-specific pages
-const FeedbacksPage = () => <div className="container mx-auto p-8"><h1 className="text-3xl font-bold">Manage Feedbacks</h1></div>;
-const TrainingSessionsPage = () => <div className="container mx-auto p-8"><h1 className="text-3xl font-bold">Manage Training Sessions</h1></div>;
-=======
 import MemberDashboard from "@/pages/MemberDashboard";
 import PlayerProfilePage from "@/pages/PlayerProfilePage";
 import SponsorshipManagePage from "@/pages/SponsorshipManagePage";
 import SubscriptionSuccessPage from "./pages/SubscriptionSuccessPage";
 import CoachDashboard from "./pages/CoachDashboard";
-import FeedbacksPage from "./pages/FeedbacksPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
->>>>>>> Stashed changes
+
 
 // Admin (Protected) Pages
 import AdminDashboard from "@/pages/AdminDashboard";
 import ManageInventory from "@/pages/ManageInventory";
 import ManageSuppliers from "@/pages/ManageSuppliers";
 import UserManagementPage from "@/pages/UserManagementPage";
-import MembersByPlanPage from "./pages/MembersByPlanPage";
-import PlayersBySportPage from "./pages/PlayersBySportPage";
-import MemberDetailsListPage from "./pages/MemberDetailsListPage";
 import SponsorshipManagementPage from "./components/admin/SponsorshipManagementPage";
 
-<<<<<<< Updated upstream
-=======
-// Temporary Placeholder Page
+
+
+// Temporary Placeholder
 const TrainingSessionsPage = () => (
   <div className="container mx-auto p-8">
     <h1 className="text-3xl font-bold">Manage Training Sessions</h1>
   </div>
 );
 
->>>>>>> Stashed changes
 function App() {
   return (
     <AdminAuthProvider>
@@ -112,14 +74,10 @@ function App() {
         <CartProvider>
           <Router>
             <Routes>
-<<<<<<< Updated upstream
-              
-              {/* --- 1. Public සහ සාමාන්‍ය Member Routes කාණ්ඩය --- */}
-=======
-              {/* Public Layout Routes */}
->>>>>>> Stashed changes
+              {/* ======================================================== */}
+              {/* Public සහ Member Routes නොවෙනස්ව තබා ඇත */}
+              {/* ======================================================== */}
               <Route path="/" element={<PublicLayout />}>
-                
                 <Route index element={<HomePage />} />
                 <Route path="shop" element={<Shop />} />
                 <Route path="cart" element={<CartPage />} />
@@ -134,11 +92,6 @@ function App() {
                 <Route path="achievements" element={<AchievementsPage />} />
                 <Route path="sponsorship" element={<SponsorshipPage />} />
                 <Route path="membership-plans" element={<MembershipPlansPage />} />
-<<<<<<< Updated upstream
-                <Route path="confirm-membership/:planName" element={<ConfirmMembershipPage />} />
-                
-                {/* ක්‍රීඩා විස්තර පිටු සඳහා වන Routes */}
-=======
                 <Route
                   path="confirm-membership/:planName"
                   element={<ConfirmMembershipPage />}
@@ -147,20 +100,12 @@ function App() {
                 <Route path="forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="reset-password/:token" element={<ResetPasswordPage />} />
 
-                {/* Sport detail routes */}
->>>>>>> Stashed changes
                 <Route path="sports/tennis" element={<TennisPage />} />
                 <Route path="sports/cricket" element={<CricketPage />} />
                 <Route path="sports/badminton" element={<BadmintonPage />} />
                 <Route path="sports/netball" element={<NetballPage />} />
                 <Route path="sports/swimming" element={<SwimmingPage />} />
-<<<<<<< Updated upstream
-                 
-                {/* Member සහ Player සඳහා වන Private Routes */}
-=======
 
-                {/* Protected Member Routes */}
->>>>>>> Stashed changes
                 <Route element={<MemberRoute />}>
                   <Route path="member-dashboard" element={<MemberDashboard />} />
                   <Route path="subscription-success" element={<SubscriptionSuccessPage />} />
@@ -171,67 +116,40 @@ function App() {
                   />
                 </Route>
               </Route>
-<<<<<<< Updated upstream
               
-              {/* --- 2. Coach සඳහා වන වෙන්වූ Route කාණ්ඩය --- */}
-=======
-
-              {/* Coach Routes */}
->>>>>>> Stashed changes
+              {/* Coach Routes නොවෙනස්ව තබා ඇත */}
               <Route path="/coach" element={<MemberRoute />}>
                 <Route element={<CoachLayout />}>
                   <Route path="dashboard" element={<CoachDashboard />} />
-                  <Route path="feedbacks" element={<FeedbacksPage />} />
                   <Route path="training" element={<TrainingSessionsPage />} />
                 </Route>
               </Route>
 
-<<<<<<< Updated upstream
-              {/* --- 3. Admin සඳහා වන Route කාණ්ඩය --- */}
-             <Route path="/admin-dashboard" element={<AdminRoute />}>
-  <Route element={<AdminLayout />}>
-     <Route index element={<AdminDashboard />} /> 
-     <Route path="inventory" element={<ManageInventory />} />
-     <Route path="suppliers" element={<ManageSuppliers />} />
-  </Route>
-</Route>
-
-
-            {/* ★★★ දෝෂය තිබූ ස්ථානය. '</Route>s' වෙනුවට '</Routes>' ලෙස නිවැරදි කර ඇත ★★★ */}
-=======
-              {/* Admin Routes */}
+              {/* ======================================================== */}
+              {/* ★★★ Admin Routes (දෝෂය නිවැරදි කරන ලද කොටස) ★★★ */}
+              {/* ======================================================== */}
               <Route path="/admin-dashboard" element={<AdminRoute />}>
                 <Route element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
                   <Route path="inventory" element={<ManageInventory />} />
                   <Route path="suppliers" element={<ManageSuppliers />} />
 
-                  {/* User Management Routes */}
+                  {/* User Management ප්‍රධාන පිටුව */}
                   <Route path="user-management" element={<UserManagementPage />} />
-                  <Route path="user-management/all" element={<MemberDetailsListPage />} />
-                  <Route
-                    path="user-management/status/:planStatus"
-                    element={<MemberDetailsListPage />}
-                  />
-                  <Route
-                    path="user-management/plan/:planName"
-                    element={<MembersByPlanPage />}
-                  />
-                  <Route
-                    path="user-management/sport/:sportName"
-                    element={<PlayersBySportPage />}
-                  />
 
-                  {/* Sponsorship Management Route */}
+                  {/* 
+                    ගැටලුවට හේතු වූ, එකිනෙකට ගැටෙන පැරණි routes සියල්ල ඉවත් කර, 
+                    ඒ වෙනුවට මෙම එකම, සරල Route එක යොදා ඇත.
+                  */}
+                  
+                  {/* Sponsorship Management */}
                   <Route
                     path="sponsorship-management"
                     element={<SponsorshipManagementPage />}
                   />
                 </Route>
               </Route>
->>>>>>> Stashed changes
             </Routes>
-
           </Router>
         </CartProvider>
       </MemberAuthProvider>
