@@ -46,6 +46,7 @@ const attendanceRoutes = require('./routes/attendanceRoutes');
 const salaryRoutes = require('./routes/salaryRoutes');
 const coachRoutes = require('./routes/coachRoutes');
 const reviewRoutes = require("./routes/reviewRoutes");
+const preorderRoutes = require('./routes/preorderRoutes');
 
 
 const eventsRoutes        = require('./routes/eventsRoutes');         // general events API
