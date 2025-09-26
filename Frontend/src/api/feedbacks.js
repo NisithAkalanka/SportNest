@@ -1,5 +1,5 @@
 import axios from "axios";
-import api from './api';
+import api from '@/api';
 const API  = axios.create({ baseURL: import.meta.env.VITE_API_BASE_URL || "/api" });
 const auth = (t) => ({ headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` } });
 

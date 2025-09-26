@@ -42,6 +42,7 @@ const sportRoutes = require('./routes/sportRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const contactRoutes = require('./routes/contactRoutes');
+const preorderRoutes = require('./routes/preorderRoutes');
 
 const eventsRoutes        = require('./routes/eventsRoutes');         // general events API
 const eventsReportRoutes  = require('./routes/eventsReportRoutes');   // reports only
@@ -66,6 +67,9 @@ app.use('/api/sports', sportRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use("/api/feedbacks", feedbackRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/trainings', trainingRoutes);
+app.use('/api/preorders', preorderRoutes);
+
 app.use('/api/suppliers', require('./routes/supplierRoutes'));
 // Backend/server.js
 // ... අනෙකුත් routes ...
