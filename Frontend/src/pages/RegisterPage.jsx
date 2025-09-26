@@ -4,6 +4,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/MemberAuthContext';
+import api from '../api';
 
 // NIC එකෙන් වයස ගණනය කරන function එක
 const calculateAgeFromNIC = (nic) => {
@@ -120,7 +121,7 @@ const RegisterPage = () => {
         setIsSubmitting(true);
         try {
             // Register endpoint එකට API call එක යැවීම. Backend එකෙන් සම්පූර්ණ user object එක token එක සමඟ නැවත ලැබේ.
-            const { data } = await axios.post('/api/members/register', formData);
+            const { data } = await api.post('/members/register', formData);
             
             // Backend එකෙන් ලැබෙන user දත්ත වලින් login වීම
             login(data);

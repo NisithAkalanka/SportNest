@@ -12,7 +12,10 @@ const jwtSecret = process.env.JWT_SECRET || process.env.JWTSECRET || null;
 if (!jwtSecret) {
   console.error('FATAL: JWT_SECRET not set in environment');
 } else {
-  const masked = jwtSecret.length > 6 ? `${jwtSecret.slice(0,3)}...${jwtSecret.slice(-3)}` : '***';
+  const masked =
+    jwtSecret.length > 6
+      ? `${jwtSecret.slice(0, 3)}...${jwtSecret.slice(-3)}`
+      : '***';
   console.log('JWT_SECRET loaded (masked):', masked);
 }
 
@@ -30,38 +33,48 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // --- Route modules ---
-const adminRoutes         = require('./routes/adminRoutes');
-const cartRoutes          = require('./routes/cartRoutes');
-const dashboardRoutes     = require('./routes/dashboardRoutes');
-const itemRoutes          = require('./routes/itemRoutes');
-const memberRoutes        = require('./routes/memberRoutes');
-const orderRoutes         = require('./routes/orderRoutes');
-const playerRoutes        = require('./routes/playerRoutes');
-const sponsorshipRoutes   = require('./routes/sponsorshipRoutes');
-const sportRoutes         = require('./routes/sportRoutes');
-const supplierRoutes      = require('./routes/supplierRoutes');
-const preorderRoutes      = require('./routes/preorderRoutes');
-
-const eventsRoutes        = require('./routes/eventsRoutes');         // general events API
-const eventsReportRoutes  = require('./routes/eventsReportRoutes');   // reports only
+const adminRoutes = require('./routes/adminRoutes');
+const cartRoutes = require('./routes/cartRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
+const itemRoutes = require('./routes/itemRoutes');
+const memberRoutes = require('./routes/memberRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+const playerRoutes = require('./routes/playerRoutes');
+const sponsorshipRoutes = require('./routes/sponsorshipRoutes');
+const sportRoutes = require('./routes/sportRoutes');
+const supplierRoutes = require('./routes/supplierRoutes');
+const preorderRoutes = require('./routes/preorderRoutes');
+const deliveryRoutes = require('./routes/deliveryRoutes');
+const driverRoutes = require('./routes/driverRoutes');
+const vehicleRoutes = require('./routes/vehicleRoutes');
+const shippingRoutes = require('./routes/shippingRoutes');
+const eventsRoutes = require('./routes/eventsRoutes'); // general events API
+const eventsReportRoutes = require('./routes/eventsReportRoutes'); // reports only
+const eventPaymentRoutes = require('./routes/eventPaymentRoutes');
+const paymentMethodRoutes = require('./routes/paymentMethodRoutes');
 
 // --- Mount order matters! ---
-// Put the more specific /report routes BEFORE the generic /events routes.
 app.use('/api/events/report', eventsReportRoutes);
-app.use('/api/events',        eventsRoutes);
+app.use('/api/events', eventsRoutes);
+app.use('/api/events', eventPaymentRoutes);
+app.use('/api/payments', paymentMethodRoutes);
 
 // Other APIs
-app.use('/api/admin',         adminRoutes);
-app.use('/api/cart',          cartRoutes);
-app.use('/api/dashboard',     dashboardRoutes);
-app.use('/api/items',         itemRoutes);
-app.use('/api/members',       memberRoutes);
-app.use('/api/orders',        orderRoutes);
-app.use('/api/players',       playerRoutes);
-app.use('/api/sponsorships',  sponsorshipRoutes);
-app.use('/api/sports',        sportRoutes);
-app.use('/api/suppliers',     supplierRoutes);
-app.use('/api/preorders',     preorderRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/items', itemRoutes);
+app.use('/api/members', memberRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/players', playerRoutes);
+app.use('/api/sponsorships', sponsorshipRoutes);
+app.use('/api/sports', sportRoutes);
+app.use('/api/suppliers', supplierRoutes);
+app.use('/api/preorders', preorderRoutes);
+app.use('/api/deliveries', deliveryRoutes);
+app.use('/api/drivers', driverRoutes);
+app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/shipping', shippingRoutes);
 
 // --- Health check ---
 app.get('/', (req, res) => {
@@ -79,8 +92,21 @@ app.use((err, req, res, next) => {
   res.status(err.status || 400).json({ error: err.message || 'Request failed' });
 });
 
-// --- Start server ---
+// --- Start server with port fallback ---
 const PORT = process.env.PORT || 5002;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+
+const server = app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use. Trying a free port...`);
+    const fallback = app.listen(0, () => {
+      const newPort = fallback.address().port;
+      console.log(`✅ Server running on fallback port ${newPort}`);
+    });
+  } else {
+    throw err;
+  }
 });

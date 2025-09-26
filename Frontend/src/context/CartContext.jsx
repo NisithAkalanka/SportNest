@@ -3,20 +3,38 @@ import axios from 'axios';
 
 const CartContext = createContext();
 
-const publicApi = axios.create({ baseURL: 'http://localhost:5002/api' });
-
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState(null); // cart එකේ සම්පූර්ණ object එකම තියාගන්නවා
+  const [cart, setCart] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Create authenticated API instance
+  const createAuthenticatedApi = () => {
+    const token = localStorage.getItem('token');
+    return axios.create({ 
+      baseURL: 'http://localhost:5002/api',
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+        'Content-Type': 'application/json'
+      }
+    });
+  };
+
   const fetchCart = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setCart({ items: [] });
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const res = await publicApi.get('/cart');
+      const api = createAuthenticatedApi();
+      const res = await api.get('/cart');
       setCart(res.data);
     } catch (error) {
       console.error("Failed to fetch cart", error);
-      setCart({ items: [] }); // Error එකක් ආවොත්, හිස් cart එකක් set කරනවා
+      setCart({ items: [] });
     } finally {
       setIsLoading(false);
     }
@@ -25,17 +43,45 @@ export const CartProvider = ({ children }) => {
   useEffect(() => { fetchCart(); }, []);
 
   const addToCartAndUpdate = async (itemId, quantity) => {
-    await publicApi.post('/cart/add', { itemId, quantity });
-    await fetchCart();
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to add items to cart');
+      return;
+    }
+
+    try {
+      const api = createAuthenticatedApi();
+      await api.post('/cart/add', { itemId, quantity });
+      await fetchCart();
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+      if (error.response?.status === 401) {
+        alert('Session expired. Please log in again.');
+        localStorage.removeItem('token');
+        setCart({ items: [] });
+      } else {
+        alert('Failed to add item to cart. Please try again.');
+      }
+    }
   };
 
-  // ★★★ මෙන්න අලුතින් එකතු කළ Remove Function එක ★★★
   const removeFromCartAndUpdate = async (cartItemId) => {
-    // Backend එකට කියනවා, මේ cartItem ID එක අයින් කරන්න කියලා
-    await publicApi.delete(`/cart/${cartItemId}`);
-    // Backend එකෙන්ම අලුත් cart එක එන නිසා, අපි ඒක පාවිච්චි නොකර, නැවත fetch කරනවා.
-    // මේකෙන් UI එකේ 100% ක් consistency එක රැකෙනවා.
-    await fetchCart();
+    const token = localStorage.getItem('token');
+    if (!token) {
+      return;
+    }
+
+    try {
+      const api = createAuthenticatedApi();
+      await api.delete(`/cart/${cartItemId}`);
+      await fetchCart();
+    } catch (error) {
+      console.error('Failed to remove from cart:', error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        setCart({ items: [] });
+      }
+    }
   };
   
   // Cart එකේ තියෙන items list එක

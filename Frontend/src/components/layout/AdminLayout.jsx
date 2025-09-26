@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom'; 
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSignOutAlt, faBoxOpen, faUsers, faTachometerAlt, faStore, faClipboardList } from '@fortawesome/free-solid-svg-icons';
+import { faSignOutAlt, faBoxOpen, faUsers, faTachometerAlt, faStore, faClipboardList, faTruck, faCar, faTruckMoving, faChartLine } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@/components/ui/button';
 import { AdminAuthContext } from '@/context/AdminAuthContext';
 
@@ -87,6 +87,51 @@ const AdminLayout = () => {
                 <span className="mr-3 w-5 text-center">📅</span> Events Management
               </NavLink>
             </li>
+
+            {/* Delivery Management */}
+            <li className="mb-4">
+              <NavLink
+                to="/admin-dashboard/delivery"
+                style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
+                className="flex items-center p-3 rounded-lg hover:bg-gray-700"
+              >
+                <FontAwesomeIcon icon={faTruck} className="mr-3 w-5" /> Delivery Management
+              </NavLink>
+            </li>
+
+            {/* Driver Management */}
+            <li className="mb-4">
+              <NavLink
+                to="/admin-dashboard/drivers"
+                style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
+                className="flex items-center p-3 rounded-lg hover:bg-gray-700"
+              >
+                <FontAwesomeIcon icon={faCar} className="mr-3 w-5" /> Driver Management
+              </NavLink>
+            </li>
+
+            {/* Vehicle Management */}
+            <li className="mb-4">
+              <NavLink
+                to="/admin-dashboard/vehicles"
+                style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
+                className="flex items-center p-3 rounded-lg hover:bg-gray-700"
+              >
+                <FontAwesomeIcon icon={faTruckMoving} className="mr-3 w-5" /> Vehicle Management
+              </NavLink>
+            </li>
+
+            {/* Financial Management */}
+            <li className="mb-4">
+              <NavLink
+                to="/admin-dashboard/financial"
+                style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
+                className="flex items-center p-3 rounded-lg hover:bg-gray-700"
+              >
+                <FontAwesomeIcon icon={faChartLine} className="mr-3 w-5" /> Financial Management
+              </NavLink>
+            </li>
+
           </ul>
         </nav>
 

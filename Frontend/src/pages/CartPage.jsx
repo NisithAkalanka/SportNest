@@ -1,7 +1,7 @@
 import { useCart } from '../context/CartContext'; // අපේ CartContext එක import කරගන්නවා
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -10,36 +10,42 @@ import axios from 'axios';
 
 const CartPage = () => {
   // useCart hook එකෙන්, cart එකේ තියෙන items සහ මුළු ගණන ලබාගන්නවා
-  const { cartItems, cartItemCount,fetchCart } = useCart();
- const handleCheckout = async () => {
-    if (window.confirm('Are you sure you want to place this order?')) {
-      try {
-        // Backend එකේ checkout endpoint එකට කතා කරනවා
-        // publicApi එක ඔබ CartContext එකේ හදලා තියෙන්න ඕන. නැත්නම් axios instance එකක් හදන්න.
-        const publicApi = axios.create({ baseURL: 'http://localhost:5002/api' }); // ඔබේ port එක අනුව වෙනස් කරන්න
-        const response = await publicApi.post('/orders/checkout');
-        
-        alert(response.data.msg); // "Order placed successfully!" පණිවිඩය පෙන්වනවා
-        
-        // සාර්ථක වූ පසු, cart එක හිස් බව පෙන්වන්න context එක refresh කරනවා
-        fetchCart();
-        
-      } catch (error) {
-        console.error('Checkout failed:', error);
-        alert(`Checkout failed: ${error.response?.data?.msg || 'Please try again.'}`);
-      }
-    }
+  const { cartItems, cartItemCount, fetchCart } = useCart();
+  const navigate = useNavigate();
+
+  const handleCheckout = () => {
+    // Navigate to shipping page instead of direct checkout
+    navigate('/shipping');
   };
 
   const handleRemoveItem = async (cartItemId) => {
     if (!window.confirm("Are you sure you want to remove this item?")) return;
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to manage your cart');
+      return;
+    }
+
     try {
-      const publicApi = axios.create({ baseURL: 'http://localhost:5002/api' });
-      await publicApi.delete(`/cart/${cartItemId}`);
+      const api = axios.create({ 
+        baseURL: 'http://localhost:5002/api',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      await api.delete(`/cart/${cartItemId}`);
       fetchCart();
     } catch (error) {
       console.error('Remove failed:', error);
-      alert(`Failed to remove item: ${error.response?.data?.msg || 'Please try again.'}`);
+      if (error.response?.status === 401) {
+        alert('Session expired. Please log in again.');
+        localStorage.removeItem('token');
+        fetchCart();
+      } else {
+        alert(`Failed to remove item: ${error.response?.data?.msg || 'Please try again.'}`);
+      }
     }
   };
 

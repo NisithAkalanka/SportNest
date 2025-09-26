@@ -1,13 +1,14 @@
 // src/pages/EventDetails.jsx
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { getEvent, registerEvent } from "@/services/eventsApi";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { getEvent } from "@/services/eventsApi";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faCreditCard } from "@fortawesome/free-solid-svg-icons";
 
 export default function EventDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [ev, setEv] = useState(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -28,13 +29,22 @@ export default function EventDetails() {
   }, [id]);
 
   const onRegister = async () => {
+    if (!name || !email || !phone) {
+      setMsg("Please fill in all required fields");
+      return;
+    }
+
     try {
       setSaving(true);
-      const { data } = await registerEvent(id, { name, email, phone });
-      setMsg(`✅ Registered (${data.registeredCount}/${data.capacity})`);
-      setName(""); setEmail(""); setPhone("");
+      // Navigate to payment page with event and registration data
+      navigate('/events/payment', {
+        state: {
+          eventData: ev,
+          registrationData: { name, email, phone }
+        }
+      });
     } catch (e) {
-      setMsg(e?.response?.data?.error || "Failed");
+      setMsg("Failed to proceed to payment");
     } finally {
       setSaving(false);
     }
@@ -99,8 +109,9 @@ export default function EventDetails() {
           value={phone}
           onChange={e => setPhone(e.target.value)}
         />
-        <Button onClick={onRegister} disabled={saving}>
-          {saving ? "Registering..." : "Register"}
+        <Button onClick={onRegister} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+          <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
+          {saving ? "Processing..." : "Proceed to Payment"}
         </Button>
         {msg && <div className="text-sm">{msg}</div>}
       </div>

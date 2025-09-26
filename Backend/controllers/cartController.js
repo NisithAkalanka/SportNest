@@ -1,13 +1,12 @@
 const Cart = require('../models/Cart');
-const Item = require('../models/Item'); // Item model එකත් import කරගන්නවා
+const Item = require('../models/Item');
 
 // @route   POST api/cart/add
 // @desc    Add an item to the cart and decrease inventory
-// @access  Public (දැනට, ඕනෑම කෙනෙකුට add කරන්න පුළුවන්)
+// @access  Private
 const addToCart = async (req, res) => {
-  const { itemId, quantity } = req.body; // Frontend එකෙන් එවන දත්ත
+  const { itemId, quantity } = req.body;
 
-  // --- 1. Item එකේ Stock එක Check කිරීම ---
   try {
     const itemToAdd = await Item.findById(itemId);
 
@@ -19,32 +18,28 @@ const addToCart = async (req, res) => {
       return res.status(400).json({ msg: 'Sorry, not enough items in stock' });
     }
 
-    // --- 2. Inventory එකේ Quantity එක අඩු කිරීම ---
-    itemToAdd.quantity -= quantity;
-    await itemToAdd.save();
-
-    // --- 3. Cart එකට Item එක එකතු කිරීම ---
-    // දැනට, අපි හිතමු හැමෝටම තියෙන්නේ එකම cart එකක් කියලා.
-    // අපි මුලින්ම බලනවා cart එකක් තියෙනවද කියලා, නැත්නම් අලුතින් හදනවා.
-    let cart = await Cart.findOne(); 
+    // Find or create user's cart
+    let cart = await Cart.findOne({ userId: req.user.id }); 
     if (!cart) {
-      cart = new Cart({ items: [] });
+      cart = new Cart({ userId: req.user.id, items: [] });
     }
     
-    // Cart එකේ දැනටමත් මේ item එක තියෙනවද කියලා බලනවා
+    // Check if item already exists in cart
     const itemIndex = cart.items.findIndex(p => p.item.toString() === itemId);
 
     if (itemIndex > -1) {
-      // තියෙනවා නම්, quantity එක විතරක් වැඩි කරනවා
+      // Update quantity
       cart.items[itemIndex].quantity += quantity;
     } else {
-      // නැත්නම්, අලුතින් item එක push කරනවා
+      // Add new item
       cart.items.push({ item: itemId, quantity: quantity });
     }
     
     await cart.save();
     
-    res.status(200).json(cart);
+    // Populate the cart with item details
+    const populatedCart = await Cart.findById(cart._id).populate('items.item', 'name price imageUrl');
+    res.status(200).json(populatedCart);
 
   } catch (err) {
     console.error(err.message);
@@ -53,14 +48,13 @@ const addToCart = async (req, res) => {
 };
 // @route   GET /api/cart
 // @desc    Get all items in the cart
-// @access  Public
+// @access  Private
 const getCartItems = async (req, res) => {
   try {
-    // අපි හිතනවා තියෙන්නේ එකම cart එකයි කියලා
-    const cart = await Cart.findOne().populate('items.item', 'name price');
+    const cart = await Cart.findOne({ userId: req.user.id }).populate('items.item', 'name price imageUrl');
     
     if (!cart) {
-      return res.json({ items: [] }); // Cart එකක් නැත්නම්, හිස් list එකක් යවනවා
+      return res.json({ items: [] });
     }
 
     res.json(cart);
@@ -73,31 +67,30 @@ const getCartItems = async (req, res) => {
 
 const removeCartItem = async (req, res) => {
   try {
-    const cart = await Cart.findOne();
+    const cart = await Cart.findOne({ userId: req.user.id });
     if (!cart) {
       return res.status(404).json({ msg: 'Cart not found' });
     }
 
-    // Cart එකෙන් අයින් කරන item එක මොකක්ද, quantity එක කීයද කියලා හොයාගන්නවා
+    // Find the item to remove
     const itemToRemove = cart.items.find(i => i._id.toString() === req.params.id);
     if (!itemToRemove) {
       return res.status(404).json({ msg: 'Item not found in cart' });
     }
     
-    // Inventory එකේ අදාළ Item එක හොයාගන්නවා
+    // Restore inventory
     const inventoryItem = await Item.findById(itemToRemove.item);
     if (inventoryItem) {
-      // Inventory එකේ quantity එක, cart එකෙන් අයින් කරපු ගානෙන් වැඩි කරනවා
       inventoryItem.quantity += itemToRemove.quantity;
       await inventoryItem.save();
     }
     
-    // Cart එකෙන් item එක remove කරනවා
+    // Remove item from cart
     cart.items = cart.items.filter(i => i._id.toString() !== req.params.id);
     await cart.save();
     
-    // Update වෙච්ච අලුත් cart එකම populate කරලා, response එකේ යවනවා
-    const updatedCart = await Cart.findOne().populate('items.item', 'name price imageUrl');
+    // Return updated cart
+    const updatedCart = await Cart.findOne({ userId: req.user.id }).populate('items.item', 'name price imageUrl');
     res.json(updatedCart);
 
   } catch (err) {

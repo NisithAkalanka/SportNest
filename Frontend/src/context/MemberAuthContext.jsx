@@ -16,11 +16,16 @@ export const MemberAuthProvider = ({ children }) => {
     const login = (userData) => {
         localStorage.removeItem('userInfo');
         localStorage.setItem('userInfo', JSON.stringify(userData));
+        // Also store token separately for cart context compatibility
+        if (userData.token) {
+            localStorage.setItem('token', userData.token);
+        }
         setUser(userData);
     };
 
     const logout = () => {
         localStorage.removeItem('userInfo');
+        localStorage.removeItem('token');
         setUser(null);
     };
 

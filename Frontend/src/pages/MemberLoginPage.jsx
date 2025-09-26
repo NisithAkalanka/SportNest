@@ -7,6 +7,7 @@ import { AuthContext } from '../context/MemberAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import api from '../api';
 
 const MemberLoginPage = () => {
     const [email, setEmail] = useState('');
@@ -34,8 +35,7 @@ const MemberLoginPage = () => {
         setError('');
         setLoading(true);
         try {
-            const config = { headers: { 'Content-Type': 'application/json' } };
-            const { data } = await axios.post('/api/members/login', { email, password }, config);
+            const { data } = await api.post('/members/login', { email, password });
             
             // Context එක සහ LocalStorage එකේ, login වූ පරිශීලකයාගේ දත්ත ගබඩා කිරීම
             login(data);

@@ -22,6 +22,7 @@ const EventSchema = new mongoose.Schema({
   date: { type: Date, required: true },   // date only
   startTime: { type: String, required: true }, // "HH:mm"
   endTime: { type: String, required: true },   // "HH:mm"
+  registrationFee: { type: Number, default: 200, min: 0 }, // Registration fee for the event (default Rs. 200)
   status: { type: String, enum: ["pending","approved","rejected"], default: "pending" },
   submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Member" },
   approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },

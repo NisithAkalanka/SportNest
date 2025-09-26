@@ -5,7 +5,7 @@ const upload = require('../middleware/uploadMiddleware');
 const {
     registerMember, loginMember, getMyUserProfile, updateMyUserProfile, deleteMyUserProfile,
     forgotPassword, resetPassword, getAllMembers, getMemberById, updateMember, deleteMember,
-    subscribeToMembership, cancelMembership 
+    subscribeToMembership, cancelMembership, processMembershipPayment
 } = require('../controllers/memberController'); 
 
 
@@ -23,6 +23,9 @@ router.route('/my-profile')
 
 // ★ Membership Subscription Route
 router.post('/subscribe', protect, subscribeToMembership);
+
+// ★ Membership Payment Route
+router.post('/process-membership-payment', protect, processMembershipPayment);
 
 // ★ Membership Cancellation Route
 router.delete('/membership', protect, cancelMembership);

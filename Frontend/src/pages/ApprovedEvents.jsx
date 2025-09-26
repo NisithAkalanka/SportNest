@@ -1,10 +1,12 @@
 // src/pages/ApprovedEvents.jsx
 import { useEffect, useState } from "react";
-import { listApproved, registerEvent } from "@/services/eventsApi";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { listApproved } from "@/services/eventsApi";
+import { Link, useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCreditCard } from "@fortawesome/free-solid-svg-icons";
 
 export default function ApprovedEvents() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
@@ -23,7 +25,9 @@ export default function ApprovedEvents() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
   const onKeyDown = (e) => e.key === "Enter" && load();
 
   return (
@@ -40,14 +44,16 @@ export default function ApprovedEvents() {
       >
         <div className="container mx-auto px-4">
           <h1 className="text-white text-2xl md:text-3xl font-bold">Events</h1>
-          <p className="text-white/80 mt-1">Discover upcoming events at SportNest.</p>
+          <p className="text-white/80 mt-1">
+            Discover upcoming events at SportNest.
+          </p>
         </div>
       </div>
 
-      {/* Controls (lifted above content; buttons “pop up”) */}
+      {/* Controls */}
       <div className="container mx-auto px-4">
         <div className="relative z-10 -mt-10 flex flex-col md:flex-row md:items-center gap-3">
-          {/* Search input card */}
+          {/* Search */}
           <div className="flex-1 bg-white rounded-2xl shadow-lg ring-1 ring-gray-200 p-2 pl-3">
             <input
               className="w-full bg-transparent outline-none placeholder:text-gray-400"
@@ -58,7 +64,7 @@ export default function ApprovedEvents() {
             />
           </div>
 
-          {/* Filter button — outlined with brand accent & lift */}
+          {/* Filter */}
           <button
             onClick={load}
             className="inline-flex items-center gap-2 h-12 px-5 rounded-2xl border-2 border-[#0D1B2A] bg-white text-[#0D1B2A]
@@ -67,19 +73,23 @@ export default function ApprovedEvents() {
             title="Apply current filters"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M3 6h18M6 12h12M10 18h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <path
+                d="M3 6h18M6 12h12M10 18h4"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
             </svg>
             Filter
           </button>
 
-          {/* Create button — bright/raised with gradient + ring */}
+          {/* Create */}
           <Link to="/events/submit" title="Create a new event">
             <button
               className="h-12 px-5 rounded-2xl text-white shadow-md hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0
                          transition ring-2 ring-transparent hover:ring-[#ffb37a]"
               style={{
-                background:
-                  "linear-gradient(180deg,#FF7A1A 0%, #FF6700 100%)"
+                background: "linear-gradient(180deg,#FF7A1A 0%, #FF6700 100%)",
               }}
             >
               + Create Event
@@ -100,7 +110,11 @@ export default function ApprovedEvents() {
               <EmptyState
                 title="No events found"
                 subtitle="Try a different search, or create a new event."
-                cta={<Link className="underline" to="/events/submit">Create one</Link>}
+                cta={
+                  <Link className="underline" to="/events/submit">
+                    Create one
+                  </Link>
+                }
               />
             ) : (
               <div className="grid gap-5">
@@ -122,15 +136,23 @@ function EventRow({ ev, reload }) {
   const date = ev.date ? new Date(ev.date).toLocaleDateString() : "—";
   const time = `${ev.startTime || "--"} – ${ev.endTime || "--"}`;
   const cap = ev.capacity ?? 0;
-  const reg = Array.isArray(ev.registrations) ? ev.registrations.length : ev.registeredCount || 0;
+  const reg = Array.isArray(ev.registrations)
+    ? ev.registrations.length
+    : ev.registeredCount || 0;
 
   return (
     <div className="rounded-2xl border bg-white shadow-sm hover:shadow-md transition">
       <div className="p-5 md:p-6 grid md:grid-cols-3 gap-6">
-        {/* Left: info */}
+        {/* Left */}
         <div className="md:col-span-2 min-w-0">
-          <h3 className="text-lg font-semibold leading-tight truncate">{ev.name}</h3>
-          {ev.description && <p className="text-gray-600 mt-1 line-clamp-2">{ev.description}</p>}
+          <h3 className="text-lg font-semibold leading-tight truncate">
+            {ev.name}
+          </h3>
+          {ev.description && (
+            <p className="text-gray-600 mt-1 line-clamp-2">
+              {ev.description}
+            </p>
+          )}
 
           <div className="mt-3 flex flex-wrap gap-2 text-sm text-gray-700">
             <InfoPill label="Venue" value={ev.venue || "—"} />
@@ -138,6 +160,10 @@ function EventRow({ ev, reload }) {
             <InfoPill label="Time" value={time} />
             <InfoPill label="Capacity" value={cap} />
             <InfoPill label="Registered" value={reg} />
+            <InfoPill 
+              label="Fee" 
+              value={ev.registrationFee ? `Rs. ${ev.registrationFee}` : "Rs. 200"} 
+            />
           </div>
 
           <div className="mt-4">
@@ -147,7 +173,7 @@ function EventRow({ ev, reload }) {
           </div>
         </div>
 
-        {/* Right: quick register */}
+        {/* Right */}
         <div>
           <RegisterInline ev={ev} onDone={reload} />
         </div>
@@ -156,9 +182,9 @@ function EventRow({ ev, reload }) {
   );
 }
 
-function InfoPill({ label, value }) {
+function InfoPill({ label, value, className = "" }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 bg-gray-50">
+    <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 bg-gray-50 ${className}`}>
       <span className="text-gray-500">{label}:</span>
       <span className="font-medium">{value}</span>
     </span>
@@ -166,6 +192,7 @@ function InfoPill({ label, value }) {
 }
 
 function RegisterInline({ ev, onDone }) {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -180,12 +207,16 @@ function RegisterInline({ ev, onDone }) {
     }
     try {
       setSaving(true);
-      const { data } = await registerEvent(ev._id, { name, email, phone });
-      setMsg(`Registered! (${data.registeredCount}/${data.capacity})`);
-      setName(""); setEmail(""); setPhone("");
-      onDone?.();
+      // ✅ Pass registrationFee to payment page
+      navigate("/events/payment", {
+        state: {
+          eventData: ev,
+          registrationData: { name, email, phone },
+          amount: ev.registrationFee || 200,
+        },
+      });
     } catch (e) {
-      setMsg(e?.response?.data?.error || "Failed");
+      setMsg("Failed to proceed to payment");
     } finally {
       setSaving(false);
     }
@@ -193,7 +224,10 @@ function RegisterInline({ ev, onDone }) {
 
   return (
     <div className="rounded-2xl border p-4 bg-gray-50 w-full sm:w-[260px]">
-      <div className="text-sm font-medium mb-2">Quick register</div>
+      <div className="text-sm font-medium mb-2">
+        Quick register{" "}
+        {ev.registrationFee ? `(Rs. ${ev.registrationFee})` : "(Rs. 200)"}
+      </div>
       <input
         className="w-full mb-2 rounded-xl border px-3 py-2 bg-white"
         placeholder="Name"
@@ -216,10 +250,13 @@ function RegisterInline({ ev, onDone }) {
         onClick={click}
         disabled={saving}
         className="w-full rounded-2xl px-3 py-2 text-white disabled:opacity-60 shadow
-                   hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition"
-        style={{ background: "linear-gradient(180deg,#0F2741 0%, #0D1B2A 100%)" }}
+                   hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition flex items-center justify-center"
+        style={{
+          background: "linear-gradient(180deg,#0F2741 0%, #0D1B2A 100%)",
+        }}
       >
-        {saving ? "Registering…" : "Register"}
+        <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
+        {saving ? "Processing…" : "Register"}
       </button>
       {msg && <div className="text-xs mt-2 text-gray-700">{msg}</div>}
     </div>

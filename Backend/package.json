@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "nodemon server.js"
+    "start": "nodemon server.js",
+    "seed-events": "node scripts/addSampleEventsWithFees.js"
   },
   "keywords": [],
   "author": "",
@@ -18,7 +19,7 @@
     "express": "^4.21.2",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "6.13.0",
+    "mongoose": "^6.13.8",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^7.0.6",

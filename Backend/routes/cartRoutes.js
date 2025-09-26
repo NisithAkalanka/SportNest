@@ -1,16 +1,16 @@
 const express = require('express');
 const router = express.Router();
+const authMiddleware = require('../middleware/authMiddleware');
 
-// අපි අවශ්‍ය functions දෙකම එකම පේළියකින් මෙතැනදී import කරගන්නවා
 const { addToCart, getCartItems, removeCartItem } = require('../controllers/cartController');
 
 // Cart එකට item එකක් එකතු කරන Route එක
-router.post('/add', addToCart);
+router.post('/add', authMiddleware, addToCart);
 
 // Cart එකේ තියෙන items ටික ලබාගන්නා Route එක
-router.get('/', getCartItems);
+router.get('/', authMiddleware, getCartItems);
 
 // Cart එකෙන් item එකක් ඉවත් කරන Route එක
-router.delete('/:id', removeCartItem);
+router.delete('/:id', authMiddleware, removeCartItem);
 
 module.exports = router;

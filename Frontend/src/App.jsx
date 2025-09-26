@@ -22,6 +22,9 @@ import MemberRoute from '@/components/MemberRoute';
 import HomePage from '@/pages/HomePage';
 import Shop from '@/pages/Shop';
 import CartPage from '@/pages/CartPage';
+import ShippingPage from '@/pages/ShippingPage';
+import PaymentPage from '@/pages/PaymentPage';
+import OrderSuccessPage from '@/pages/OrderSuccessPage';
 import SportsHomePage from '@/pages/SportsHomePage';
 import RegisterPage from '@/pages/RegisterPage';
 import MemberLoginPage from '@/pages/MemberLoginPage';
@@ -30,6 +33,8 @@ import ClubHomePage from '@/pages/ClubHomePage';
 import SponsorshipPage from '@/pages/SponsorshipPage';
 import MembershipPlansPage from './pages/MembershipPlansPage';
 import ConfirmMembershipPage from './pages/ConfirmMembershipPage';
+import MembershipPaymentPage from './pages/MembershipPaymentPage';
+import DriverConfirmationPage from './pages/DriverConfirmationPage';
 import AboutPage from './pages/AboutPage';
 import AchievementsPage from './pages/AchievementsPage';
 
@@ -63,6 +68,10 @@ const TrainingSessionsPage = () => (
 import AdminDashboard from '@/pages/AdminDashboard';
 import ManageInventory from '@/pages/ManageInventory';
 import ManageSuppliers from '@/pages/ManageSuppliers';
+import DeliveryManagement from '@/pages/DeliveryManagement';
+import DriverManagement from '@/pages/DriverManagement';
+import Vehicle from '@/pages/Vehicle';
+import FinancialManagement from '@/pages/FinancialManagement';
 
 // ★★★ Events module (lazy) — additive only
 const SubmitEvent     = lazy(() => import('@/pages/SubmitEvent'));
@@ -80,6 +89,11 @@ const EditEvent      = lazy(() => import('@/pages/EditEvent'));
 // ★ NEW (admin report page)
 const EventsReport   = lazy(() => import('@/pages/EventsReport'));
 
+// ★ NEW (event payment pages)
+const EventPaymentPage = lazy(() => import('@/pages/EventPaymentPage'));
+const EventPaymentSuccessPage = lazy(() => import('@/pages/EventPaymentSuccessPage'));
+const EventTicketPage = lazy(() => import('@/pages/EventTicketPage'));
+
 function App() {
   return (
     <AdminAuthProvider>
@@ -95,6 +109,9 @@ function App() {
                   <Route index element={<HomePage />} />
                   <Route path="shop" element={<Shop />} />
                   <Route path="cart" element={<CartPage />} />
+                  <Route path="shipping" element={<ShippingPage />} />
+                  <Route path="payment" element={<PaymentPage />} />
+                  <Route path="order-success" element={<OrderSuccessPage />} />
                   <Route path="sports" element={<SportsHomePage />} />
                   <Route path="register" element={<RegisterPage />} />
                   <Route path="login" element={<MemberLoginPage />} />
@@ -105,6 +122,8 @@ function App() {
                   <Route path="sponsorship" element={<SponsorshipPage />} />
                   <Route path="membership-plans" element={<MembershipPlansPage />} />
                   <Route path="confirm-membership/:planName" element={<ConfirmMembershipPage />} />
+                  <Route path="membership-payment" element={<MembershipPaymentPage />} />
+                  <Route path="driver/confirm-delivery/:token" element={<DriverConfirmationPage />} />
 
                   {/* Sport detail routes */}
                   <Route path="sports/tennis" element={<TennisPage />} />
@@ -117,6 +136,9 @@ function App() {
                   <Route path="events" element={<ApprovedEvents />} />
                   <Route path="events/submit" element={<SubmitEvent />} />
                   <Route path="events/:id" element={<EventDetails />} />
+                  <Route path="events/payment" element={<EventPaymentPage />} />
+                  <Route path="events/payment-success" element={<EventPaymentSuccessPage />} />
+                  <Route path="events/ticket" element={<EventTicketPage />} />
 
                   {/* Member-protected */}
                   <Route element={<MemberRoute />}>
@@ -147,6 +169,10 @@ function App() {
                     <Route path="inventory" element={<ManageInventory />} />
                     <Route path="preorders" element={<Preorders />} />
                     <Route path="suppliers" element={<ManageSuppliers />} />
+                    <Route path="delivery" element={<DeliveryManagement />} />
+                    <Route path="drivers" element={<DriverManagement />} />
+                    <Route path="vehicles" element={<Vehicle />} />
+                    <Route path="financial" element={<FinancialManagement />} />
 
                     {/* Admin: events moderation + edit + report */}
                     <Route path="events/moderate" element={<ModerateEvents />} />

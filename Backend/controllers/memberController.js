@@ -343,10 +343,64 @@ const cancelMembership = async (req, res) => {
     }
 };
 
+const processMembershipPayment = async (req, res) => {
+    const userId = req.user._id;
+    const { membershipId, planName, planPrice, paymentMethod } = req.body;
+    
+    if (!membershipId || !planName || !planPrice) {
+        return res.status(400).json({ message: 'Membership ID, plan name, and plan price are required.' });
+    }
+
+    try {
+        const member = await Member.findById(userId);
+        if (!member) {
+            return res.status(404).json({ message: 'Member not found.' });
+        }
+
+        // Verify membership details match
+        if (member.membershipId !== membershipId || member.membershipPlan !== planName) {
+            return res.status(400).json({ message: 'Membership details do not match.' });
+        }
+
+        // Create payment record (you might want to create a MembershipPayment model)
+        const paymentData = {
+            membershipId,
+            planName,
+            amount: planPrice,
+            paymentMethod: paymentMethod ? {
+                cardName: paymentMethod.cardName,
+                cardNumber: paymentMethod.cardNumber,
+                expiryMonth: paymentMethod.expiryMonth,
+                expiryYear: paymentMethod.expiryYear
+            } : null,
+            status: 'completed',
+            transactionId: `MEM_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            paymentDate: new Date()
+        };
+
+        // Update membership status to paid
+        member.membershipStatus = 'Paid';
+        member.paymentDate = new Date();
+        await member.save();
+
+        res.status(200).json({
+            message: 'Membership payment processed successfully',
+            paymentId: paymentData.transactionId,
+            membershipId: member.membershipId,
+            planName: member.membershipPlan,
+            status: member.membershipStatus
+        });
+
+    } catch (error) {
+        console.error('Membership Payment Error:', error);
+        res.status(500).json({ message: 'Server error during membership payment processing.' });
+    }
+};
+
 // Final exports for all functions
 module.exports = {
     registerMember, loginMember, getMyUserProfile, updateMyUserProfile, deleteMyUserProfile,
     getAllMembers, getMemberById, updateMember, deleteMember,
     forgotPassword, resetPassword, subscribeToMembership,
-    cancelMembership 
+    cancelMembership, processMembershipPayment
 };
