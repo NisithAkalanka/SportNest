@@ -14,11 +14,16 @@ const memberSchema = new mongoose.Schema({
     clubId: { type: String, unique: true, sparse: true },
     passwordResetToken: String,
     passwordResetExpires: Date,
-    // ★★★ අලුතින් එකතු කළ ක්ෂේත්‍ර ★★★
-    profileImage: { type: String, default: '/uploads/default-avatar.png' }, // Default image path
+    profileImage: { type: String, default: '/uploads/default-avatar.png' }, 
     membershipId: { type: String },
     membershipPlan: { type: String },
-    membershipStatus: { type: String, default: 'Inactive' }
+    membershipStatus: { type: String, default: 'Inactive' },
+
+    // ★★★★★ මෙන්න අලුතින් එකතු කළ ක්ෂේත්‍රය ★★★★★
+    baseSalary: { 
+        type: Number,
+        default: 0  // Coach කෙනෙක් නොවේ නම්, default අගය 0 වේ
+    }
 
 }, {
     timestamps: true

@@ -29,6 +29,11 @@ const sportRoutes = require('./routes/sportRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const contactRoutes = require('./routes/contactRoutes');
+const attendanceRoutes = require('./routes/attendanceRoutes');
+const salaryRoutes = require('./routes/salaryRoutes');
+const coachRoutes = require('./routes/coachRoutes');
+const reviewRoutes = require("./routes/reviewRoutes");
+
 
 // Use routes
 app.use('/api/admin', adminRoutes);
@@ -44,6 +49,12 @@ app.use('/api/suppliers', supplierRoutes);
 app.use("/api/feedbacks", feedbackRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/suppliers', require('./routes/supplierRoutes'));
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/salaries', salaryRoutes);
+app.use('/api/coaches', coachRoutes);
+app.use("/api/reviews", reviewRoutes);
+
+
 // Backend/server.js
 // ... අනෙකුත් routes ...
 app.use('/api/sponsorships', require('./routes/sponsorshipRoutes'));

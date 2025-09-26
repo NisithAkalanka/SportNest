@@ -10,6 +10,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner, faCheckCircle, faExclamationTriangle, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 import PlayerEditModal from '../components/PlayerEditModal'; 
 
+// ★★★ MyReview import එක සම්පූර්ණයෙන්ම ඉවත් කර ඇත ★★★
+
 const MemberDashboard = () => {
     const { user, login, logout } = useContext(AuthContext); 
     const navigate = useNavigate();
@@ -31,11 +33,12 @@ const MemberDashboard = () => {
 
     const fetchProfileData = async () => {
         if (!user?.token) {
-            logout(); 
+            if (logout) logout(); 
             navigate('/login'); 
             return; 
         }
         try {
+            setLoading(true);
             const config = { headers: { Authorization: `Bearer ${user.token}` } };
             const { data } = await axios.get('/api/members/my-profile', config);
             const { memberDetails, playerProfiles } = data;
@@ -56,15 +59,21 @@ const MemberDashboard = () => {
             setSportRegistrations(playerProfiles);
         } catch (err) {
             setError('Failed to fetch profile data.');
-            if (err.response?.status === 401) { logout(); navigate('/login'); }
+            if (err.response?.status === 401) { 
+                if(logout) logout(); 
+                navigate('/login'); 
+            }
         } finally { 
             setLoading(false); 
         }
     };
 
     useEffect(() => {
-        fetchProfileData();
-    }, [user, navigate, logout]);
+        if(user) {
+            fetchProfileData();
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -82,20 +91,20 @@ const MemberDashboard = () => {
 
         const updateData = new FormData();
         Object.keys(formData).forEach(key => updateData.append(key, formData[key]));
-        const body = new FormData();
-        Object.entries(formData).forEach(([k, v]) => body.append(k, v));
         if (newImageFile) {
             updateData.append('profileImage', newImageFile);
         }
         try {
             const config = { headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${user.token}` } };
             const { data } = await axios.put('/api/members/my-profile', updateData, config);
-            login(data);
+            
+            const updatedUserContext = { ...user, ...data.memberDetails };
+            if (login) login(updatedUserContext);
+
             setSuccess('Profile updated successfully!');
-            setOriginalData({ ...formData, profileImage: data.profileImage }); 
-            setProfileImage(data.profileImage);
-            setNewImageFile(null);
+            await fetchProfileData();
             setIsEditing(false);
+
         } catch (err) {
             setError(err.response?.data?.message || "An error occurred. Please try again.");
         } finally {
@@ -119,9 +128,10 @@ const MemberDashboard = () => {
             try {
                 const token = user?.token;
                 const config = { headers: { Authorization: `Bearer ${token}` } };
-                const { data } = await axios.delete('/api/members/membership', config);
-                login(data);
+                await axios.delete('/api/members/membership', config);
                 alert('Your membership has been successfully cancelled.');
+                if (logout) logout();
+                navigate('/');
             } catch (err) {
                 alert(err.response?.data?.message || 'Failed to cancel membership.');
             }
@@ -158,15 +168,15 @@ const MemberDashboard = () => {
             )}
 
             <div className="container mx-auto max-w-7xl p-4 md:p-8">
-                <h1 className="text-3xl font-bold mb-8">My Profile</h1>
+                <h1 className="text-3xl font-bold mb-8">My Dashboard</h1>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                    {/* Left Side */}
+                    
                     <div className="lg:col-span-1 space-y-8">
-                        <Card className="text-center sticky top-8">
+                         <Card className="text-center sticky top-8">
                             <CardContent className="p-6">
                                 <div className="relative w-36 h-36 mx-auto mb-4 group">
                                     <img 
-                                        src={profileImage.startsWith('blob:') ? profileImage : `http://localhost:5002${profileImage}`} 
+                                        src={profileImage && profileImage.startsWith('blob:') ? profileImage : `http://localhost:5002${profileImage}`} 
                                         alt="Profile" 
                                         className="w-full h-full rounded-full object-cover border-4 border-white shadow-md"
                                     />
@@ -179,10 +189,7 @@ const MemberDashboard = () => {
                                         </div>
                                     )}
                                 </div>
-                                <input 
-                                    type="file" accept="image/*" ref={fileInputRef} onChange={handleImageChange} 
-                                    className="hidden" disabled={!isEditing} 
-                                />
+                                <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageChange} className="hidden" disabled={!isEditing} />
                                 <h2 className="text-2xl font-bold">{formData.firstName} {formData.lastName}</h2>
                                 <p className="text-sm text-gray-500">{user?.email}</p>
                                 <hr className="my-4"/>
@@ -193,10 +200,8 @@ const MemberDashboard = () => {
                             </CardContent>
                         </Card>
                     </div>
-
-                    {/* Right Side */}
+                    
                     <div className="lg:col-span-2 space-y-8">
-                        {/* Personal Info */}
                         <Card>
                             <CardHeader>
                                 <CardTitle>Personal Information</CardTitle>
@@ -241,7 +246,6 @@ const MemberDashboard = () => {
                             </form>
                         </Card>
                         
-                        {/* Membership Details */}
                         <Card>
                             <CardHeader><CardTitle>Membership Details</CardTitle><CardDescription>Your current membership information.</CardDescription></CardHeader>
                             <CardContent>{user && user.membershipId ? (
@@ -262,7 +266,6 @@ const MemberDashboard = () => {
                             )}</CardContent>
                         </Card>
 
-                        {/* My Sport Registrations */}
                         <Card>
                             <CardHeader><CardTitle>My Sport Registrations</CardTitle></CardHeader>
                             <CardContent>{sportRegistrations && sportRegistrations.length > 0 ? (
@@ -284,10 +287,25 @@ const MemberDashboard = () => {
                                 </div>
                             )}</CardContent>
                         </Card>
+                        
+                        {/* ★★★ MyReview component එක ඉවත් කර, සරල Link එකක් පමණක් තැබීම ★★★ */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Club Review</CardTitle>
+                                <CardDescription>Your feedback is valuable to us. Share or update your experience on our official reviews page.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="text-center">
+                                 <Link to="/reviews">
+                                    <Button style={{ backgroundColor: '#FF6700' }}>Go to Reviews Page</Button>
+                                 </Link>
+                            </CardContent>
+                        </Card>
+
                     </div>
                 </div>
             </div>
         </div>
     );
 };
+
 export default MemberDashboard;

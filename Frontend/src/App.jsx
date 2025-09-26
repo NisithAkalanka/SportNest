@@ -1,4 +1,4 @@
-// File: frontend/src/App.jsx (ALL PATHS CORRECTED, NO ERRORS)
+// File: frontend/src/App.jsx
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
@@ -18,7 +18,7 @@ import MemberRoute from '@/components/MemberRoute';
 
 // --- Pages ---
 
-// Public Pages (CORRECTED PATHS WITHOUT DASHES)
+// Public Pages
 import HomePage from '@/pages/HomePage';
 import Shop from '@/pages/Shop';
 import CartPage from '@/pages/CartPage';
@@ -28,11 +28,12 @@ import MemberLoginPage from '@/pages/MemberLoginPage';
 import AdminLoginPage from '@/pages/AdminLoginPage';
 import ClubHomePage from '@/pages/ClubHomePage';
 import SponsorshipPage from '@/pages/SponsorshipPage';
-import MembershipPlansPage from './pages/MembershipPlansPage'; // ★★★ CORRECTED PATH ★★★
+import MembershipPlansPage from './pages/MembershipPlansPage'; 
 import ConfirmMembershipPage from './pages/ConfirmMembershipPage';
 import AboutPage from './pages/AboutPage';
 import AchievementsPage from './pages/AchievementsPage';
-import ContactUsPage from './pages/ContactUsPage'; // ★★★ 1. ADDED IMPORT ★★★
+import ContactUsPage from './pages/ContactUsPage'; 
+import ReviewsPage from './pages/ReviewsPage'; // <- Review page import
 
 // Sport Detail Pages
 import TennisPage from './pages/sports/TennisPage';
@@ -53,7 +54,12 @@ import FeedbacksPage from './pages/FeedbacksPage';
 import AdminDashboard from '@/pages/AdminDashboard';
 import ManageInventory from '@/pages/ManageInventory';
 import ManageSuppliers from '@/pages/ManageSuppliers';
+import AttendancePage from '@/pages/AttendancePage';
+import SalaryPage from '@/pages/SalaryPage'; 
+import ManageCoachesPage from '@/pages/ManageCoachesPage';
+import ManageReviewsPage from '@/pages/ManageReviewsPage'; // <- Manage Review page import
 
+// Import/Export දෝෂ වැළැක්වීමට TrainingSessionsPage component එක මෙහිම නිර්වචනය කිරීම
 const TrainingSessionsPage = () => <div className="container mx-auto p-8"><h1 className="text-3xl font-bold">Manage Training Sessions</h1></div>;
 
 function App() {
@@ -78,7 +84,8 @@ function App() {
                 <Route path="sponsorship" element={<SponsorshipPage />} />
                 <Route path="membership-plans" element={<MembershipPlansPage />} />
                 <Route path="confirm-membership/:planName" element={<ConfirmMembershipPage />} />
-                <Route path="contact" element={<ContactUsPage />} /> {/* ★★★ 2. ADDED ROUTE ★★★ */}
+                <Route path="contact" element={<ContactUsPage />} />
+                <Route path="reviews" element={<ReviewsPage />} />
                 
                 <Route path="sports/tennis" element={<TennisPage />} />
                 <Route path="sports/cricket" element={<CricketPage />} />
@@ -107,6 +114,10 @@ function App() {
                   <Route index element={<AdminDashboard />} /> 
                   <Route path="inventory" element={<ManageInventory />} />
                   <Route path="suppliers" element={<ManageSuppliers />} />
+                  <Route path="coaches" element={<ManageCoachesPage />} />
+                  <Route path="attendance" element={<AttendancePage />} />
+                  <Route path="salaries" element={<SalaryPage />} />
+                  <Route path="reviews" element={<ManageReviewsPage />} />
                 </Route>
               </Route>
 

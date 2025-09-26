@@ -261,7 +261,7 @@ export default function FeedbacksPage() {
                     </Button>
                   </>
                 ) : (
-                  <Button type="submit" disabled={busy} className="w-full bg-slate-800 text-white hover:bg-slate-900 py-3 text-lg font-semibold transition-transform hover:scale-105 transform-gpu">
+                  <Button type="submit" disabled={busy} className="w-full bg-green-800 text-white hover:bg-green-900 py-3 text-lg font-semibold transition-transform hover:scale-105 transform-gpu">
                     {busy ? "Sending..." : "Send Feedback & Notify Player"}
                   </Button>
                 )}
@@ -290,9 +290,27 @@ export default function FeedbacksPage() {
                         {fb.comment && <p className="mt-2 text-gray-600 italic">"{fb.comment}"</p>}
                       </div>
                       <div className="flex flex-col gap-2">
-                        <Button variant="outline" size="sm" onClick={() => startEdit(fb)}><FaEdit className="mr-2 h-3.5 w-3.5"/>Update</Button>
-                        <Button variant="destructive" size="sm" onClick={() => remove(fb._id)}><FaTrash className="mr-2 h-3.5 w-3.5"/>Delete</Button>
-                      </div>
+    {/* Update Button එකට කොළ පාට එකතු කිරීම */}
+    <Button 
+        size="sm" 
+        onClick={() => startEdit(fb)}
+        className="bg-blue-600 text-white hover:bg-blue-700"
+    >
+        <FaEdit className="mr-2 h-3.5 w-3.5"/>
+        Update
+    </Button>
+
+    {/* Delete Button එක shadcn/ui හි 'destructive' variant එක නිසා දැනටමත් රතු පාටයි */}
+    <Button 
+        variant="destructive" 
+        size="sm" 
+        onClick={() => remove(fb._id)}
+        className="bg-red-600 text-white hover:bg-red-700"
+    >
+        <FaTrash className="mr-2 h-3.5 w-3.5"/>
+        Delete
+    </Button>
+</div>
                     </div>);
                 })}
               </div>
