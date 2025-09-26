@@ -1,3 +1,9 @@
+<<<<<<< Updated upstream
+=======
+
+// Backend/server.js
+const path = require('path');
+>>>>>>> Stashed changes
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -27,6 +33,7 @@ const sponsorshipRoutes = require('./routes/sponsorshipRoutes');
 const sportRoutes = require('./routes/sportRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
 
+<<<<<<< Updated upstream
 // Use routes
 app.use('/api/admin', adminRoutes);
 app.use('/api/cart', cartRoutes);
@@ -35,6 +42,32 @@ app.use('/api/items', itemRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/players', playerRoutes);
+=======
+const preorderRoutes = require('./routes/preorderRoutes');   // ✅
+app.use('/api/preorders', preorderRoutes);   
+
+const eventsRoutes        = require('./routes/eventsRoutes');         // general events API
+const eventsReportRoutes  = require('./routes/eventsReportRoutes');   // reports only
+const trainingRoutes = require('./routes/trainingRoutes');
+
+const trainingRoutes = require('./routes/trainingRoutes');
+app.use('/api/trainings', trainingRoutes);
+
+
+// --- Mount order matters! ---
+// Put the more specific /report routes BEFORE the generic /events routes.
+app.use('/api/events/report', eventsReportRoutes);
+app.use('/api/events',        eventsRoutes);
+
+// Other APIs
+app.use('/api/admin',        adminRoutes);
+app.use('/api/cart',         cartRoutes);
+app.use('/api/dashboard',    dashboardRoutes);
+app.use('/api/items',        itemRoutes);
+app.use('/api/members',      memberRoutes);
+app.use('/api/orders',       orderRoutes);
+app.use('/api/players',      playerRoutes);
+>>>>>>> Stashed changes
 app.use('/api/sponsorships', sponsorshipRoutes);
 app.use('/api/sports', sportRoutes);
 app.use('/api/suppliers', supplierRoutes);
@@ -48,5 +81,6 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);//original
 });
+
