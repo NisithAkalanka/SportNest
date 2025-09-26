@@ -1,4 +1,5 @@
-// Frontend/src/App.jsx — CLEAN MERGED
+// File: frontend/src/App.jsx
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 
@@ -36,6 +37,8 @@ import MembershipPlansPage from '@/pages/MembershipPlansPage';
 import ConfirmMembershipPage from '@/pages/ConfirmMembershipPage';
 import AboutPage from '@/pages/AboutPage';
 import AchievementsPage from '@/pages/AchievementsPage';
+import ContactUsPage from '@/pages/ContactUsPage';
+import ReviewsPage from '@/pages/ReviewsPage';
 
 // Sport Detail Pages
 import TennisPage from '@/pages/sports/TennisPage';
@@ -49,6 +52,11 @@ import MemberDashboard from '@/pages/MemberDashboard';
 import PlayerProfilePage from '@/pages/PlayerProfilePage';
 import SponsorshipManagePage from '@/pages/SponsorshipManagePage';
 import SubscriptionSuccessPage from '@/pages/SubscriptionSuccessPage';
+
+import FeedbacksPage from './pages/FeedbacksPage'; 
+
+
+// Coach pages
 import CoachDashboard from '@/pages/CoachDashboard';
 
 // --- Admin (Protected) Pages ---
@@ -56,6 +64,10 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import ManageInventory from '@/pages/ManageInventory';
 import ManageSuppliers from '@/pages/ManageSuppliers';
 import Preorders from '@/pages/Preorders';
+import AttendancePage from '@/pages/AttendancePage';
+import SalaryPage from '@/pages/SalaryPage';
+import ManageCoachesPage from '@/pages/ManageCoachesPage';
+import ManageReviewsPage from '@/pages/ManageReviewsPage';
 
 // Events (lazy)
 const SubmitEvent     = lazy(() => import('@/pages/SubmitEvent'));
@@ -95,6 +107,8 @@ function App() {
                   <Route path="sponsorship" element={<SponsorshipPage />} />
                   <Route path="membership-plans" element={<MembershipPlansPage />} />
                   <Route path="confirm-membership/:planName" element={<ConfirmMembershipPage />} />
+                  <Route path="contact" element={<ContactUsPage />} />
+                  <Route path="reviews" element={<ReviewsPage />} />
 
                   {/* Sports detail */}
                   <Route path="sports/tennis" element={<TennisPage />} />
@@ -125,6 +139,8 @@ function App() {
                   <Route element={<CoachLayout />}> 
                     <Route path="dashboard" element={<CoachDashboard />} />
                     <Route path="training-sessions" element={<ManageTrainingsPage />} />
+                      <Route path="feedbacks" element={<FeedbacksPage />} />
+                   
                     {/* If you later add a FeedbacksPage, enable the line below */}
                     {/* <Route path="feedbacks" element={<FeedbacksPage />} /> */}
                   </Route>
@@ -137,6 +153,10 @@ function App() {
                     <Route path="inventory" element={<ManageInventory />} />
                     <Route path="preorders" element={<Preorders />} />
                     <Route path="suppliers" element={<ManageSuppliers />} />
+                    <Route path="coaches" element={<ManageCoachesPage />} />
+                    <Route path="attendance" element={<AttendancePage />} />
+                    <Route path="salaries" element={<SalaryPage />} />
+                    <Route path="reviews" element={<ManageReviewsPage />} />
                     <Route path="events/moderate" element={<ModerateEvents />} />
                     <Route path="events/:id/edit" element={<EditEvent />} />
                     <Route path="events/report" element={<EventsReport />} />

@@ -42,7 +42,12 @@ const sportRoutes = require('./routes/sportRoutes');
 const supplierRoutes = require('./routes/supplierRoutes');
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const contactRoutes = require('./routes/contactRoutes');
+const attendanceRoutes = require('./routes/attendanceRoutes');
+const salaryRoutes = require('./routes/salaryRoutes');
+const coachRoutes = require('./routes/coachRoutes');
+const reviewRoutes = require("./routes/reviewRoutes");
 const preorderRoutes = require('./routes/preorderRoutes');
+
 
 const eventsRoutes        = require('./routes/eventsRoutes');         // general events API
 const eventsReportRoutes  = require('./routes/eventsReportRoutes');   // reports only
@@ -71,6 +76,12 @@ app.use('/api/trainings', trainingRoutes);
 app.use('/api/preorders', preorderRoutes);
 
 app.use('/api/suppliers', require('./routes/supplierRoutes'));
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/salaries', salaryRoutes);
+app.use('/api/coaches', coachRoutes);
+app.use("/api/reviews", reviewRoutes);
+
+
 // Backend/server.js
 // ... අනෙකුත් routes ...
 app.use('/api/sponsorships', require('./routes/sponsorshipRoutes'));
