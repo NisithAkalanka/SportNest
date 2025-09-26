@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClipboardList, faDollarSign, faExclamationTriangle, faRedo, faBoxOpen, faShoppingCart, faUsers, faWarehouse } from '@fortawesome/free-solid-svg-icons';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -54,6 +54,32 @@ const AdminDashboard = () => {
   ].filter(d => d.value > 0);
 
   const PIE_COLORS = ['#10B981', '#F59E0B', '#EF4444']; // emerald, amber, red
+
+  // --- Top Selling (safe gather from multiple possible shapes) ---
+  const rawTop = Array.isArray(stats?.topSellingItems)
+    ? stats.topSellingItems
+    : Array.isArray(stats?.salesByItem)
+      ? stats.salesByItem
+      : Array.isArray(stats?.popularItems)
+        ? stats.popularItems
+        : [];
+
+  const topDataAll = rawTop
+    .map((it) => ({
+      name: it.name || it.itemName || it?.item?.name || it?.itemNameText || 'Item',
+      value: Number(it.sold ?? it.totalSold ?? it.count ?? it.quantity ?? it.units ?? 0)
+    }))
+    .filter((d) => d.value > 0)
+    .sort((a, b) => b.value - a.value);
+
+  const top5Data = topDataAll.slice(0, 5);
+  const otherSum = topDataAll.slice(5).reduce((sum, d) => sum + d.value, 0);
+  const sharePieData = [
+    ...top5Data.length ? [{ name: 'Top 5', value: top5Data.reduce((s, d) => s + d.value, 0) }] : [],
+    ...(otherSum > 0 ? [{ name: 'Others', value: otherSum }] : []),
+  ];
+
+  const BAR_COLOR = '#10B981';
 
   const openPreorder = (item) => {
     setSelectedItem(item);
@@ -170,6 +196,51 @@ const AdminDashboard = () => {
               </div>
             ) : (
               <div className="text-sm text-gray-500">No inventory data to display.</div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Top Selling Items */}
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader>
+            <CardTitle>Top Selling Items</CardTitle>
+            <CardDescription>Best performers (bar) & overall share</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {top5Data.length > 0 ? (
+              <>
+                {/* Bar chart: Top 5 items */}
+                <div className="w-full h-64 mb-6">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={top5Data} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" tick={{ fontSize: 12 }} interval={0} angle={-10} textAnchor="end" height={50} />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip />
+                      <Bar dataKey="value" fill={BAR_COLOR} radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Donut: Share Top 5 vs Others (optional if others>0) */}
+                {sharePieData.length > 0 && (
+                  <div className="w-full h-40">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={sharePieData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={70} label>
+                          {sharePieData.map((entry, idx) => (
+                            <Cell key={`share-${idx}`} fill={idx === 0 ? '#059669' : '#93C5FD'} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-sm text-gray-500">No sales breakdown available.</div>
             )}
           </CardContent>
         </Card>
