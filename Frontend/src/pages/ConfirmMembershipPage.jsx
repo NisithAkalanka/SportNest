@@ -7,9 +7,9 @@ import { AuthContext } from '../context/MemberAuthContext';
 import { FaEdit } from 'react-icons/fa';
 
 const allPlans = [
-    { name: 'Student Membership', price: '500 LKR', period: '/ year' },
-    { name: 'Ordinary Membership', price: '1500 LKR', period: '/ year' },
-    { name: 'Life Membership', price: '10,000 LKR', period: '/ lifetime' }
+    { name: 'Student Membership', price: '20,000 LKR', period: '/ year' },
+    { name: 'Ordinary Membership', price: '60,000 LKR', period: '/ year' },
+    { name: 'Life Time Membership', price: '100,000 LKR', period: '/ lifetime' } // ✅ FIXED
 ];
 
 const ConfirmMembershipPage = () => {
@@ -46,7 +46,6 @@ const ConfirmMembershipPage = () => {
     };
     const handleGoBack = () => navigate('/membership-plans');
     
-    // ★★★ යාවත්කාලීන කරන ලද handleSubmit function එක ★★★
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -61,13 +60,9 @@ const ConfirmMembershipPage = () => {
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const subscriptionData = { clubId: formData.clubId, planName: selectedPlan.name };
             
-            // Backend එකෙන් යාවත්කාලීන වූ user දත්ත ලබාගැනීම
             const { data: updatedUserData } = await axios.post('/api/members/subscribe', subscriptionData, config);
-            
-            // Context එක සහ LocalStorage එක පසුබිමින් යාවත්කාලීන කිරීම
             login(updatedUserData);
 
-            // Dashboard එකට කෙලින්ම යොමු කිරීම වෙනුවට, නව සාර්ථක වීමේ පිටුවට යොමු කිරීම
             navigate('/subscription-success', { 
                 state: { 
                     planName: updatedUserData.membershipPlan, 
@@ -102,7 +97,15 @@ const ConfirmMembershipPage = () => {
                                 <button type="button" onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex items-center gap-2 px-4 py-2 bg-white border rounded-md text-sm font-semibold text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <FaEdit /> Change
                                 </button>
-                                {isDropdownOpen && ( <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-10 border">{allPlans.map(plan => ( plan.name !== selectedPlan.name && <a key={plan.name} onClick={() => handlePlanChange(plan)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">{plan.name}</a>))}</div>)}
+                                {isDropdownOpen && (
+                                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-10 border">
+                                    {allPlans.map(plan => (
+                                      plan.name !== selectedPlan.name && (
+                                        <a key={plan.name} onClick={() => handlePlanChange(plan)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">{plan.name}</a>
+                                      )
+                                    ))}
+                                  </div>
+                                )}
                             </div>
                         </div>
                     </div>

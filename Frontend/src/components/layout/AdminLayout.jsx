@@ -1,11 +1,19 @@
 import React, { useContext } from 'react';
-// ★★★ අනවශ්‍ය import පේළි ඉවත් කර, එක පේළියකට ගෙන එන ලදී ★★★
 import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom'; 
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSignOutAlt, faBoxOpen, faUsers, faTachometerAlt, faStore } from '@fortawesome/free-solid-svg-icons';
+import { 
+  faSignOutAlt, 
+  faBoxOpen, 
+  faUsers, 
+  faTachometerAlt, 
+  faStore, 
+  faUserFriends, 
+  faHandshake   // ★★★ Sponsorship icon එක
+} from '@fortawesome/free-solid-svg-icons'; 
+
 import { Button } from '@/components/ui/button';
-import { AdminAuthContext } from '@/context/AdminAuthContext'; // alias path එක වඩාත් හොඳයි
+import { AdminAuthContext } from '@/context/AdminAuthContext';
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -25,15 +33,10 @@ const AdminLayout = () => {
         <nav className="flex-grow">
           <ul>
             <li className="mb-4">
-            
-              {/* ★★★★★ මෙන්න නිවැරදි කරන ලද වැදගත්ම කොටස ★★★★★ */}
-              {/* a href වෙනුවට, React Router එකේ <Link> component එක භාවිතා කිරීම */}
-              {/* මෙමගින් පිටුව reload වීම නතර වී, Admin ගේ login session එක ආරක්ෂා වේ */}
               <Link to="/shop" className="flex items-center p-3 rounded-lg hover:bg-gray-700 transition-colors">
                 <FontAwesomeIcon icon={faStore} className="mr-3 w-5" />
                 View Shop
               </Link>
-
             </li>
             <hr className="my-2 border-gray-600" />
             <li className="mb-4">
@@ -51,6 +54,20 @@ const AdminLayout = () => {
                 <FontAwesomeIcon icon={faUsers} className="mr-3 w-5" /> Suppliers
               </NavLink>
             </li>
+
+            {/* ★★★ User Management ★★★ */}
+            <li className="mb-4">
+              <NavLink to="/admin-dashboard/user-management" style={({ isActive }) => isActive ? activeLinkStyle : undefined} className="flex items-center p-3 rounded-lg hover:bg-gray-700">
+                <FontAwesomeIcon icon={faUserFriends} className="mr-3 w-5" /> User Management
+              </NavLink>
+            </li>
+
+            {/* ★★★ Sponsorship Management (NEW) ★★★ */}
+            <li className="mb-4">
+              <NavLink to="/admin-dashboard/sponsorship-management" style={({ isActive }) => isActive ? activeLinkStyle : undefined} className="flex items-center p-3 rounded-lg hover:bg-gray-700">
+                <FontAwesomeIcon icon={faHandshake} className="mr-3 w-5" /> Sponsorship 
+              </NavLink>
+            </li>
           </ul>
         </nav>
         <Button onClick={handleLogout} className="mt-auto w-full" style={{ backgroundColor: '#FF6700' }}>
@@ -64,4 +81,5 @@ const AdminLayout = () => {
     </div>
   );
 };
+
 export default AdminLayout;

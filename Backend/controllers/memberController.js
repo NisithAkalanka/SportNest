@@ -1,3 +1,4 @@
+// backend/controllers/memberController.js
 const Member = require('../models/memberModel');
 const Player = require('../models/PlayerModel');
 const jwt = require('jsonwebtoken');
@@ -25,14 +26,45 @@ const generateNextClubId = async () => {
     return clubId;
 };
 
+// ===================== MEMBERSHIP PLANS =====================
+const getMembershipPlans = async (req, res) => {
+    try {
+        // Updated plans with new prices
+        const plans = [
+            {
+                id: 1,
+                name: 'Student Membership',
+                price: 20000,
+                duration: '6 Months',
+                features: ['Access to all clubs', 'Online booking system', 'Basic support']
+            },
+            {
+                id: 2,
+                name: 'Ordinary Membership',
+                price: 60000,
+                duration: '1 Year',
+                features: ['All Student features', 'Priority booking', 'Monthly newsletter']
+            },
+            {
+                id: 3,
+                name: 'Life Time Membership',
+                price: 100000,
+                duration: 'life',
+                features: ['All Features Included']
+            }
+        ];
+        res.json(plans);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error fetching plans.' });
+    }
+};
+
 // =================================================================================
 // 1. CREATE a new member (Register)
 const registerMember = async (req, res) => {
-    const { 
-        firstName, lastName, age, nic, gender, role, email, contactNumber, password, confirmPassword 
-    } = req.body;
+    const { firstName, lastName, age, nic, gender, role, email, contactNumber, password, confirmPassword } = req.body;
 
-    if (!firstName || !lastName || !email || !contactNumber|| !password || !nic ) {
+    if (!firstName || !lastName || !email || !contactNumber || !password || !nic) {
         return res.status(400).json({ message: 'Please fill all required fields' });
     }
     if (password !== confirmPassword) {
@@ -43,12 +75,12 @@ const registerMember = async (req, res) => {
         if (userExists) {
             return res.status(400).json({ message: 'Member with this Email or NIC already exists' });
         }
-        
+
         const clubId = await generateNextClubId();
         const newMember = new Member({
-            firstName, lastName, gender, age, nic, email, contactNumber, password, role, clubId, 
+            firstName, lastName, gender, age, nic, email, contactNumber, password, role, clubId,
         });
-        
+
         const savedMember = await newMember.save();
         if (savedMember) {
             res.status(201).json({
@@ -63,7 +95,7 @@ const registerMember = async (req, res) => {
                 token: generateToken(savedMember._id)
             });
         } else {
-             res.status(400).json({ message: 'Invalid member data' });
+            res.status(400).json({ message: 'Invalid member data' });
         }
     } catch (error) {
         console.error("Registration Error:", error);
@@ -77,7 +109,12 @@ const loginMember = async (req, res) => {
     try {
         const member = await Member.findOne({ email });
         if (member && (await member.matchPassword(password))) {
-             res.status(200).json({
+            // ★★★ DEBUGGING: Token සෑදීමට පෙර පරීක්ෂා කිරීම ★★★
+            console.log("\n--- BACKEND LOGIN CHECK ---");
+            console.log("User found in DB. ID to be used in token:", member._id);
+            console.log("-------------------------\n");
+
+            res.status(200).json({
                 _id: member._id,
                 clubId: member.clubId,
                 firstName: member.firstName,
@@ -89,7 +126,7 @@ const loginMember = async (req, res) => {
                 membershipId: member.membershipId,
                 membershipPlan: member.membershipPlan,
                 membershipStatus: member.membershipStatus,
-                token: generateToken(member._id)
+                token: generateToken(member._id) // ✅ fixed: direct call with member._id
             });
         } else {
             res.status(401).json({ message: 'Login failed. Please check your credentials.' });
@@ -108,6 +145,7 @@ const getMyUserProfile = async (req, res) => {
 
         const memberDetails = await Member.findById(userId).select('-password');
         if (!memberDetails) return res.status(404).json({ message: 'User not found.' });
+
         const playerProfiles = await Player.find({ member: userId });
         res.status(200).json({ memberDetails, playerProfiles });
     } catch (error) {
@@ -116,7 +154,7 @@ const getMyUserProfile = async (req, res) => {
     }
 };
 
-// 4. Update logged-in user's profile (with image upload support)
+// 4. Update logged-in user's profile
 const updateMyUserProfile = async (req, res) => {
     try {
         const member = await Member.findById(req.user.id);
@@ -128,8 +166,7 @@ const updateMyUserProfile = async (req, res) => {
             member.age = req.body.age || member.age;
             member.nic = req.body.nic || member.nic;
             member.gender = req.body.gender || member.gender;
-            
-            // Profile picture update
+
             if (req.file) {
                 member.profileImage = `/uploads/profilePics/${req.file.filename}`;
             }
@@ -243,17 +280,29 @@ const forgotPassword = async (req, res) => {
     const member = await Member.findOne({ email: req.body.email });
     if (!member) return res.status(404).json({ message: 'No user with that email.' });
 
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    member.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    member.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+    const resetToken = member.createPasswordResetToken();
     await member.save({ validateBeforeSave: false });
 
     try {
-        const resetURL = `${req.protocol}://${req.get('host')}/reset-password/${resetToken}`;
-        const message = `Forgot your password? Click here: ${resetURL}\nIf you didn't, please ignore this email.`;
-        await sendEmail({ email: member.email, subject: 'Password Reset Token', message });
+        const resetURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+        const messageHtml = `
+            <p>Hi ${member.firstName || 'there'},</p>
+            <p>You requested a password reset for your SportNest account. Click the link below to reset your password. This link is valid for 10 minutes.</p>
+            <p><a href="${resetURL}" target="_blank" rel="noopener noreferrer">Reset your password</a></p>
+            <p>If you didn't request this, you can safely ignore this email.</p>
+            <p>— SportNest Team</p>
+        `;
+
+        await sendEmail({
+            to: member.email,
+            subject: 'SportNest - Password Reset Request',
+            html: messageHtml
+        });
+
         res.status(200).json({ message: 'Token sent to email!' });
     } catch (err) {
+        console.error('Error sending reset email:', err);
         member.passwordResetToken = undefined;
         member.passwordResetExpires = undefined;
         await member.save({ validateBeforeSave: false });
@@ -268,17 +317,17 @@ const resetPassword = async (req, res) => {
         passwordResetExpires: { $gt: Date.now() }
     });
 
-    if (!member) return res.status(400).json({ message: 'Token invalid or expired.' });
+    if (!member) return res.status(400).json({ message: 'Token is invalid or has expired.' });
 
     member.password = req.body.password;
     member.passwordResetToken = undefined;
     member.passwordResetExpires = undefined;
     await member.save();
 
-    const token = generateToken(member._id);
-    res.status(200).json({ token });
+    res.status(200).json({ message: "Password reset successfully. You can now login." });
 };
 
+// Membership Subscription
 const subscribeToMembership = async (req, res) => {
     const userId = req.user._id;
     const { clubId, planName } = req.body;
@@ -343,10 +392,64 @@ const cancelMembership = async (req, res) => {
     }
 };
 
-// Final exports for all functions
+const renewMembership = async (req, res) => {
+    try {
+        const { newPlan } = req.body;
+        if (!newPlan) {
+            return res.status(400).json({ message: 'New plan is required for renewal.' });
+        }
+
+        const member = await Member.findById(req.user.id);
+        if (!member) {
+            return res.status(404).json({ message: 'Member not found' });
+        }
+
+        member.membershipPlan = newPlan;
+        member.membershipStatus = 'Active';
+
+        if (newPlan === 'Life Membership') {
+            member.membershipExpiresAt = new Date(new Date().setFullYear(new Date().getFullYear() + 100));
+        } else {
+            member.membershipExpiresAt = new Date(new Date().setFullYear(new Date().getFullYear() + 1));
+        }
+
+        const updatedMember = await member.save();
+
+        res.status(200).json({
+            _id: updatedMember._id,
+            clubId: updatedMember.clubId,
+            firstName: updatedMember.firstName,
+            lastName: updatedMember.lastName,
+            email: updatedMember.email,
+            role: updatedMember.role,
+            contactNumber: updatedMember.contactNumber,
+            profileImage: updatedMember.profileImage,
+            membershipId: updatedMember.membershipId,
+            membershipPlan: updatedMember.membershipPlan,
+            membershipStatus: updatedMember.membershipStatus,
+            token: generateToken(updatedMember._id),
+        });
+
+    } catch (error) {
+        console.error("Membership Renewal Error:", error);
+        res.status(500).json({ message: "Server error during membership renewal." });
+    }
+};
+
 module.exports = {
-    registerMember, loginMember, getMyUserProfile, updateMyUserProfile, deleteMyUserProfile,
-    getAllMembers, getMemberById, updateMember, deleteMember,
-    forgotPassword, resetPassword, subscribeToMembership,
-    cancelMembership 
+    registerMember,
+    loginMember,
+    getMyUserProfile,
+    updateMyUserProfile,
+    deleteMyUserProfile,
+    getAllMembers,
+    getMemberById,
+    updateMember,
+    deleteMember,
+    forgotPassword,
+    resetPassword,
+    getMembershipPlans,
+    subscribeToMembership,
+    cancelMembership,
+    renewMembership
 };

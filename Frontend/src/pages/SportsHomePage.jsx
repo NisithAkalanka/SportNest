@@ -5,14 +5,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/MemberAuthContext';
 import PlayerRegistrationModal from '../components/PlayerRegistrationModal';
 
-// ★★★ 1. එක් එක් ක්‍රීඩාවට අදාළ, උසස් තත්ත්වයේ, Creative පින්තූර සමඟ යාවත්කාලීන කර ඇත ★★★
+// ★★★ පින්තූර URL නිවැරදිව මෙහි ඇතුළත් කර ඇත ★★★
 const sportsData = [
     { 
         name: 'Tennis', 
         description: 'A classic racket sport for singles or doubles. Improve your serve and volley with us!', 
         detailsLink: '/sports/tennis',
         imageUrl: 'https://images.unsplash.com/photo-1594756543549-1111624b5d84?q=80&w=1780&auto=format&fit=crop',
-        icon: <i className="fa-solid fa-table-tennis-paddle-ball text-4xl text-white"></i> // උදාහරණයක් ලෙස icon එකක්
+        icon: <i className="fa-solid fa-table-tennis-paddle-ball text-4xl text-white"></i>
     },
     { 
         name: 'Cricket', 
@@ -72,17 +72,15 @@ const SportsHomePage = () => {
                     <p className="text-lg text-gray-600 mt-4 max-w-2xl mx-auto">Find the perfect sport that fits your passion and energy.</p>
                 </div>
                 
-                {/* ★★★ 2. The Club පිටුවේ පෙනුමට ගැලපෙන, ආකර්ෂණීය Card ව්‍යුහය ★★★ */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {sportsData.map(sport => (
                         <div key={sport.name} className="group relative rounded-xl shadow-lg overflow-hidden text-white flex flex-col h-72">
-                            {/* Background Image & Overlay */}
+                            {/* ★★★ Background Image එක මෙතනින් load වේ ★★★ */}
                             <img src={sport.imageUrl} alt={sport.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"/>
                             <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-50 transition-all duration-300"></div>
                             
-                            {/* Card Content */}
                             <div className="relative z-10 flex flex-col h-full p-6">
-                                {sport.icon} {/* අලුතින් එකතු කළ icon එක මෙහි පෙන්වයි */}
+                                {sport.icon}
                                 <h3 className="text-2xl font-bold mt-4 mb-2">{sport.name}</h3>
                                 <p className="text-sm opacity-0 group-hover:opacity-100 transform -translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-in-out">{sport.description}</p>
                                 

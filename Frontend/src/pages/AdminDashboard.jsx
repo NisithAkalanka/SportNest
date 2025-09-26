@@ -1,13 +1,19 @@
-// src/pages/AdminDashboard.jsx (සම්පූර්ණ, නිවැරදි සහ වැඩිදියුණු කරන ලද කේතය)
-
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import axios from 'axios'; // අපි කෙලින්ම axios භාවිතා කරමු
+import axios from 'axios';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDollarSign, faShoppingCart, faBoxOpen, faClipboardList } from '@fortawesome/free-solid-svg-icons';
+import { 
+  faDollarSign, 
+  faShoppingCart, 
+  faBoxOpen, 
+  faClipboardList, 
+  faUsers, 
+  faUserCheck, 
+  faUserTimes, 
+  faUserFriends 
+} from '@fortawesome/free-solid-svg-icons';
 
-const AdminDashboard = () => { 
+const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -17,27 +23,19 @@ const AdminDashboard = () => {
       setIsLoading(true);
       setError('');
       try {
-        // ★★★★★ මෙන්න නිවැරදි කරන ලද වැදගත්ම කොටස ★★★★★
-
-        // 1. LocalStorage එකෙන් 'adminInfo' object එක ලබාගන්නවා.
         const adminInfo = JSON.parse(localStorage.getItem('adminInfo'));
-        
-        // 2. ඒකෙන් token එක ගන්නවා. Token එකක් නැත්නම් error එකක් පෙන්වනවා.
         if (!adminInfo || !adminInfo.token) {
           setError('Authorization failed. Please login again.');
           setIsLoading(false);
           return;
         }
 
-        // 3. API request එක යවන්න කලින්, 'config' object එකක් හදනවා
         const config = {
           headers: {
-            // 4. Authorization header එකට 'Bearer' සමග token එක එකතු කරනවා
             Authorization: `Bearer ${adminInfo.token}`
           }
         };
 
-        // 5. Token එකත් එක්ක request එක Backend එකට යවනවා
         const response = await axios.get('/api/dashboard/stats', config);
         setStats(response.data);
 
@@ -51,57 +49,115 @@ const AdminDashboard = () => {
     fetchStats();
   }, []);
 
-  // Loading, Error, සහ stats හිස් නම් පෙන්වන UI
-  if (isLoading) return <div className="p-10"><h1 className="text-3xl font-bold">Loading Dashboard...</h1></div>;
-  if (error) return <div className="p-10"><h1 className="text-3xl font-bold text-red-600">{error}</h1></div>;
-  
+  if (isLoading) {
+    return (
+      <div className="p-10">
+        <h1 className="text-3xl font-bold">Loading Dashboard...</h1>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-10">
+        <h1 className="text-3xl font-bold text-red-600">{error}</h1>
+      </div>
+    );
+  }
+
   return (
-    <div>
+    <div className="p-6">
       <h1 className="text-3xl font-bold text-gray-800 mb-8">Admin Dashboard</h1>
 
-      {/* Stats තියෙනවා නම් විතරක් cards පෙන්වන්න */}
       {stats ? (
         <>
           {/* --- Quick Summary Cards --- */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-12">
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                    <FontAwesomeIcon icon={faDollarSign} className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">Rs. {stats.totalRevenue.toFixed(2)}</div>
-                </CardContent>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                <FontAwesomeIcon icon={faDollarSign} className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">Rs. {stats.totalRevenue.toFixed(2)}</div>
+              </CardContent>
             </Card>
+
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Items Sold</CardTitle>
-                    <FontAwesomeIcon icon={faShoppingCart} className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">+{stats.totalItemsSold}</div>
-                </CardContent>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Items Sold</CardTitle>
+                <FontAwesomeIcon icon={faShoppingCart} className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalItemsSold}</div>
+              </CardContent>
             </Card>
-             <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-                    <FontAwesomeIcon icon={faClipboardList} className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{stats.totalOrders}</div>
-                </CardContent>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+                <FontAwesomeIcon icon={faClipboardList} className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalOrders}</div>
+              </CardContent>
             </Card>
-             <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Items in Stock</CardTitle>
-                    <FontAwesomeIcon icon={faBoxOpen} className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{stats.totalInventoryItems}</div>
-                </CardContent>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Items in Stock</CardTitle>
+                <FontAwesomeIcon icon={faBoxOpen} className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalInventoryItems}</div>
+              </CardContent>
             </Card>
           </div>
-          {/* ... අනිත් card ටික මෙතනට එනවා ... */}
+
+          {/* --- Suppliers & Expiring Items --- */}
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Expiring Soon Items</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {stats.expiringSoonItems && stats.expiringSoonItems.length > 0 ? (
+                  <ul className="space-y-2">
+                    {stats.expiringSoonItems.map((item, idx) => (
+                      <li key={idx} className="flex justify-between text-sm">
+                        <span>{item.name}</span>
+                        <span className="text-gray-500">
+                          {new Date(item.expiryDate).toLocaleDateString()}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500 text-sm">No items expiring soon.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Suppliers</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {stats.recentSuppliers && stats.recentSuppliers.length > 0 ? (
+                  <ul className="space-y-2">
+                    {stats.recentSuppliers.map((sup, idx) => (
+                      <li key={idx} className="flex justify-between text-sm">
+                        <span>{sup.name}</span>
+                        <span className="text-gray-500">{sup.phone}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500 text-sm">No recent suppliers.</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </>
       ) : (
         <p>No dashboard statistics available at the moment.</p>

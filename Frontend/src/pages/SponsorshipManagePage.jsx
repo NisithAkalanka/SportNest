@@ -1,25 +1,43 @@
-// frontend/src/pages/SponsorshipManagePage.jsx
-
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { FaFilePdf } from 'react-icons/fa';
+import { FaFilePdf, FaArrowLeft } from 'react-icons/fa'; // FaArrowLeft import කරගන්නවා
 
-// PDF එකේ පිරිසිදු පෙනුම සඳහා වන නව Component එක
+// ★★★ PDF එකට 'createdAt' දත්තය පෙන්වීමට PDFLayout එක යාවත්කාලීන කර ඇත ★★★
 const PDFLayout = React.forwardRef(({ data }, ref) => {
     if (!data) return null;
+
+    // දිනය සහ වෙලාව ලස්සනට format කරන function එකක්
+    const formatDateTime = (isoString) => {
+        if (!isoString) return 'N/A';
+        return new Date(isoString).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    };
+
     return (
         <div ref={ref} className="p-10 bg-white" style={{ width: '210mm', minHeight: '297mm' }}>
-            <div className="flex items-center gap-4 pb-4 border-b">
-                <FaFilePdf className="text-4xl text-blue-600" />
+            <div className="flex items-center justify-between pb-4 border-b">
                 <div>
                     <h1 className="text-2xl font-bold">Sponsorship Application Summary</h1>
                     <p className="text-sm text-gray-500">SportNest Club</p>
                 </div>
+                <FaFilePdf className="text-4xl text-blue-600" />
             </div>
-            <div className="mt-8 space-y-6">
+            
+            {/* ★★★ Application එක submit කරපු වෙලාව මෙතැන පෙන්වයි ★★★ */}
+            <div className="mt-6 text-sm text-gray-700 bg-gray-50 p-3 rounded-md">
+                <p><strong>Application Submitted On:</strong> {formatDateTime(data.createdAt)}</p>
+            </div>
+
+            <div className="mt-6 space-y-6">
                 <div className="border rounded-lg p-4">
                     <h2 className="font-bold text-lg mb-3">1. Sponsorship Information</h2>
                     <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
@@ -52,14 +70,12 @@ const PDFLayout = React.forwardRef(({ data }, ref) => {
     );
 });
 
-// Helper component for label + input pairs to reduce repetition and fix styles
 const FormField = ({ label, children }) => (
     <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
         {children}
     </div>
 );
-
 
 const SponsorshipManagePage = () => {
     const { id } = useParams();
@@ -129,7 +145,7 @@ const SponsorshipManagePage = () => {
     const handleDownloadPDF = () => {
         const input = pdfContentRef.current;
         if (!input) return;
-        html2canvas(input, { scale: 2 }).then((canvas) => {
+        html2canvas(input, { scale: 2, useCORS: true }).then((canvas) => {
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'mm', 'a4', true);
             const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -157,6 +173,17 @@ const SponsorshipManagePage = () => {
         <div className="container mx-auto my-10 px-4">
             <div style={{ position: 'absolute', left: '-9999px', top: 'auto', zIndex:-1 }}>
                 <PDFLayout ref={pdfContentRef} data={formData} />
+            </div>
+            
+            {/* Back Button එකතු කර ඇත */}
+            <div className="mb-8">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 font-semibold"
+                >
+                    <FaArrowLeft />
+                    Back
+                </button>
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">

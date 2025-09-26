@@ -1,6 +1,8 @@
 // Backend/middleware/adminMiddleware.js (අවසාන සහ නිවැරදි කරන ලද කේතය)
 
 const jwt = require('jsonwebtoken');
+
+
 const Admin = require('../models/Admin');
 require('dotenv').config();
 

@@ -1,5 +1,7 @@
+// Backend/models/memberModel.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const memberSchema = new mongoose.Schema({
     firstName: { type: String, required: [true, 'Please provide a first name'] },
@@ -14,16 +16,21 @@ const memberSchema = new mongoose.Schema({
     clubId: { type: String, unique: true, sparse: true },
     passwordResetToken: String,
     passwordResetExpires: Date,
-    // ★★★ අලුතින් එකතු කළ ක්ෂේත්‍ර ★★★
-    profileImage: { type: String, default: '/uploads/default-avatar.png' }, // Default image path
+    profileImage: { type: String, default: '/uploads/default-avatar.png' },
     membershipId: { type: String },
-    membershipPlan: { type: String },
-    membershipStatus: { type: String, default: 'Inactive' }
-
+    membershipPlan: { 
+        type: String,
+        enum: ['None','Student Membership', 'Ordinary Membership', 'Life Time Membership'],
+        default: 'None'
+    },
+    membershipStatus: { type: String, default: 'Inactive' },
+    membershipExpiresAt: { 
+        type: Date,
+        default: null
+    } 
 }, {
     timestamps: true
 });
-
 
 memberSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
@@ -32,9 +39,18 @@ memberSchema.pre('save', async function (next) {
     next();
 });
 
-
 memberSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
+};
+
+memberSchema.methods.createPasswordResetToken = function() {
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    this.passwordResetToken = crypto
+        .createHash('sha256')
+        .update(resetToken)
+        .digest('hex');
+    this.passwordResetExpires = Date.now() + 10 * 60 * 1000; 
+    return resetToken; 
 };
 
 module.exports = mongoose.models.Member || mongoose.model('Member', memberSchema);

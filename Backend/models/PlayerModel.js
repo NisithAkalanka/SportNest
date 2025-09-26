@@ -1,11 +1,11 @@
 // Backend/models/PlayerModel.js
-
 const mongoose = require('mongoose');
 
 const playerSchema = new mongoose.Schema({
-    member: {
+    // Member reference (අනිවාර්යයි)
+    memberId: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true,
+        required: [true, 'Member ID is required'],
         ref: 'Member'
     },
     fullName: {
@@ -14,11 +14,11 @@ const playerSchema = new mongoose.Schema({
     },
     clubId: {
         type: String,
-        required: true // ★★★ Club ID-யையும் கட்டாயமாக்குதல்
+        required: true
     },
     membershipId: {
         type: String,
-        required: [true, 'Membership ID is required'] // ★★★ Membership ID-யையும் கட்டாயமாக்குதல்
+        required: [true, 'Membership ID is required']
     },
     sportName: {
         type: String,
@@ -46,9 +46,8 @@ const playerSchema = new mongoose.Schema({
         enum: ['Beginner', 'Intermediate', 'Advanced', 'Professional']
     },
     healthHistory: {
-        type: String,
-        required: false
+        type: String
     },
 }, { timestamps: true });
 
-module.exports = mongoose.models.Player || mongoose.model('Player', playerSchema);
+module.exports = mongoose.models.PlayerRegistration || mongoose.model('PlayerRegistration', playerSchema);

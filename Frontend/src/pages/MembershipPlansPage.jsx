@@ -1,77 +1,116 @@
-import { useNavigate } from 'react-router-dom';
-import { FaUserShield, FaUserGraduate, FaCrown } from 'react-icons/fa';
+// Frontend/src/pages/MembershipPlansPage.jsx
 
-// 'plans' array එකේ කිසිදු වෙනසක් නැත
-const plans = [
-    {
-        name: 'Student Membership',
-        price: '500 LKR',
-        period: '/ year',
-        details: 'For students under 23. Access to all basic facilities and events.',
-        icon: <FaUserGraduate size={40} />,
-        color: 'bg-blue-500'
-    },
-    {
-        name: 'Ordinary Membership',
-        price: '1500 LKR',
-        period: '/ year',
-        details: 'Full access to club facilities, voting rights, and member discounts.',
-        icon: <FaUserShield size={40} />,
-        color: 'bg-green-500'
-    },
-    {
-        name: 'Life Membership',
-        price: '10,000 LKR',
-        period: '/ lifetime',
-        details: 'One-time payment for lifelong access, premium benefits, and special invitations.',
-        icon: <FaCrown size={40} />,
-        color: 'bg-yellow-500'
-    }
-];
+import React, { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { AuthContext } from "../context/MemberAuthContext";
+
+// 🟠 Single Plan Card Component
+const PlanCard = ({ plan, onSelect }) => (
+  <div className="bg-white rounded-2xl shadow-lg p-8 border-t-4 border-orange-500 flex flex-col hover:shadow-xl transition duration-300">
+    <h2 className="text-2xl font-bold text-gray-800">{plan.name}</h2>
+    <p className="text-4xl font-extrabold text-gray-900 my-4">
+      LKR {plan.price.toLocaleString()}
+      <span className="text-base font-medium text-gray-500"> / {plan.duration}</span>
+    </p>
+
+    <ul className="space-y-3 text-gray-600 mb-8 flex-grow">
+      {plan.features.map((feature, index) => (
+        <li key={index} className="flex items-center">
+          <svg
+            className="w-5 h-5 text-green-500 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+          {feature}
+        </li>
+      ))}
+    </ul>
+
+    <button
+      onClick={() => onSelect(plan)}
+      className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition duration-300"
+    >
+      Select Plan
+    </button>
+  </div>
+);
 
 const MembershipPlansPage = () => {
-    // ★ 2. 'useState' hook එක (selectedPlan) සහ Modal එකට අදාළ functions (handleCloseModal, handleSubmitMembership) ඉවත් කර ඇත.
-    // ඒ වෙනුවට 'useNavigate' hook එක පමණක් භාවිතා වේ.
-    const navigate = useNavigate();
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-    // ★ 3. 'handleSelectPlan' function එක නව පිටුවට යොමු වන ලෙස සම්පූර්ණයෙන්ම වෙනස් කර ඇත.
-    const handleSelectPlan = (plan) => {
-        // URL එකේ space වැනි අක්ෂර නිවැරදිව යැවීමට plan name එක encode කරමු.
-        const encodedPlanName = encodeURIComponent(plan.name);
-        navigate(`/confirm-membership/${encodedPlanName}`);
+  // 🔹 Fetch Plans (Public)
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const { data } = await axios.get("/api/members/membership-plans");
+
+        // 🔥 Override prices manually
+        const updatedPlans = data.map((plan) => {
+          if (plan.name === "Student Membership") return { ...plan, price: 20000 };
+          if (plan.name === "Ordinary Membership") return { ...plan, price: 60000 };
+          if (plan.name === "Life Time Membership") return { ...plan, price: 100000 };
+          return plan;
+        });
+
+        setPlans(updatedPlans);
+      } catch (err) {
+        setError("Could not load membership plans. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
     };
+    fetchPlans();
+  }, []);
 
-    return (
-        // JSX ව්‍යුහයේ දෘශ්‍ය කොටස් වල කිසිදු වෙනසක් කර නැත.
-        <div className="bg-gray-100 min-h-screen p-8">
-            <div className="text-center mb-12">
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-800">Choose Your Plan</h1>
-                <p className="text-lg text-gray-600 mt-2">Become a part of the SportNest family today!</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto">
-                {plans.map((plan) => (
-                    <div key={plan.name} className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center text-center transform hover:scale-105 transition-transform duration-300">
-                        <div className={`p-4 rounded-full text-white mb-4 ${plan.color}`}>
-                            {plan.icon}
-                        </div>
-                        <h2 className="text-2xl font-bold mb-2">{plan.name}</h2>
-                        <p className="text-4xl font-extrabold text-gray-800">{plan.price}<span className="text-lg font-normal text-gray-500">{plan.period}</span></p>
-                        <p className="text-gray-600 my-4 h-20">{plan.details}</p>
-                        <button 
-                            // onClick එක දැන් අපගේ නව 'handleSelectPlan' function එක call කරයි
-                            onClick={() => handleSelectPlan(plan)}
-                            className={`w-full py-3 mt-4 text-white font-bold rounded-lg ${plan.color} hover:opacity-90 transition-opacity`}>
-                            Select Plan
-                        </button>
-                    </div>
-                ))}
-            </div>
+  // 🔹 Handle Plan Selection
+  const handleSelectPlan = (selectedPlan) => {
+    if (!user) {
+      navigate("/login", {
+        state: { from: `/confirm-membership/${selectedPlan.name}` },
+      });
+    } else {
+      navigate(`/confirm-membership/${selectedPlan.name}`);
+    }
+  };
 
-            {/* ★ 4. Modal එක පෙන්වීමට අදාළ JSX කේතය මෙතැනින් සම්පූර්ණයෙන්ම ඉවත් කර ඇත. */}
-            
+  if (loading) return <div className="text-center p-8">Loading plans...</div>;
+  if (error) return <div className="text-center p-8 text-red-500">{error}</div>;
+
+  return (
+    <div className="bg-gray-100 min-h-screen py-16">
+      <div className="container mx-auto px-4">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">
+            Choose Your Plan
+          </h1>
+          <p className="text-lg text-gray-600 mt-4 max-w-2xl mx-auto">
+            Select the perfect membership plan to start your journey with SportNest.
+          </p>
         </div>
-    );
+
+        {/* Plans Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+          {plans.map((plan) => (
+            <PlanCard key={plan.name} plan={plan} onSelect={handleSelectPlan} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default MembershipPlansPage;

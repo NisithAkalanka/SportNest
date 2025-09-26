@@ -1,6 +1,6 @@
-// Frontend/src/pages/AchievementsPage.jsx
-
 import React from 'react';
+import { useNavigate } from 'react-router-dom'; // 1. useNavigate import කරගන්න
+import { FaArrowLeft } from 'react-icons/fa';   // 2. Icon එකක් import කරගන්න
 
 // ★ ඔබගේ کلب එකේ සැබෑ ජයග්‍රහණ වල දත්ත මෙහි ඇතුළත් කළ හැක
 const achievementsData = [
@@ -22,13 +22,26 @@ const achievementsData = [
         imageUrl: "https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?q=80&w=1907&auto=format&fit=crop",
         year: "2023",
     },
-    // ★ අවශ්‍ය නම්, තවත් ජයග්‍රහණ මෙහි එකතු කළ හැක
 ];
 
 const AchievementsPage = () => {
+    const navigate = useNavigate(); // 3. useNavigate initialize කරගන්න
+
     return (
         <div className="bg-gray-100 min-h-screen">
             <div className="container mx-auto px-4 py-16">
+
+                {/* ★★★ 4. Back Button එක මෙතැන එකතු කර ඇත ★★★ */}
+                <div className="mb-8">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 font-semibold"
+                    >
+                        <FaArrowLeft />
+                        Back
+                    </button>
+                </div>
+
                 <div className="text-center mb-16">
                     <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">Our Achievements</h1>
                     <p className="text-lg text-gray-600 mt-2 max-w-3xl mx-auto">
