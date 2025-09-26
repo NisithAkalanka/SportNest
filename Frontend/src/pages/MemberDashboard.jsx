@@ -1,6 +1,4 @@
-
-
-// src/pages/MemberDashboard.jsx — merged, conflict‑free
+// src/pages/MemberDashboard.jsx — merged, conflict-free, preserved features
 
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import axios from 'axios';
@@ -36,13 +34,15 @@ const MemberDashboard = () => {
   const [sportRegistrations, setSportRegistrations] = useState([]);
   const [editingProfile, setEditingProfile] = useState(null);
 
+  // Combined, safe profile fetcher (preserves both branches' behavior)
   const fetchProfileData = async () => {
     if (!user?.token) {
-      logout();
+      if (logout) logout();
       navigate('/login');
       return;
     }
     try {
+      setLoading(true);
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
       const { data } = await axios.get('/api/members/my-profile', config);
       const { memberDetails, playerProfiles } = data;
@@ -64,16 +64,19 @@ const MemberDashboard = () => {
       setError('');
     } catch (err) {
       setError('Failed to fetch profile data.');
-      if (err.response?.status === 401) { logout(); navigate('/login'); }
+      if (err.response?.status === 401) {
+        if (logout) logout();
+        navigate('/login');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProfileData();
+    if (user) fetchProfileData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, navigate, logout]);
+  }, [user]);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -96,12 +99,18 @@ const MemberDashboard = () => {
     try {
       const config = { headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${user.token}` } };
       const { data } = await axios.put('/api/members/my-profile', updateData, config);
-      login(data);
+
+      // Preserve both branches: update context if details provided, then refetch
+      if (data?.memberDetails && login) {
+        login({ ...user, ...data.memberDetails });
+      } else if (data && login) {
+        login(data);
+      }
+
       setSuccess('Profile updated successfully!');
-      setOriginalData({ ...formData, profileImage: data.profileImage });
-      setProfileImage(data.profileImage);
-      setNewImageFile(null);
+      await fetchProfileData();
       setIsEditing(false);
+      setNewImageFile(null);
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred. Please try again.');
     } finally {
@@ -127,9 +136,16 @@ const MemberDashboard = () => {
       try {
         const token = user?.token;
         const config = { headers: { Authorization: `Bearer ${token}` } };
-        const { data } = await axios.delete('/api/members/membership', config);
-        login(data);
+        const resp = await axios.delete('/api/members/membership', config);
         alert('Your membership has been successfully cancelled.');
+
+        // If backend returns updated user, apply; otherwise logout
+        if (resp?.data && login && resp.data.memberDetails) {
+          login({ ...user, ...resp.data.memberDetails });
+        } else if (logout) {
+          logout();
+          navigate('/');
+        }
       } catch (err) {
         alert(err.response?.data?.message || 'Failed to cancel membership.');
       }
@@ -150,11 +166,11 @@ const MemberDashboard = () => {
     }
   };
 
-if (loading) return (
-  <div className="min-h-[60vh] grid place-content-center">
-    <FontAwesomeIcon icon={faSpinner} className="h-10 w-10 text-emerald-600 animate-spin" />
-  </div>
-);
+  if (loading) return (
+    <div className="min-h-[60vh] grid place-content-center">
+      <FontAwesomeIcon icon={faSpinner} className="h-10 w-10 text-emerald-600 animate-spin" />
+    </div>
+  );
 
   return (
     <div className="bg-gray-50 min-h-screen">
