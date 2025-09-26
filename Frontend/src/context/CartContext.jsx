@@ -38,6 +38,14 @@ export const CartProvider = ({ children }) => {
     await fetchCart();
   };
   
+  // ★★★ අලුතින් එකතු කළ Quantity Update Function එක ★★★
+  const updateCartItemQuantityAndUpdate = async (cartItemId, newQuantity) => {
+    // Backend එකට quantity update කරන්න කියනවා
+    await publicApi.put(`/cart/${cartItemId}`, { quantity: newQuantity });
+    // Update උනාට පස්සේ cart එක නැවත load කරනවා (UI consistency)
+    await fetchCart();
+  };
+
   // Cart එකේ තියෙන items list එක
   const cartItems = cart ? cart.items : [];
   // මුළු item ගණන
@@ -51,7 +59,8 @@ export const CartProvider = ({ children }) => {
             isLoading,
             fetchCart,
             addToCartAndUpdate,
-            removeFromCartAndUpdate // අලුත් function එකත් export කරනවා
+            removeFromCartAndUpdate, // අයින් කිරීම
+            updateCartItemQuantityAndUpdate // Quantity update function එකත් export කරනවා
         }}
     >
       {children}

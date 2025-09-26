@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClipboardList, faDollarSign, faExclamationTriangle, faRedo, faBoxOpen, faShoppingCart, faUsers, faWarehouse } from '@fortawesome/free-solid-svg-icons';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -39,6 +40,46 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchStats();
   }, []);
+
+  // --- Inventory pie data (safe fallbacks) ---
+  const lowCount = stats?.lowStockItems?.length || 0;
+  const expCount = stats?.expiringSoonItems?.length || 0;
+  const totalItems = (stats?.totalItems ?? stats?.totalActiveItems ?? stats?.totalUniqueItems);
+  const healthyCount = typeof totalItems === 'number' ? Math.max(0, totalItems - lowCount - expCount) : null;
+
+  const inventoryPieData = [
+    ...(healthyCount !== null ? [{ name: 'Healthy', value: healthyCount }] : []),
+    { name: 'Low Stock', value: lowCount },
+    { name: 'Expiring Soon', value: expCount },
+  ].filter(d => d.value > 0);
+
+  const PIE_COLORS = ['#10B981', '#F59E0B', '#EF4444']; // emerald, amber, red
+
+  // --- Top Selling (safe gather from multiple possible shapes) ---
+  const rawTop = Array.isArray(stats?.topSellingItems)
+    ? stats.topSellingItems
+    : Array.isArray(stats?.salesByItem)
+      ? stats.salesByItem
+      : Array.isArray(stats?.popularItems)
+        ? stats.popularItems
+        : [];
+
+  const topDataAll = rawTop
+    .map((it) => ({
+      name: it.name || it.itemName || it?.item?.name || it?.itemNameText || 'Item',
+      value: Number(it.sold ?? it.totalSold ?? it.count ?? it.quantity ?? it.units ?? 0)
+    }))
+    .filter((d) => d.value > 0)
+    .sort((a, b) => b.value - a.value);
+
+  const top5Data = topDataAll.slice(0, 5);
+  const otherSum = topDataAll.slice(5).reduce((sum, d) => sum + d.value, 0);
+  const sharePieData = [
+    ...top5Data.length ? [{ name: 'Top 5', value: top5Data.reduce((s, d) => s + d.value, 0) }] : [],
+    ...(otherSum > 0 ? [{ name: 'Others', value: otherSum }] : []),
+  ];
+
+  const BAR_COLOR = '#10B981';
 
   const openPreorder = (item) => {
     setSelectedItem(item);
@@ -120,6 +161,88 @@ const AdminDashboard = () => {
          <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Total Suppliers</CardTitle><FontAwesomeIcon icon={faUsers} className="h-4 w-4 text-gray-400" /></CardHeader>
           <CardContent><div className="text-2xl font-bold">{stats.totalSuppliers}</div></CardContent>
+        </Card>
+      </div>
+
+      {/* Inventory Overview (Pie) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader>
+            <CardTitle>Inventory Overview</CardTitle>
+            <CardDescription>Current stock status</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {inventoryPieData.length > 0 ? (
+              <div className="w-full h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={inventoryPieData}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={50}
+                      outerRadius={100}
+                      paddingAngle={2}
+                      label
+                    >
+                      {inventoryPieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">No inventory data to display.</div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Top Selling Items */}
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader>
+            <CardTitle>Top Selling Items</CardTitle>
+            <CardDescription>Best performers (bar) & overall share</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {top5Data.length > 0 ? (
+              <>
+                {/* Bar chart: Top 5 items */}
+                <div className="w-full h-64 mb-6">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={top5Data} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" tick={{ fontSize: 12 }} interval={0} angle={-10} textAnchor="end" height={50} />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip />
+                      <Bar dataKey="value" fill={BAR_COLOR} radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Donut: Share Top 5 vs Others (optional if others>0) */}
+                {sharePieData.length > 0 && (
+                  <div className="w-full h-40">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={sharePieData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={70} label>
+                          {sharePieData.map((entry, idx) => (
+                            <Cell key={`share-${idx}`} fill={idx === 0 ? '#059669' : '#93C5FD'} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-sm text-gray-500">No sales breakdown available.</div>
+            )}
+          </CardContent>
         </Card>
       </div>
       

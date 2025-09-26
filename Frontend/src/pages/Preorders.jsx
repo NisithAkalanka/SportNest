@@ -163,7 +163,7 @@ const Preorders = () => {
   };
 
   return (
-    <div className="p-6 md:p-10 min-h-screen bg-slate-50 text-slate-900">
+    <div className="p-6 md:p-10 min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-900">
       
       {toast && (
         <div className={`fixed top-6 right-6 z-50 p-4 rounded-md shadow-lg text-white font-semibold ${toast.style}`}>
@@ -171,24 +171,24 @@ const Preorders = () => {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+      <div className="rounded-2xl p-6 bg-[#0D1B2A] text-white border border-white/10 mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h1 className="text-4xl font-bold text-slate-800">Pre-orders</h1>
-            <p className="text-lg text-slate-600 mt-1">Manage and track all requested supplier orders.</p>
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Pre-orders</h1>
+            <p className="text-white/80 mt-1">Manage and track all requested supplier orders.</p>
         </div>
         <div className="flex items-center gap-2">
-            <Button onClick={handleDownloadReport} disabled={reportDownloading} variant="outline" className="bg-white">
+            <Button onClick={handleDownloadReport} disabled={reportDownloading} variant="outline" className="bg-white text-slate-800 hover:bg-slate-50">
                 <FontAwesomeIcon icon={faFileCsv} className={reportDownloading ? 'animate-pulse mr-2' : 'mr-2'} />
                 {reportDownloading ? 'Generating...' : 'Monthly Report'}
             </Button>
-            <Button onClick={load} disabled={loading} variant="outline" className="bg-white">
+            <Button onClick={load} disabled={loading} className="bg-emerald-600 hover:bg-emerald-700 text-white">
               <FontAwesomeIcon icon={faSync} className={loading ? 'animate-spin mr-2' : 'mr-2'} />
               {loading ? 'Refreshing...' : 'Refresh'}
             </Button>
         </div>
       </div>
       
-      <Card className="bg-white">
+      <Card className="bg-white border border-slate-200 shadow-sm">
         <CardHeader>
           <CardTitle>All Pre-orders</CardTitle>
           <CardDescription>
@@ -198,7 +198,7 @@ const Preorders = () => {
         <CardContent>
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-slate-50">
                 <TableRow>
                   <TableHead>Item</TableHead>
                   <TableHead>Supplier</TableHead>
@@ -208,7 +208,16 @@ const Preorders = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? ( <TableRow><TableCell colSpan={5} className="text-center h-24">Loading...</TableCell></TableRow> )
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24">
+                      <div className="animate-pulse">
+                        <div className="h-4 bg-slate-200 rounded w-1/3 mb-2"></div>
+                        <div className="h-4 bg-slate-200 rounded w-2/3"></div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
                 : list.length === 0 ? ( <TableRow><TableCell colSpan={5} className="text-center h-24">There are no pre-orders to display.</TableCell></TableRow> )
                 : (
                   list.map(p => (
@@ -241,7 +250,7 @@ const Preorders = () => {
                                       </AlertDialogFooter>
                                   </AlertDialogContent>
                                </AlertDialog>
-                               <Button size="sm" onClick={() => updateStatus(p._id, 'ordered')}>
+                               <Button size="sm" onClick={() => updateStatus(p._id, 'ordered')} className="bg-emerald-600 text-white hover:bg-emerald-700">
                                  Mark as Ordered
                                </Button>
                             </>
@@ -272,12 +281,12 @@ const Preorders = () => {
             <div className="grid gap-4 py-4">
                 <div className="grid w-full items-center gap-1.5">
                     <Label htmlFor="expiry-date">Expiry Date</Label>
-                    <Input type="date" id="expiry-date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} min={minDate} max={maxDate} />
+                    <Input type="date" id="expiry-date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} min={minDate} max={maxDate} className="focus-visible:ring-emerald-500" />
                 </div>
             </div>
             <DialogFooter>
                 <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-                <Button onClick={handleConfirmReceive}>Confirm & Receive</Button>
+                <Button onClick={handleConfirmReceive} className="bg-emerald-600 hover:bg-emerald-700 text-white">Confirm & Receive</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -304,7 +313,7 @@ const Preorders = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleUpdateQuantity}>Save Changes</Button>
+            <Button onClick={handleUpdateQuantity} className="bg-emerald-600 hover:bg-emerald-700 text-white">Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

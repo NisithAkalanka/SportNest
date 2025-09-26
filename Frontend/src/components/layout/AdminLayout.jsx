@@ -15,74 +15,91 @@ const AdminLayout = () => {
     navigate('/admin-login');
   };
 
-  const activeLinkStyle = { backgroundColor: '#FF6700' };
-
   // Keep the container height constrained to the viewport to avoid outer scroll
   return (
     <div className="flex h-screen">
       
       {/* Sidebar */}
-      <aside className="w-64 text-white p-5 flex flex-col flex-shrink-0" style={{ backgroundColor: '#0D1B2A' }}>
+      <aside className="w-64 text-white p-5 flex flex-col flex-shrink-0 bg-[#0D1B2A] border-r border-white/10">
         <h1 className="text-2xl font-bold mb-10 text-center">SportNest Admin</h1>
         <nav className="flex-grow">
           <ul>
-            <li className="mb-4">
-              {/* Use React Router <Link> instead of a plain <a> */}
-              <Link to="/shop" className="flex items-center p-3 rounded-lg hover:bg-gray-700 transition-colors">
-                <FontAwesomeIcon icon={faStore} className="mr-3 w-5" />
-                View Shop
-              </Link>
-            </li>
+            
 
-            <hr className="my-2 border-gray-600" />
+            <hr className="my-2 border-white/10" />
 
-            <li className="mb-4">
+            <li className="mb-2">
               <NavLink
                 to="/admin-dashboard"
                 end
-                style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
-                className="flex items-center p-3 rounded-lg hover:bg-gray-700"
+                className={({ isActive }) =>
+                  `flex items-center p-3 rounded-lg border-l-4 transition-colors ${
+                    isActive
+                      ? 'bg-emerald-600 border-emerald-500 text-white'
+                      : 'border-transparent text-white/90 hover:bg-white/10'
+                  }`
+                }
               >
                 <FontAwesomeIcon icon={faTachometerAlt} className="mr-3 w-5" /> Dashboard
               </NavLink>
             </li>
 
-            <li className="mb-4">
+            <li className="mb-2">
               <NavLink
                 to="/admin-dashboard/inventory"
-                style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
-                className="flex items-center p-3 rounded-lg hover:bg-gray-700"
+                className={({ isActive }) =>
+                  `flex items-center p-3 rounded-lg border-l-4 transition-colors ${
+                    isActive
+                      ? 'bg-emerald-600 border-emerald-500 text-white'
+                      : 'border-transparent text-white/90 hover:bg-white/10'
+                  }`
+                }
               >
                 <FontAwesomeIcon icon={faBoxOpen} className="mr-3 w-5" /> Inventory
               </NavLink>
             </li>
 
-            <li className="mb-4">
+            <li className="mb-2">
               <NavLink
                 to="/admin-dashboard/preorders"
-                style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
-                className="flex items-center p-3 rounded-lg hover:bg-gray-700"
+                className={({ isActive }) =>
+                  `flex items-center p-3 rounded-lg border-l-4 transition-colors ${
+                    isActive
+                      ? 'bg-emerald-600 border-emerald-500 text-white'
+                      : 'border-transparent text-white/90 hover:bg-white/10'
+                  }`
+                }
               >
                 <FontAwesomeIcon icon={faClipboardList} className="mr-3 w-5" /> Pre-orders
               </NavLink>
             </li>
 
-            <li className="mb-4">
+            <li className="mb-2">
               <NavLink
                 to="/admin-dashboard/suppliers"
-                style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
-                className="flex items-center p-3 rounded-lg hover:bg-gray-700"
+                className={({ isActive }) =>
+                  `flex items-center p-3 rounded-lg border-l-4 transition-colors ${
+                    isActive
+                      ? 'bg-emerald-600 border-emerald-500 text-white'
+                      : 'border-transparent text-white/90 hover:bg-white/10'
+                  }`
+                }
               >
                 <FontAwesomeIcon icon={faUsers} className="mr-3 w-5" /> Suppliers
               </NavLink>
             </li>
 
             {/* Events Management */}
-            <li className="mb-4">
+            <li className="mb-2">
               <NavLink
                 to="/admin-dashboard/events/moderate"
-                style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
-                className="flex items-center p-3 rounded-lg hover:bg-gray-700"
+                className={({ isActive }) =>
+                  `flex items-center p-3 rounded-lg border-l-4 transition-colors ${
+                    isActive
+                      ? 'bg-emerald-600 border-emerald-500 text-white'
+                      : 'border-transparent text-white/90 hover:bg-white/10'
+                  }`
+                }
               >
                 <span className="mr-3 w-5 text-center">📅</span> Events Management
               </NavLink>
@@ -90,14 +107,14 @@ const AdminLayout = () => {
           </ul>
         </nav>
 
-        <Button onClick={handleLogout} className="mt-auto w-full" style={{ backgroundColor: '#FF6700' }}>
+        <Button onClick={handleLogout} className="mt-auto w-full bg-emerald-600 hover:bg-emerald-700 text-white">
           <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
           Logout
         </Button>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-10 overflow-auto bg-gray-100">
+      <main className="flex-1 p-10 overflow-auto bg-gradient-to-b from-slate-50 via-white to-slate-50">
         <Outlet />
       </main>
     </div>

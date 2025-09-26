@@ -150,7 +150,11 @@ const MemberDashboard = () => {
     }
   };
 
-  if (loading) return <div className="p-6">Loading Profile...</div>;
+if (loading) return (
+  <div className="min-h-[60vh] grid place-content-center">
+    <FontAwesomeIcon icon={faSpinner} className="h-10 w-10 text-emerald-600 animate-spin" />
+  </div>
+);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -163,7 +167,10 @@ const MemberDashboard = () => {
       )}
 
       <div className="container mx-auto max-w-7xl p-4 md:p-8">
-        <h1 className="text-3xl font-bold mb-8">My Profile</h1>
+        <div className="rounded-2xl p-6 bg-[#0D1B2A] text-white border border-white/10 mb-8">
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">My Profile</h1>
+          <p className="text-white/80 mt-1">Manage your details, membership and sport registrations.</p>
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           {/* Left Side */}
           <div className="lg:col-span-1 space-y-8">
@@ -235,12 +242,12 @@ const MemberDashboard = () => {
                   {isEditing ? (
                     <>
                       <Button type="button" variant="ghost" onClick={handleCancelClick}>Cancel</Button>
-                      <Button type="submit" disabled={saving} style={{ backgroundColor: '#FF6700' }}>
+                      <Button type="submit" disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white">
                         {saving && <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />}{saving ? 'Saving...' : 'Save Changes'}
                       </Button>
                     </>
                   ) : (
-                    <Button type="button" onClick={handleEditClick} style={{ backgroundColor: '#FF6700' }}>Edit Profile</Button>
+                    <Button type="button" onClick={handleEditClick} className="bg-emerald-600 hover:bg-emerald-700 text-white">Edit Profile</Button>
                   )}
                 </CardFooter>
               </form>
@@ -276,7 +283,7 @@ const MemberDashboard = () => {
                 {sportRegistrations && sportRegistrations.length > 0 ? (
                   <ul className="space-y-3">
                     {sportRegistrations.map(p => (
-                      <li key={p._id} className="bg-gray-100 p-3 rounded-md flex justify-between items-center">
+                      <li key={p._id} className="bg-white p-3 rounded-lg border border-slate-200 flex justify-between items-center hover:shadow-sm transition">
                         <div>
                           <span className="font-semibold">{p.sportName}</span>
                           <span className="text-gray-500 text-sm ml-2">({p.skillLevel})</span>

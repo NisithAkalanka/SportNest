@@ -1,13 +1,13 @@
-// Backend/controllers/playerController.js
+// File: backend/controllers/playerController.js (UPDATED & COMPLETE)
 
 const Player = require('../models/PlayerModel');
 
 const registerPlayer = async (req, res) => {
-    // ★ 1. Frontend-இலிருந்து அனுப்பப்படும் அனைத்துத் தரவுகளையும் இங்குப் பெறுதல்
+    // ★ 1. Frontend
     const { 
         sportName, 
         fullName, 
-        clubId, // ★ clubId இங்கே சேர்க்கப்பட்டுள்ளது
+        clubId, // ★ clubId 
         membershipId,
         dateOfBirth, 
         contactNumber,
@@ -17,7 +17,7 @@ const registerPlayer = async (req, res) => {
         healthHistory 
     } = req.body;
     
-    // middleware-இலிருந்து பயனரின் member ID-யைப் பெறுதல்
+    // middleware
     const memberId = req.user._id;
 
     try {
@@ -27,14 +27,14 @@ const registerPlayer = async (req, res) => {
             return res.status(400).json({ message: `You are already registered for ${sportName}.` });
         }
         
-        // ★ 2. தரவுத்தளத்தில் புதிய விளையாட்டுப் பதிவை உருவாக்குதல்
+        
         const player = await Player.create({
             member: memberId,
-            clubId, // ★ clubId தரவுத்தளத்தில் சேமிக்கப்படும்
+            clubId, 
             fullName,
             membershipId,
             sportName,
-            dateOfBirth: new Date(dateOfBirth), // Frontend-இலிருந்து வரும் தேதி வடிவம் சரியாக இருக்க வேண்டும்
+            dateOfBirth: new Date(dateOfBirth), 
             contactNumber,
             emergencyContactName,
             emergencyContactNumber,
@@ -115,9 +115,48 @@ const deleteMyProfile = async (req, res) => {
     }
 };
 
+// ★★★ 1. ADD THE NEW FUNCTION BELOW ★★★
+/**
+ * @desc    Get a simplified list of players (ID and fullName) for dropdowns
+ * @route   GET /api/players/simple
+ * @access  Private (Coach/Admin)
+ */
+const getSimplePlayerList = async (req, res) => {
+  try {
+    // Only allow users with 'coach' or 'admin' role to access this list.
+    const role = req.user?.role?.toLowerCase();
+    if (role !== 'coach' && role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden: You do not have permission to access this list.' });
+    }
+
+    // Find all player profiles and select only their ID, fullName, and clubId.
+    const players = await Player.find().select('_id fullName clubId').lean();
+
+    if (!players || players.length === 0) {
+        return res.status(404).json({ message: 'No player profiles have been created yet.' });
+    }
+
+    // Format the data to create a 'displayName' field for the frontend.
+    const playerList = players.map(player => ({
+        _id: player._id,
+        displayName: player.fullName, // Using the 'fullName' field which exists in your database
+        clubId: player.clubId || '',
+    }));
+    
+    res.status(200).json(playerList);
+
+  } catch (error) {
+    console.error('Error in getSimplePlayerList:', error);
+    res.status(500).json({ message: 'Server error while fetching player list.' });
+  }
+};
+
+
+// ★★★ 2. UPDATE THE EXPORTS OBJECT ★★★
 module.exports = {
     registerPlayer,
     getMyProfiles,
     updateMyProfile,
-    deleteMyProfile
+    deleteMyProfile,
+    getSimplePlayerList // Add the new function name here
 };

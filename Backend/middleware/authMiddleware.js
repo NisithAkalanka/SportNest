@@ -26,7 +26,7 @@ async function protectAny(req, res, next) {
       // 1) Try member
       const member = await Member.findById(decoded.id).select('-password');
       if (member) {
-        if (!member.role) member.role = 'member';
+        if (!member.role) member.role = 'member'; // default role
         req.user = member;
         return next();
       }
@@ -40,7 +40,6 @@ async function protectAny(req, res, next) {
       return next();
 
     } catch (e) {
-      // Helpful for debugging
       console.error('auth error:', e.name, e.message);
       return res.status(401).json({ msg: 'Not authorized, token failed' });
     }
@@ -53,7 +52,16 @@ function adminOnly(req, res, next) {
   return res.status(403).json({ msg: 'Admin only' });
 }
 
-/* Back-compat exports: default is function, also provides .protectAny / .adminOnly */
+// 🔹 New middleware: Only Coaches allowed
+function protectCoach(req, res, next) {
+  if (req.user && req.user.role && req.user.role.toLowerCase() === 'coach') {
+    return next();
+  }
+  return res.status(403).json({ msg: 'Not authorized as a Coach' });
+}
+
+/* Back-compat exports */
 module.exports = protectAny;
 module.exports.protectAny = protectAny;
 module.exports.adminOnly = adminOnly;
+module.exports.protectCoach = protectCoach;

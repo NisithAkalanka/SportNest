@@ -16,6 +16,11 @@ const ItemSchema = new mongoose.Schema({
 
   supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' },
   
+
+    description: {
+    type: String,
+    default: ''
+  },
   price: {
     type: Number,
     required: true,
