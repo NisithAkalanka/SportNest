@@ -25,6 +25,7 @@
     "mongoose": "^6.13.8",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
+    "node-cron": "^4.2.1",
     "nodemailer": "^7.0.6",
     "pdf-creator-node": "^2.3.5",
     "pdfkit": "^0.17.2",

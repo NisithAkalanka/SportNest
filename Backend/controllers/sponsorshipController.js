@@ -1,117 +1,110 @@
-const Sponsorship = require('../models/SponsorshipModel');
-const sendEmail = require('../utils/email'); // 
-const crypto = require('crypto'); 
+// Backend/controllers/sponsorshipController.js
 
-// --- 1.registration Function
+const Sponsorship = require('../models/SponsorshipModel');
+const sendEmail = require('../utils/email');
+const crypto = require('crypto');
+
+// --- 1. Register Sponsorship Application (Public) ---
 const registerSponsorship = async (req, res) => {
-    // Getting all the data sent from the frontend
     const {
         fullName, organizationName, contactPerson, email, phoneNumber, address,
         sponsorshipPlan, sponsorshipAmount, startDate, endDate, preferredPerks,
         website, promotionalMessage, agreedToTerms, agreedToLogoUsage
     } = req.body;
 
-    // Server-side validation
     if (!agreedToTerms || !agreedToLogoUsage) {
-        return res.status(400).json({ message: 'You must agree to the terms and conditions to proceed.' });
+        return res.status(400).json({ message: 'You must agree to the terms and conditions.' });
     }
 
     try {
-        // Generating a new, secure access token
         const accessToken = crypto.randomBytes(32).toString('hex');
         const registrationId = `SP-${Date.now()}`;
-        
-        // Preparation of a new sponsorship object according to the model
+
         const newSponsorship = new Sponsorship({
-            fullName,organizationName, contactPerson, email, phoneNumber, address,
-            sponsorshipPlan, sponsorshipAmount, startDate, endDate, preferredPerks,
-            website, promotionalMessage, agreedToTerms, agreedToLogoUsage,
+            fullName,
+            organizationName,
+            contactPerson,
+            email,
+            phoneNumber,
+            address,
+            sponsorshipPlan,
+            sponsorshipAmount,
+            startDate,
+            endDate,
+            preferredPerks,
+            website,
+            promotionalMessage,
+            agreedToTerms,
+            agreedToLogoUsage,
             registrationId,
-            approvalStatus: 'Pending',
-            accessToken // Add to save the generated token to the database
+            contactStatus: 'Not Contacted',
+            accessToken
         });
 
-        // data save database 
-        const savedSponsorship = await newSponsorship.save();
-        console.log("Document successfully saved to DB:", savedSponsorship);
-        
-        // (This section can be reactivated once your email issue is resolved)
-        /* 
-        const message = `Dear ${contactPerson}, ...`;
-        await sendEmail({ email, subject: '...', message });
-        */
-        
-        //  Sending the ID and Access Token with a successful response to the frontend 
-        res.status(201).json({ 
-            message: 'Application submitted! You will be redirected shortly.',
-            sponsorshipId: savedSponsorship._id,
-            accessToken: savedSponsorship.accessToken 
+        const saved = await newSponsorship.save();
+        res.status(201).json({
+            message: 'Application submitted successfully!',
+            sponsorshipId: saved._id,
+            accessToken: saved.accessToken
         });
-
     } catch (error) {
-        console.error("SPONSORSHIP SUBMISSION FAILED:", error); 
-        res.status(500).json({ message: 'Server error while submitting application. Please try again later.' });
+        console.error("SPONSORSHIP SUBMISSION FAILED:", error);
+        res.status(500).json({ message: 'Server error while submitting application.' });
     }
 };
 
-// --- 2.Retrieve Function for Viewing and Editing an Application (Newly Added) ---
+// --- 2. Retrieve Sponsorship for Editing (with Access Token) ---
 const getSponsorshipForEditing = async (req, res) => {
     try {
         const { id } = req.params;
-        const { token } = req.query; // using URL get the token 
+        const { token } = req.query;
 
         if (!token) return res.status(401).json({ message: "Access token is missing." });
 
         const sponsorship = await Sponsorship.findById(id);
-
         if (!sponsorship || sponsorship.accessToken !== token) {
             return res.status(404).json({ message: "Application not found or invalid token." });
         }
-        
-        // Checking if the 5 hour period is valid
+
         const fiveHours = 5 * 60 * 60 * 1000;
-        const timeElapsed = Date.now() - new Date(sponsorship.createdAt).getTime();
-        const isEditable = timeElapsed < fiveHours;
+        const isEditable = (Date.now() - new Date(sponsorship.createdAt).getTime()) < fiveHours;
 
         res.status(200).json({ sponsorship, isEditable });
-
     } catch (error) {
         res.status(500).json({ message: 'Server error while fetching data.' });
     }
 };
 
-// --- 3.  Update Function 
+// --- 3. Update Sponsorship Application (within 5 hours) ---
 const updateSponsorship = async (req, res) => {
     try {
-        // again check Access 
         const sponsorship = await Sponsorship.findById(req.params.id);
         if (!sponsorship || sponsorship.accessToken !== req.query.token) {
             return res.status(404).json({ message: "Application not found or invalid token." });
         }
+
         const fiveHours = 5 * 60 * 60 * 1000;
         if (Date.now() - new Date(sponsorship.createdAt).getTime() > fiveHours) {
-            sponsorship.accessToken = undefined; // Token expired and remove
+            sponsorship.accessToken = undefined;
             await sponsorship.save();
             return res.status(403).json({ message: "Editing period has expired." });
         }
-        
-        //  update 
-        const updatedSponsorship = await Sponsorship.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        res.status(200).json({ message: "Application updated successfully!", sponsorship: updatedSponsorship });
 
+        const updated = await Sponsorship.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.status(200).json({ message: "Application updated successfully!", sponsorship: updated });
     } catch (error) {
-        res.status(500).json({ message: 'Server error while updating data.' });
+        res.status(500).json({ message: 'Server error while updating application.' });
     }
 };
 
-// --- 4.  Delete  Function  (new added) ---
+// --- 4. Delete Sponsorship Application (within 5 hours) ---
 const deleteSponsorship = async (req, res) => {
     try {
-        // again chheck Access 
         const sponsorship = await Sponsorship.findById(req.params.id);
         if (!sponsorship || sponsorship.accessToken !== req.query.token) {
             return res.status(404).json({ message: "Application not found or invalid token." });
         }
+
         const fiveHours = 5 * 60 * 60 * 1000;
         if (Date.now() - new Date(sponsorship.createdAt).getTime() > fiveHours) {
             return res.status(403).json({ message: "Deletion period has expired." });
@@ -119,17 +112,73 @@ const deleteSponsorship = async (req, res) => {
 
         await Sponsorship.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: "Application deleted successfully." });
-
     } catch (error) {
-        res.status(500).json({ message: 'Server error while deleting data.' });
+        res.status(500).json({ message: 'Server error while deleting application.' });
     }
 };
 
+// --- 5. Admin: Get All Sponsorship Applications ---
+const getAllSponsorships = async (req, res) => {
+    try {
+        const applications = await Sponsorship.find({}).sort({ createdAt: -1 }); // latest first
+        res.status(200).json(applications);
+    } catch (error) {
+        res.status(500).json({ message: 'Error retrieving sponsorship applications.' });
+    }
+};
 
-// --- 5. Functions export  
-module.exports = { 
+// --- 6. Admin: Send Invitation Email (instead of approval) ---
+const sendInvitationEmail = async (req, res) => {
+    try {
+        const sponsorship = await Sponsorship.findById(req.params.id);
+
+        if (!sponsorship) {
+            return res.status(404).json({ message: "Application not found." });
+        }
+
+        if (sponsorship.contactStatus === 'Contacted') {
+            return res.status(400).json({ message: "An invitation has already been sent to this applicant." });
+        }
+
+        const emailSubject = `Invitation to Sponsor SportNest`;
+        const emailMessage = `
+            Dear ${sponsorship.contactPerson},
+
+            Thank you for your application to sponsor SportNest. We appreciate your interest in supporting our club.
+
+            We would like to invite you to discuss this partnership opportunity further. Please contact us at your earliest convenience to schedule a meeting.
+
+            We look forward to hearing from you.
+
+            Best Regards,
+            The SportNest Team
+        `;
+
+        await sendEmail({
+            email: sponsorship.email,
+            subject: emailSubject,
+            message: emailMessage
+        });
+
+        sponsorship.contactStatus = 'Contacted';
+        await sponsorship.save();
+
+        res.status(200).json({ 
+            message: `Invitation email sent successfully to ${sponsorship.contactPerson}.`,
+            updatedApplication: sponsorship
+        });
+
+    } catch (error) {
+        console.error("SEND INVITATION FAILED:", error);
+        res.status(500).json({ message: 'Server error while sending invitation.' });
+    }
+};
+
+module.exports = {
     registerSponsorship,
     getSponsorshipForEditing,
     updateSponsorship,
-    deleteSponsorship
+    deleteSponsorship,
+    getAllSponsorships,
+    sendInvitationEmail
 };

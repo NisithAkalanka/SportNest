@@ -1,36 +1,45 @@
+// frontend/src/context/MemberAuthContext.jsx (FINAL MERGED)
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 
-// Context එකේ නම 'AuthContext' ලෙසම පවතී
+// Always export the same name for consistency
 export const AuthContext = createContext();
 
 export const MemberAuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null);
 
-    useEffect(() => {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-        if (userInfo) {
-            setUser(userInfo);
-        }
-    }, []);
+  useEffect(() => {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+    if (userInfo) {
+      setUser(userInfo);
+    }
+  }, []);
 
-    const login = (userData) => {
-        localStorage.removeItem('userInfo');
-        localStorage.setItem('userInfo', JSON.stringify(userData));
-        setUser(userData);
-    };
+  // ✅ Updated login function (clear old, save new, update state)
+  const login = (userData) => {
+    // 1. Remove old session data
+    localStorage.removeItem('userInfo');
 
-    const logout = () => {
-        localStorage.removeItem('userInfo');
-        setUser(null);
-    };
+    // 2. Save fresh, full user data
+    localStorage.setItem('userInfo', JSON.stringify(userData));
 
-    return (
-        <AuthContext.Provider value={{ user, login, logout }}>
-            {children}
-        </AuthContext.Provider>
-    );
+    // 3. Update context state
+    setUser(userData);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('userInfo');
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
+// Custom hook for easier usage
 export const useAuth = () => {
-    return useContext(AuthContext);
+  return useContext(AuthContext);
 };

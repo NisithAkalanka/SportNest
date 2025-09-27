@@ -1,9 +1,22 @@
-// src/pages/RegisterPage.jsx
-
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/MemberAuthContext';
+
+// ඇසක හැඩයේ අයිකන දෙක (SVG icons for password visibility)
+const EyeOpenIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+    </svg>
+);
+
+const EyeClosedIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2 2 0 01-2.828 2.828l-1.515-1.514A4 4 0 0010 14a4 4 0 10-2.032-7.44z" clipRule="evenodd" />
+        <path d="M10 12a2 2 0 110-4 2 2 0 010 4z" />
+    </svg>
+);
 
 // NIC එකෙන් වයස ගණනය කරන function එක
 const calculateAgeFromNIC = (nic) => {
@@ -32,26 +45,18 @@ const RegisterPage = () => {
 
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
-    // Login වී ඇත්නම්, member-dashboard එකට redirect කිරීම
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
     useEffect(() => {
         if (user) {
-            if (user.role === 'Coach') {
-                navigate('/coach-dashboard');
-            } else {
-                navigate('/member-dashboard');
-            }
+            navigate(user.role === 'Coach' ? '/coach-dashboard' : '/member-dashboard');
         }
     }, [user, navigate]);
-    
-    // NIC එක type කරන විට, වයස ස්වයංක්‍රීයව ගණනය කිරීම
+
     useEffect(() => {
         const calculatedAge = calculateAgeFromNIC(formData.nic);
-        if (calculatedAge !== null) {
-            setFormData(prev => ({ ...prev, age: calculatedAge.toString() }));
-        } else if (formData.nic) {
-             setFormData(prev => ({ ...prev, age: '' }));
-        }
+        setFormData(prev => ({ ...prev, age: calculatedAge ? calculatedAge.toString() : '' }));
     }, [formData.nic]);
 
     // ක්ෂේත්‍ර වලංගුකරණය (Validation)
@@ -59,17 +64,23 @@ const RegisterPage = () => {
         switch (name) {
             case 'firstName':
             case 'lastName':
-                return /^[A-Za-z\s]{3,}$/.test(value) ? '' : 'Name must be at least 3 characters.';
+                if (!/^[A-Za-z]+$/.test(value)) return 'Only letters are allowed.';
+                if (value.length < 3) return 'Name must be at least 3 characters.';
+                return '';
             case 'nic':
-                if (value.length !== 12) return 'NIC number must be exactly 12 digits.';
-                if (!/^\d+$/.test(value)) return 'NIC must only contain numbers.';
-                const age = calculateAgeFromNIC(value);
-                if (age === null) return 'You must be over 18 years old.';
+                if (!/^\d{12}$/.test(value)) return 'NIC must be exactly 12 digits.';
+                if (!calculateAgeFromNIC(value)) return 'Invalid NIC or you must be over 18 years old.';
                 return '';
             case 'contactNumber':
-                return /^(0\d{9})$/.test(value) ? '' : 'Must be a valid 10-digit number starting with 0.';
+                if (!/^(?:\+94\d{9}|0\d{9})$/.test(value)) {
+                    return 'Use format: 0xxxxxxxxx or +94xxxxxxxxx.';
+                }
+                return '';
             case 'email':
-                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? '' : 'Please enter a valid email.';
+                if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(value)) {
+                    return 'Please use only lowercase letters (e.g., yourname@example.com).';
+                }
+                return '';
             case 'password':
                 if (value.length < 8) return 'Password must be at least 8 characters long.';
                 if (!/[A-Z]/.test(value)) return 'Must contain an uppercase letter.';
@@ -84,7 +95,6 @@ const RegisterPage = () => {
         }
     };
 
-    // Form එකේ input fields වෙනස් වන විට state එක යාවත්කාලීන කිරීම
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
@@ -93,50 +103,45 @@ const RegisterPage = () => {
         }
     };
     
-    // Input field එකෙන් ඉවතට click කළ විට (onBlur) validation කිරීම
     const handleBlur = (e) => {
         const { name, value } = e.target;
-        if(value) {
+        if (value) {
             const errorMessage = validateField(name, value);
             setErrors(prev => ({ ...prev, [name]: errorMessage }));
         }
     };
     
-    // ★★★ යාවත්කාලීන කරන ලද handleSubmit function එක ★★★
+    // Form එක submit කිරීමේ ක්‍රියාවලිය
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const validationErrors = {};
+        
+        // 1. submit කිරීමට පෙර සියලුම ක්ෂේත්‍ර (fields) වලංගු දැයි පරීක්ෂා කිරීම
         let formIsValid = true;
-        Object.keys(formData).forEach(name => {
+        const validationErrors = Object.keys(formData).reduce((acc, name) => {
             const errorMessage = validateField(name, formData[name]);
             if (errorMessage) {
-                validationErrors[name] = errorMessage;
                 formIsValid = false;
+                acc[name] = errorMessage;
             }
-        });
+            return acc;
+        }, {});
         
         if (!formIsValid) { setErrors(validationErrors); return; }
         
         setIsSubmitting(true);
         try {
-            // Register endpoint එකට API call එක යැවීම. Backend එකෙන් සම්පූර්ණ user object එක token එක සමඟ නැවත ලැබේ.
+            // 2. සියල්ල නිවැරදි නම්, member ව ලියාපදිංචි කිරීමට එක් API ඇමතුමක් පමණක් යැවීම
             const { data } = await axios.post('/api/members/register', formData);
-            
-            // Backend එකෙන් ලැබෙන user දත්ත වලින් login වීම
-            login(data);
 
-            alert('Registration Successful! Redirecting to your dashboard...');
+            // ★★ කිසිදු ක්‍රීඩාවකට ලියාපදිංචි කිරීමට දෙවන API ඇමතුමක් මෙහි නොමැත. මෙය නිවැරදියි! ★★
             
-            // ★ Role එක අනුව නිවැරදි dashboard එකට navigate කිරීම ★
-            if (data.role === 'Coach') {
-                navigate('/coach-dashboard');
-            } else {
-                // Member සහ Player යන දෙදෙනාම member-dashboard එකට යොමු කිරීම
-                navigate('/member-dashboard');
-            }
+            // 3. ලියාපදිංචි වීම සාර්ථක වූ පසු, පරිශීලකයාව login කර dashboard එකට යොමු කිරීම
+            login(data);
+            alert('Registration Successful! Redirecting to your dashboard...');
+            navigate(data.role === 'Coach' ? '/coach-dashboard' : '/member-dashboard');
 
         } catch (err) {
-            // Backend එකෙන් එන දෝෂ පණිවිඩය පෙන්වීම
+            // 4. ලියාපදිංචි වීම අසාර්ථක වුවහොත් දෝෂ පණිවිඩයක් පෙන්වීම
             setErrors({ form: err.response?.data?.message || 'Registration failed.' });
         } finally {
             setIsSubmitting(false);
@@ -170,7 +175,7 @@ const RegisterPage = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-600 mb-1">NIC Number</label>
-                                <input name="nic" onChange={handleChange} onBlur={handleBlur} required className="input-field" placeholder="12 Digits only"/>
+                                <input name="nic" onChange={handleChange} onBlur={handleBlur} required className="input-field" placeholder="12 Digits only" maxLength="12" />
                                 {errors.nic && <p className="text-red-500 text-xs mt-1">{errors.nic}</p>}
                             </div>
                             <div>
@@ -194,7 +199,7 @@ const RegisterPage = () => {
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-600 mb-1">Contact Number</label>
-                                <input type="tel" name="contactNumber" onChange={handleChange} onBlur={handleBlur} required className="input-field" placeholder="0xxxxxxxxx"/>
+                                <input type="tel" name="contactNumber" onChange={handleChange} onBlur={handleBlur} required className="input-field" placeholder="0xxxxxxxxx or +94xxxxxxxxx"/>
                                 {errors.contactNumber && <p className="text-red-500 text-xs mt-1">{errors.contactNumber}</p>}
                             </div>
                             <div className="md:col-span-2">
@@ -202,14 +207,38 @@ const RegisterPage = () => {
                                 <input type="email" name="email" onChange={handleChange} onBlur={handleBlur} required className="input-field" placeholder="you@example.com"/>
                                 {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                             </div>
-                            <div>
+                            
+                            <div className="relative">
                                 <label className="block text-sm font-medium text-gray-600 mb-1">Password</label>
-                                <input type="password" name="password" onChange={handleChange} onBlur={handleBlur} required className="input-field" placeholder="••••••••"/>
+                                <input 
+                                    type={showPassword ? 'text' : 'password'} 
+                                    name="password" 
+                                    onChange={handleChange} 
+                                    onBlur={handleBlur} 
+                                    required 
+                                    className="input-field" 
+                                    placeholder="••••••••"
+                                />
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 top-6 pr-3 flex items-center text-gray-500">
+                                    {showPassword ? <EyeClosedIcon /> : <EyeOpenIcon />}
+                                </button>
                                 {errors.password && <p className="text-red-500 text-xs mt-1 max-w-full">{errors.password}</p>}
                             </div>
-                            <div>
+                            
+                            <div className="relative">
                                 <label className="block text-sm font-medium text-gray-600 mb-1">Confirm Password</label>
-                                <input type="password" name="confirmPassword" onChange={handleChange} onBlur={handleBlur} required className="input-field" placeholder="••••••••"/>
+                                <input 
+                                    type={showConfirmPassword ? 'text' : 'password'} 
+                                    name="confirmPassword" 
+                                    onChange={handleChange} 
+                                    onBlur={handleBlur} 
+                                    required 
+                                    className="input-field" 
+                                    placeholder="••••••••"
+                                />
+                                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 top-6 pr-3 flex items-center text-gray-500">
+                                    {showConfirmPassword ? <EyeClosedIcon /> : <EyeOpenIcon />}
+                                </button>
                                 {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
                             </div>
                         </div>
