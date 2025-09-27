@@ -60,8 +60,14 @@ const TrainingSessionsPage = () => (
 import AdminDashboard from '@/pages/AdminDashboard';
 import ManageInventory from '@/pages/ManageInventory';
 import ManageSuppliers from '@/pages/ManageSuppliers';
+<<<<<<< Updated upstream
 
 // ★★★ Events module (lazy) — additive only
+=======
+import Preorders from '@/pages/Preorders';
+import FeedbacksPage from '@/pages/FeedbacksPage';
+// Events (lazy)
+>>>>>>> Stashed changes
 const SubmitEvent     = lazy(() => import('@/pages/SubmitEvent'));
 const ApprovedEvents  = lazy(() => import('@/pages/ApprovedEvents'));
 const EventDetails    = lazy(() => import('@/pages/EventDetails'));
@@ -129,6 +135,11 @@ function App() {
                     <Route path="dashboard" element={<CoachDashboard />} />
                     <Route path="feedbacks" element={<FeedbacksPage />} />
                     <Route path="training-sessions" element={<ManageTrainingsPage />} />
+<<<<<<< Updated upstream
+=======
+                    {/* If you later add a FeedbacksPage, enable the line below */}
+                    <Route path="feedbacks" element={<FeedbacksPage />} /> 
+>>>>>>> Stashed changes
                   </Route>
                 </Route>
 

@@ -40,6 +40,7 @@ app.use('/api/events',        eventsRoutes);
 
 // Other APIs
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 app.use('/api/admin',       adminRoutes);
 app.use('/api/cart',        cartRoutes);
 app.use('/api/dashboard',   dashboardRoutes);
@@ -63,6 +64,27 @@ app.use('/api/sports',        sportRoutes);
 app.use('/api/suppliers',     supplierRoutes);
 app.use('/api/preorders',     preorderRoutes);
 app.use('/api/trainings', trainingRoutes);
+>>>>>>> Stashed changes
+=======
+app.use('/api/admin',        adminRoutes);
+app.use('/api/cart',         cartRoutes);
+app.use('/api/dashboard',    dashboardRoutes);
+app.use('/api/items',        itemRoutes);
+app.use('/api/members',      memberRoutes);
+app.use('/api/orders',       orderRoutes);
+app.use('/api/players',      playerRoutes);
+app.use('/api/sponsorships', sponsorshipRoutes);
+app.use('/api/sports', sportRoutes);
+app.use('/api/suppliers', supplierRoutes);
+app.use("/api/feedbacks", feedbackRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/suppliers', require('./routes/supplierRoutes'));
+app.use('/api/trainings', trainingRoutes);
+// Backend/server.js
+// ... අනෙකුත් routes ...
+app.use('/api/sponsorships', require('./routes/sponsorshipRoutes'));
+// Other middlewares...
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 >>>>>>> Stashed changes
 
 // --- Health check ---
