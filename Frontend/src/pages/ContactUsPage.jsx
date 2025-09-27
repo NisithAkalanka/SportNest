@@ -1,33 +1,46 @@
-// File: frontend/src/pages/ContactUsPage.jsx (EMERALD / GLASS UI)
+// File: Frontend/src/pages/ContactUsPage.jsx (FINAL MERGED & CLEAN)
 
 import React, { useState, useMemo } from 'react';
-import contactService from '../api/contactService';
+import api from '@/api';
 import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
 
 const ContactUsPage = () => {
-  // --- Form Logic ---
+  // --- Form State ---
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [status, setStatus] = useState({ message: '', type: '' });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const wordCount = useMemo(() => (formData.message.trim() === '' ? 0 : formData.message.trim().split(/\s+/).length), [formData.message]);
+  // Word count (real-time)
+  const wordCount = useMemo(
+    () => (formData.message.trim() === '' ? 0 : formData.message.trim().split(/\s+/).filter(Boolean).length),
+    [formData.message]
+  );
 
+  // --- Handlers ---
   const handleChange = (e) => {
     let { name, value } = e.target;
-    if (name === 'email') value = value.toLowerCase();
-    setFormData({ ...formData, [name]: value });
-    if (errors[name]) setErrors({ ...errors, [name]: null });
+    if (name === 'email') value = value.toLowerCase(); // keep email lowercase
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
   };
 
   const validate = () => {
     const temp = {};
+
+    // Name: required + min length (Ayuni rule)
     if (!formData.name.trim()) temp.name = 'Full Name is required.';
+    else if (formData.name.trim().length < 3) temp.name = 'Name must be at least 3 characters long.';
+
+    // Email: required + lowercase regex (shared rule)
     const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
     if (!formData.email.trim()) temp.email = 'Email is required.';
     else if (!emailRegex.test(formData.email)) temp.email = 'Please enter a valid email with lowercase letters only.';
+
+    // Message: required + 50-word limit (shared rule)
     if (!formData.message.trim()) temp.message = 'Message is required.';
     else if (wordCount > 50) temp.message = 'Message must not exceed 50 words.';
+
     setErrors(temp);
     return Object.keys(temp).length === 0;
   };
@@ -35,22 +48,30 @@ const ContactUsPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
+
     setLoading(true);
     setStatus({ message: '', type: '' });
     try {
-      // If you later wire the backend: await contactService.submitContactForm(formData);
-      await new Promise((r) => setTimeout(r, 1000));
+      // Real API call (Backend mounted at /api). Controller sets default subject if missing.
+      await api.post('/contact', {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        subject: 'Website Inquiry',
+        message: formData.message.trim(),
+      });
+
       setStatus({ message: 'Thank you! Your message has been sent.', type: 'success' });
       setFormData({ name: '', email: '', message: '' });
       setErrors({});
     } catch (error) {
-      setStatus({ message: error.response?.data?.message || 'An error occurred. Please try again.', type: 'error' });
+      const msg = error?.response?.data?.message || error?.response?.data?.error || 'An error occurred. Please try again.';
+      setStatus({ message: msg, type: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
-  // Use the same ground image used elsewhere for visual consistency
+  // Background image used elsewhere for visual consistency
   const backgroundImageUrl = '/assets/ground.jpeg';
 
   return (
@@ -58,8 +79,8 @@ const ContactUsPage = () => {
       className="relative min-h-screen bg-cover bg-center bg-fixed bg-no-repeat text-white"
       style={{ backgroundImage: `url(${backgroundImageUrl})` }}
     >
-      {/* dark tint */}
-      <div className="absolute inset-0 bg-slate-950/60"></div>
+      {/* Dark tint */}
+      <div className="absolute inset-0 bg-slate-950/60" />
 
       <div className="relative z-10 container mx-auto px-6 py-16 lg:py-24">
         {/* Header */}
@@ -68,7 +89,7 @@ const ContactUsPage = () => {
             Get in <span className="text-emerald-300">Touch</span>
           </h1>
           <p className="mt-4 text-lg text-white/80">
-            We're here to help! Ask about the club, training sessions, memberships—or anything else.
+            We're here to help! Ask about the club, training sessions, memberships — or anything else.
           </p>
         </div>
 
@@ -95,8 +116,21 @@ const ContactUsPage = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-              <InputField name="name" value={formData.name} onChange={handleChange} placeholder="Full Name" error={errors.name} />
-              <InputField name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Email" error={errors.email} />
+              <InputField
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Full Name"
+                error={errors.name}
+              />
+              <InputField
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Email (lowercase only)"
+                error={errors.email}
+              />
               <InputField
                 name="message"
                 isTextarea
@@ -161,7 +195,9 @@ const InputField = ({ name, value, onChange, placeholder, error, type = 'text', 
     <div className="mt-1 flex justify-between items-center">
       {error ? <p className="text-red-600 text-xs">{error}</p> : <span />}
       {isTextarea && (
-        <p className={`text-xs font-medium ${wordCount > maxWords ? 'text-red-600' : 'text-slate-500'}`}>{wordCount}/{maxWords}</p>
+        <p className={`text-xs font-medium ${wordCount > maxWords ? 'text-red-600' : 'text-slate-500'}`}>
+          {wordCount}/{maxWords}
+        </p>
       )}
     </div>
   </div>

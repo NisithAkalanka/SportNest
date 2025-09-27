@@ -1,21 +1,34 @@
-// Frontend/src/pages/AboutPage.jsx
-
 import React from 'react';
-import { FaBullseye, FaUsers, FaChartLine } from 'react-icons/fa';
+import { FaBullseye, FaUsers, FaChartLine, FaArrowLeft } from 'react-icons/fa'; // 1. FaArrowLeft import කරගන්න
+import { useNavigate } from 'react-router-dom'; // 2. useNavigate import කරගන්න
 
 const AboutPage = () => {
+    const navigate = useNavigate(); // 3. useNavigate initialize කරගන්න
+
     return (
         <div className="bg-white">
-            {/* 1. Hero Section with Background Image */}
+            {/* Hero Section */}
             <div className="relative h-96 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=1740&auto=format&fit=crop')" }}>
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                     <h1 className="text-5xl font-extrabold text-white">Our Story: The Heart of SportNest</h1>
                 </div>
             </div>
 
-            {/* 2. Main Content Section */}
+            {/* Main Content Section */}
             <div className="container mx-auto px-4 py-16">
                 <div className="max-w-4xl mx-auto">
+                
+                    {/* ★★★ 4. Back Button එක මෙතැන එකතු කර ඇත ★★★ */}
+                    <div className="mb-8">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 font-semibold"
+                        >
+                            <FaArrowLeft />
+                            Back
+                        </button>
+                    </div>
+
                     {/* Introduction */}
                     <div className="mb-12">
                         <h2 className="text-3xl font-bold text-gray-800 mb-4">Forged in Passion, Driven by Community</h2>

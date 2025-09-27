@@ -1,18 +1,29 @@
-// src/pages/MemberDashboard.jsx — merged, conflict-free, preserved features
+// src/pages/MemberDashboard.jsx — FINAL MERGED & CLEAN (main2 + Ayuni)
 
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import axios from 'axios';
-import { AuthContext } from '../context/MemberAuthContext';
+import api from '@/api';
+import { AuthContext } from '@/context/MemberAuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+  CardFooter,
+} from '@/components/ui/card';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner, faCheckCircle, faExclamationTriangle, faPenToSquare } from '@fortawesome/free-solid-svg-icons';
+import {
+  faSpinner,
+  faCheckCircle,
+  faExclamationTriangle,
+  faPenToSquare,
+  faTrashAlt,
+} from '@fortawesome/free-solid-svg-icons';
 import PlayerEditModal from '../components/PlayerEditModal';
-
-// NEW: My submitted events (inline list)
 import MyEventsInline from '@/components/profile/MyEventsInline';
 
 const MemberDashboard = () => {
@@ -23,8 +34,16 @@ const MemberDashboard = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [originalData, setOriginalData] = useState(null);
   const [formData, setFormData] = useState({
-    firstName: '', lastName: '', email: '', contactNumber: '', age: '', nic: '', gender: 'Male'
+    firstName: '',
+    lastName: '',
+    email: '',
+    contactNumber: '',
+    age: '',
+    nic: '',
+    gender: 'Male',
   });
+
+  const [memberDetails, setMemberDetails] = useState(null);
   const [profileImage, setProfileImage] = useState('/uploads/default-avatar.png');
   const [newImageFile, setNewImageFile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +53,7 @@ const MemberDashboard = () => {
   const [sportRegistrations, setSportRegistrations] = useState([]);
   const [editingProfile, setEditingProfile] = useState(null);
 
-  // Combined, safe profile fetcher (preserves both branches' behavior)
+  // ================== Fetch Profile (union of both branches) ==================
   const fetchProfileData = async () => {
     if (!user?.token) {
       if (logout) logout();
@@ -43,20 +62,22 @@ const MemberDashboard = () => {
     }
     try {
       setLoading(true);
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      const { data } = await axios.get('/api/members/my-profile', config);
-      const { memberDetails, playerProfiles } = data;
+      const { data } = await api.get('/members/my-profile');
+
+      setMemberDetails(data.memberDetails);
+      const { memberDetails: md, playerProfiles } = data;
 
       const initialData = {
-        firstName: memberDetails.firstName || '',
-        lastName: memberDetails.lastName || '',
-        email: memberDetails.email || '',
-        contactNumber: memberDetails.contactNumber || '',
-        age: memberDetails.age || '',
-        nic: memberDetails.nic || '',
-        gender: memberDetails.gender || 'Male',
-        profileImage: memberDetails.profileImage || '/uploads/default-avatar.png'
+        firstName: md?.firstName || '',
+        lastName: md?.lastName || '',
+        email: md?.email || '',
+        contactNumber: md?.contactNumber || '',
+        age: md?.age || '',
+        nic: md?.nic || '',
+        gender: md?.gender || 'Male',
+        profileImage:  data.memberDetails.profileImage || '/uploads/default-avatar.png',
       };
+
       setFormData(initialData);
       setOriginalData(initialData);
       setProfileImage(initialData.profileImage);
@@ -74,10 +95,11 @@ const MemberDashboard = () => {
   };
 
   useEffect(() => {
-    if (user) fetchProfileData();
+    fetchProfileData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // ================== Handlers ==================
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleImageChange = (e) => {
@@ -90,27 +112,27 @@ const MemberDashboard = () => {
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
-    setSaving(true); setError(''); setSuccess('');
+    setSaving(true);
+    setError('');
+    setSuccess('');
 
     const updateData = new FormData();
-    Object.entries(formData).forEach(([k, v]) => updateData.append(k, v));
+    Object.keys(formData).forEach((key) => updateData.append(key, formData[key]));
     if (newImageFile) updateData.append('profileImage', newImageFile);
 
     try {
-      const config = { headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${user.token}` } };
-      const { data } = await axios.put('/api/members/my-profile', updateData, config);
+      const { data } = await api.put('/members/my-profile', updateData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
 
-      // Preserve both branches: update context if details provided, then refetch
-      if (data?.memberDetails && login) {
-        login({ ...user, ...data.memberDetails });
-      } else if (data && login) {
-        login(data);
-      }
-
+      // Login with updated user (Ayuni) + re-sync local state (main2)
+      if (login) login(data);
       setSuccess('Profile updated successfully!');
-      await fetchProfileData();
-      setIsEditing(false);
+      setOriginalData({ ...formData, profileImage: data.profileImage });
+      setProfileImage(data.profileImage);
       setNewImageFile(null);
+      setIsEditing(false);
+      await fetchProfileData();
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred. Please try again.');
     } finally {
@@ -134,18 +156,10 @@ const MemberDashboard = () => {
   const handleCancelMembership = async () => {
     if (window.confirm('Are you sure you want to cancel your membership? This cannot be undone.')) {
       try {
-        const token = user?.token;
-        const config = { headers: { Authorization: `Bearer ${token}` } };
-        const resp = await axios.delete('/api/members/membership', config);
+        const { data } = await api.delete('/members/membership');
+        if (login) login(data);
         alert('Your membership has been successfully cancelled.');
-
-        // If backend returns updated user, apply; otherwise logout
-        if (resp?.data && login && resp.data.memberDetails) {
-          login({ ...user, ...resp.data.memberDetails });
-        } else if (logout) {
-          logout();
-          navigate('/');
-        }
+        fetchProfileData();
       } catch (err) {
         alert(err.response?.data?.message || 'Failed to cancel membership.');
       }
@@ -155,22 +169,42 @@ const MemberDashboard = () => {
   const handleDeleteSport = async (profileId) => {
     if (window.confirm('Are you sure you want to delete this sport registration?')) {
       try {
-        const token = user?.token;
-        const config = { headers: { Authorization: `Bearer ${token}` } };
-        await axios.delete(`/api/players/profile/${profileId}`, config);
+        await api.delete(`/players/profile/${profileId}`);
         alert('Registration deleted successfully!');
-        setSportRegistrations(prev => prev.filter(p => p._id !== profileId));
+        setSportRegistrations((prev) => prev.filter((p) => p._id !== profileId));
       } catch (err) {
         alert(err.response?.data?.message || 'Failed to delete registration.');
       }
     }
   };
 
-  if (loading) return (
-    <div className="min-h-[60vh] grid place-content-center">
-      <FontAwesomeIcon icon={faSpinner} className="h-10 w-10 text-emerald-600 animate-spin" />
-    </div>
-  );
+  const handleRemovePhoto = async () => {
+    if (window.confirm('Are you sure you want to remove your profile photo?')) {
+      setSaving(true);
+      setError('');
+      setSuccess('');
+      try {
+        const { data } = await api.delete('/members/my-profile/photo');
+        if (login) login(data);
+        setProfileImage(data.profileImage);
+        setOriginalData((prev) => ({ ...prev, profileImage: data.profileImage }));
+        setSuccess('Profile photo removed successfully!');
+        setIsEditing(false);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to remove photo.');
+      } finally {
+        setSaving(false);
+      }
+    }
+  };
+
+  // ================== Render ==================
+  if (loading)
+    return (
+      <div className="min-h-[60vh] grid place-content-center">
+        <FontAwesomeIcon icon={faSpinner} className="h-10 w-10 text-emerald-600 animate-spin" />
+      </div>
+    );
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -178,15 +212,31 @@ const MemberDashboard = () => {
         <PlayerEditModal
           profile={editingProfile}
           onClose={() => setEditingProfile(null)}
-          onUpdate={() => { setEditingProfile(null); fetchProfileData(); }}
+          onUpdate={() => {
+            setEditingProfile(null);
+            fetchProfileData();
+          }}
         />
       )}
 
       <div className="container mx-auto max-w-7xl p-4 md:p-8">
+        {/* Main header (main2 style) */}
         <div className="rounded-2xl p-6 bg-[#0D1B2A] text-white border border-white/10 mb-8">
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">My Profile</h1>
           <p className="text-white/80 mt-1">Manage your details, membership and sport registrations.</p>
         </div>
+
+        {/* Membership Expired Reminder (Ayuni) */}
+        {memberDetails?.membershipStatus === 'Expired' && (
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-8 shadow-md" role="alert">
+            <p className="font-bold text-lg">Your Membership Has Expired!</p>
+            <p className="mt-1">Please renew your membership to continue enjoying our services without interruption.</p>
+            <Link to="/renew-membership" className="inline-block mt-3 bg-red-600 text-white font-bold py-2 px-4 rounded hover:bg-red-700 transition-colors">
+              Renew Now
+            </Link>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           {/* Left Side */}
           <div className="lg:col-span-1 space-y-8">
@@ -215,6 +265,14 @@ const MemberDashboard = () => {
                   <p className="flex justify-between text-sm"><span className="font-semibold text-gray-600">Club ID:</span> <span>{user?.clubId}</span></p>
                   <p className="flex justify-between text-sm"><span className="font-semibold text-gray-600">Role:</span> <span className="capitalize">{user?.role}</span></p>
                 </div>
+
+                {/* Remove Photo Button (Ayuni) */}
+                {isEditing && originalData?.profileImage !== '/uploads/default-avatar.png' && (
+                  <Button variant="link" className="text-red-500 mt-2" onClick={handleRemovePhoto} disabled={saving}>
+                    <FontAwesomeIcon icon={faTrashAlt} className="mr-2" />
+                    Remove Photo
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -231,8 +289,16 @@ const MemberDashboard = () => {
               </CardHeader>
               <form onSubmit={handleProfileUpdate}>
                 <CardContent className="space-y-6">
-                  {error && (<div className="bg-red-100 text-red-700 p-3 rounded flex items-center"><FontAwesomeIcon icon={faExclamationTriangle} className="mr-2" /> {error}</div>)}
-                  {success && !isEditing && (<div className="bg-green-100 text-green-700 p-3 rounded flex items-center"><FontAwesomeIcon icon={faCheckCircle} className="mr-2" /> {success}</div>)}
+                  {error && (
+                    <div className="bg-red-100 text-red-700 p-3 rounded flex items-center">
+                      <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2" /> {error}
+                    </div>
+                  )}
+                  {success && !isEditing && (
+                    <div className="bg-green-100 text-green-700 p-3 rounded flex items-center">
+                      <FontAwesomeIcon icon={faCheckCircle} className="mr-2" /> {success}
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1"><Label htmlFor="firstName">First Name</Label><Input id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} required disabled={!isEditing} /></div>
@@ -271,13 +337,27 @@ const MemberDashboard = () => {
 
             {/* Membership Details */}
             <Card>
-              <CardHeader><CardTitle>Membership Details</CardTitle><CardDescription>Your current membership information.</CardDescription></CardHeader>
+              <CardHeader>
+                <CardTitle>Membership Details</CardTitle>
+                <CardDescription>Your current membership information.</CardDescription>
+              </CardHeader>
               <CardContent>
-                {user && user.membershipId ? (
+                {memberDetails && memberDetails.membershipId ? (
                   <div className="space-y-4">
-                    <div className="flex justify-between items-center"><p className="text-sm font-medium text-gray-500">Membership ID</p><p className="font-semibold text-gray-800">{user.membershipId}</p></div>
-                    <div className="flex justify-between items-center"><p className="text-sm font-medium text-gray-500">Current Plan</p><p className="font-semibold text-green-600">{user.membershipPlan}</p></div>
-                    <div className="flex justify-between items-center"><p className="text-sm font-medium text-gray-500">Status</p><span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">Active</span></div>
+                    <div className="flex justify-between items-center"><p className="text-sm font-medium text-gray-500">Membership ID</p><p className="font-semibold text-gray-800">{memberDetails.membershipId}</p></div>
+                    <div className="flex justify-between items-center"><p className="text-sm font-medium text-gray-500">Current Plan</p><p className="font-semibold">{memberDetails.membershipPlan}</p></div>
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm font-medium text-gray-500">Status</p>
+                      <span className={`px-3 py-1 text-xs font-bold rounded-full capitalize ${memberDetails.membershipStatus === 'Active' ? 'bg-green-100 text-green-800' : memberDetails.membershipStatus === 'Expired' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
+                        {memberDetails.membershipStatus}
+                      </span>
+                    </div>
+                    {memberDetails.membershipExpiresAt && (
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm font-medium text-gray-500">Expires On</p>
+                        <p className="font-semibold text-gray-800">{new Date(memberDetails.membershipExpiresAt).toLocaleDateString()}</p>
+                      </div>
+                    )}
                     <div className="flex justify-end gap-4 pt-4 border-t">
                       <Link to="/membership-plans"><Button variant="outline">Switch Plan</Button></Link>
                       <Button variant="destructive" onClick={handleCancelMembership}>Cancel Membership</Button>
@@ -298,7 +378,7 @@ const MemberDashboard = () => {
               <CardContent>
                 {sportRegistrations && sportRegistrations.length > 0 ? (
                   <ul className="space-y-3">
-                    {sportRegistrations.map(p => (
+                    {sportRegistrations.map((p) => (
                       <li key={p._id} className="bg-white p-3 rounded-lg border border-slate-200 flex justify-between items-center hover:shadow-sm transition">
                         <div>
                           <span className="font-semibold">{p.sportName}</span>
@@ -319,10 +399,23 @@ const MemberDashboard = () => {
                 )}
               </CardContent>
             </Card>
+              
+                        {/* ★★★ MyReview component එක ඉවත් කර, සරල Link එකක් පමණක් තැබීම ★★★ */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Club Review</CardTitle>
+                                <CardDescription>Your feedback is valuable to us. Share or update your experience on our official reviews page.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="text-center">
+                                 <Link to="/reviews">
+                                    <Button style={{ backgroundColor: '#FF6700' }}>Go to Reviews Page</Button>
+                                 </Link>
+                            </CardContent>
+                        </Card>
           </div>
         </div>
 
-        {/* Inline list of my submitted events */}
+        {/* Inline list of my submitted events (main2 add-on) */}
         <div className="mt-10">
           <MyEventsInline />
         </div>
@@ -331,4 +424,4 @@ const MemberDashboard = () => {
   );
 };
 
-export default MemberDashboard;
+export default MemberDashboard;//original

@@ -1,97 +1,159 @@
-// Frontend/src/pages/MemberLoginPage.jsx
-
-import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-import { useNavigate, Link } from "react-router-dom";
-import { AuthContext } from '../context/MemberAuthContext'; 
+// Frontend/src/pages/MemberLoginPage.jsx — FINAL MERGED & CLEAN
+import React, { useState, useContext, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import api from '@/api'; // ✅ shared axios instance with /api base
+import { AuthContext } from '@/context/MemberAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+// --- Password Visibility Toggle Icons ---
+const EyeOpenIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+  </svg>
+);
+const EyeClosedIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2 2 0 01-2.828 2.828l-1.515-1.514A4 4 0 0010 14a4 4 0 10-2.032-7.44z" clipRule="evenodd" />
+    <path d="M10 12a2 2 0 110-4 2 2 0 010 4z" />
+  </svg>
+);
+
 const MemberLoginPage = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    
-    const navigate = useNavigate();
-    const { user, login } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const { user, login } = useContext(AuthContext);
 
-    // Login වූ පරිශීලකයෙක් මෙම පිටුවට කෙලින්ම පිවිසීමට උත්සාහ කළහොත්, ඔහුව/ඇයව අදාළ dashboard එකට යොමු කිරීම
-    useEffect(() => {
-        if (user) {
-            if (user.role === 'Coach') {
-                navigate('/coach/dashboard');
-            } else {
-                navigate('/member-dashboard');
-            }
-        }
-    }, [user, navigate]);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-    // ★★★ යාවත්කාලීන කරන ලද handleSubmit function එක ★★★
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-        try {
-            const config = { headers: { 'Content-Type': 'application/json' } };
-            const { data } = await axios.post('/api/members/login', { email, password }, config);
-            
-            // Context එක සහ LocalStorage එකේ, login වූ පරිශීලකයාගේ දත්ත ගබඩා කිරීම
-            login(data);
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'Admin') navigate('/admin-dashboard');
+      else if (user.role === 'Coach') navigate('/coach/dashboard');
+      else navigate('/member-dashboard');
+    }
+  }, [user, navigate]);
 
-            // ★ Role එක අනුව, අදාළ Dashboard එකට navigate කිරීම ★
-            if (data.role === 'Coach') {
-                navigate('/coach/dashboard');
-            } else {
-                // Member සහ Player යන දෙදෙනාම member-dashboard එකට යොමු කිරීම
-                navigate('/member-dashboard');
-            }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
 
-        } catch (err) {
-            setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
-        } finally {
-            setLoading(false);
-        }
-    };
+    // --- Validation ---
+    const emailLc = String(email).trim().toLowerCase();
+    if (!emailLc || !password) {
+      setError('Please enter both email and password.');
+      return;
+    }
+    if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(emailLc)) {
+      setError('Please enter a valid lowercase email (e.g., yourname@example.com).');
+      return;
+    }
 
-    return (
-        <div className="flex items-center justify-center min-h-screen p-6" style={{backgroundColor: '#F8F9FA'}}>
-            <form onSubmit={handleSubmit} className="bg-white p-8 md:p-10 rounded-xl shadow-2xl w-full max-w-md border">
-                <h2 className="text-3xl font-bold mb-8 text-center" style={{color: '#0D1B2A'}}>Welcome Back!</h2>
-                
-                {error && <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6">{error}</div>}
-                
-                <div className="mb-6">
-                    <Label htmlFor="member-email">Email Address</Label>
-                    <Input id="member-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                </div>
-                
-                <div className="mb-6">
-                     <Label htmlFor="member-password">Password</Label>
-                    <Input id="member-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                </div>
-                
-                <Button type="submit" disabled={loading} className="w-full text-white font-bold py-3" style={{backgroundColor: '#FF6700'}}>
-                    {loading ? 'Signing In...' : 'Sign In'}
-                </Button>
+    // --- API Request ---
+    setIsSubmitting(true);
+    try {
+      const { data } = await api.post('/members/login', { email: emailLc, password });
 
-                <div className="text-center mt-6 space-y-2">
-                    <p className="text-sm text-gray-600">
-                        Don't have an account?{' '}
-                        <Link to="/register" className="font-medium hover:underline" style={{color: '#0D1B2A'}}>
-                            Register here
-                        </Link>
-                    </p>
-                     <p className="text-sm">
-                        <Link to="/forgot-password" className="font-medium text-gray-500 hover:underline">
-                           Forgot Password?
-                        </Link>
-                    </p>
-                </div>
-            </form>
+      // Context login handles localStorage + state update
+      login(data);
+
+      // Redirect based on role
+      if (data.role === 'Admin') navigate('/admin-dashboard');
+      else if (data.role === 'Coach') navigate('/coach/dashboard');
+      else navigate('/member-dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Invalid email or password.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-100 to-orange-200">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-xl">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900">Welcome Back!</h2>
+          <p className="mt-2 text-gray-600">Sign in to continue to your account</p>
         </div>
-    );
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit} noValidate>
+          {error && <p className="bg-red-100 text-red-700 p-3 rounded-lg text-center">{error}</p>}
+
+          {/* Email */}
+          <div>
+            <Label htmlFor="email">Email Address</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value.toLowerCase())}
+              className="mt-1"
+            />
+          </div>
+
+          {/* Password */}
+          <div className="relative">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 top-7 hover:text-gray-700"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeClosedIcon /> : <EyeOpenIcon />}
+            </button>
+          </div>
+
+          {/* Forgot Password */}
+          <div className="text-sm text-right">
+            <Link to="/forgot-password" className="font-medium text-orange-600 hover:text-orange-500">
+              Forgot Password?
+            </Link>
+          </div>
+
+          {/* Submit */}
+          <div>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="relative flex justify-center w-full text-white font-medium"
+            >
+              {isSubmitting ? 'Signing In...' : 'Sign In'}
+            </Button>
+          </div>
+
+          {/* Register */}
+          <div className="text-sm text-center">
+            <p className="text-gray-600">
+              Don’t have an account?{' '}
+              <Link to="/register" className="font-medium text-orange-600 hover:text-orange-500">
+                Register here
+              </Link>
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 };
 
 export default MemberLoginPage;

@@ -165,5 +165,5 @@ module.exports = {
   deleteSession,
   registerForTraining,
   unregisterFromTraining,
-  getCoachSummary,
+  getCoachSummary,//original
 };

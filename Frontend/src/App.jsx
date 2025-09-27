@@ -1,83 +1,83 @@
-// File: frontend/src/App.jsx
+// File: Frontend/src/App.jsx — FINAL MERGED & CLEAN
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Suspense, lazy } from "react";
 
 // Providers (Contexts)
-import { MemberAuthProvider } from '@/context/MemberAuthContext';
-import { AdminAuthProvider } from '@/context/AdminAuthContext';
-import { CartProvider } from '@/context/CartContext';
+import { MemberAuthProvider } from "@/context/MemberAuthContext";
+import { AdminAuthProvider } from "@/context/AdminAuthContext";
+import { CartProvider } from "@/context/CartContext";
 
 // Layouts
-import PublicLayout from '@/components/layout/PublicLayout';
-import AdminLayout from '@/components/layout/AdminLayout';
-import CoachLayout from '@/components/layout/CoachLayout';
+import PublicLayout from "@/components/layout/PublicLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
+import CoachLayout from "@/components/layout/CoachLayout";
 
 // Route Protection
-import AdminRoute from '@/components/AdminRoute';
-import MemberRoute from '@/components/MemberRoute';
+import AdminRoute from "@/components/AdminRoute";
+import MemberRoute from "@/components/MemberRoute";
 
-// Trainings
-// --- Member (Protected) ---
-import TrainingsPage from '@/pages/TrainingsPage';
-// --- Coach (Protected) ---
-import ManageTrainingsPage from '@/pages/ManageTrainingsPage';
-
-// Public Pages
-import HomePage from '@/pages/HomePage';
-import Shop from '@/pages/Shop';
-import CartPage from '@/pages/CartPage';
-import SportsHomePage from '@/pages/SportsHomePage';
-import RegisterPage from '@/pages/RegisterPage';
-import MemberLoginPage from '@/pages/MemberLoginPage';
-import AdminLoginPage from '@/pages/AdminLoginPage';
-import ClubHomePage from '@/pages/ClubHomePage';
-import SponsorshipPage from '@/pages/SponsorshipPage';
-import MembershipPlansPage from '@/pages/MembershipPlansPage';
-import ConfirmMembershipPage from '@/pages/ConfirmMembershipPage';
-import AboutPage from '@/pages/AboutPage';
-import AchievementsPage from '@/pages/AchievementsPage';
-import ContactUsPage from '@/pages/ContactUsPage';
-import ReviewsPage from '@/pages/ReviewsPage';
+// --- Public Pages ---
+import HomePage from "@/pages/HomePage";
+import Shop from "@/pages/Shop";
+import CartPage from "@/pages/CartPage";
+import SportsHomePage from "@/pages/SportsHomePage";
+import RegisterPage from "@/pages/RegisterPage";
+import MemberLoginPage from "@/pages/MemberLoginPage";
+import AdminLoginPage from "@/pages/AdminLoginPage";
+import ClubHomePage from "@/pages/ClubHomePage";
+import SponsorshipPage from "@/pages/SponsorshipPage";
+import MembershipPlansPage from "@/pages/MembershipPlansPage";
+import ConfirmMembershipPage from "@/pages/ConfirmMembershipPage";
+import AboutPage from "@/pages/AboutPage";
+import AchievementsPage from "@/pages/AchievementsPage";
+import ContactUsPage from "@/pages/ContactUsPage";
+import ReviewsPage from "@/pages/ReviewsPage";
+import RenewPage from "@/pages/RenewPage";
+import RenewalSuccessPage from "@/pages/RenewalSuccessPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 
 // Sport Detail Pages
-import TennisPage from '@/pages/sports/TennisPage';
-import CricketPage from '@/pages/sports/CricketPage';
-import BadmintonPage from '@/pages/sports/BadmintonPage';
-import NetballPage from '@/pages/sports/NetballPage';
-import SwimmingPage from '@/pages/sports/SwimmingPage';
+import TennisPage from "@/pages/sports/TennisPage";
+import CricketPage from "@/pages/sports/CricketPage";
+import BadmintonPage from "@/pages/sports/BadmintonPage";
+import NetballPage from "@/pages/sports/NetballPage";
+import SwimmingPage from "@/pages/sports/SwimmingPage";
 
 // --- Member (Protected) Pages ---
-import MemberDashboard from '@/pages/MemberDashboard';
-import PlayerProfilePage from '@/pages/PlayerProfilePage';
-import SponsorshipManagePage from '@/pages/SponsorshipManagePage';
-import SubscriptionSuccessPage from '@/pages/SubscriptionSuccessPage';
-
-import FeedbacksPage from './pages/FeedbacksPage'; 
-
+import MemberDashboard from "@/pages/MemberDashboard";
+import PlayerProfilePage from "@/pages/PlayerProfilePage";
+import SponsorshipManagePage from "@/pages/SponsorshipManagePage";
+import SubscriptionSuccessPage from "@/pages/SubscriptionSuccessPage";
+import TrainingsPage from "@/pages/TrainingsPage";
 
 // Coach pages
-import CoachDashboard from '@/pages/CoachDashboard';
+import CoachDashboard from "@/pages/CoachDashboard";
+import ManageTrainingsPage from "@/pages/ManageTrainingsPage";
+import FeedbacksPage from "@/pages/FeedbacksPage";
 
 // --- Admin (Protected) Pages ---
-import AdminDashboard from '@/pages/AdminDashboard';
-import ManageInventory from '@/pages/ManageInventory';
-import ManageSuppliers from '@/pages/ManageSuppliers';
-import Preorders from '@/pages/Preorders';
-import AttendancePage from '@/pages/AttendancePage';
-import SalaryPage from '@/pages/SalaryPage';
-import ManageCoachesPage from '@/pages/ManageCoachesPage';
-import ManageReviewsPage from '@/pages/ManageReviewsPage';
+import AdminDashboard from "@/pages/AdminDashboard";
+import ManageInventory from "@/pages/ManageInventory";
+import ManageSuppliers from "@/pages/ManageSuppliers";
+import Preorders from "@/pages/Preorders";
+import AttendancePage from "@/pages/AttendancePage";
+import SalaryPage from "@/pages/SalaryPage";
+import ManageCoachesPage from "@/pages/ManageCoachesPage";
+import ManageReviewsPage from "@/pages/ManageReviewsPage";
+import UserManagementPage from "@/pages/UserManagementPage";
+import SponsorshipManagementPage from "@/components/admin/SponsorshipManagementPage";
 
 // Events (lazy)
-const SubmitEvent     = lazy(() => import('@/pages/SubmitEvent'));
-const ApprovedEvents  = lazy(() => import('@/pages/ApprovedEvents'));
-const EventDetails    = lazy(() => import('@/pages/EventDetails'));
-const ModerateEvents  = lazy(() => import('@/pages/ModerateEvents'));
-const MyEvents        = lazy(() => import('@/pages/MyEvents'));
-const EditMyEvent     = lazy(() => import('@/pages/EditMyEvent'));
-const EditEvent       = lazy(() => import('@/pages/EditEvent'));
-const EventsReport    = lazy(() => import('@/pages/EventsReport'));
+const SubmitEvent = lazy(() => import("@/pages/SubmitEvent"));
+const ApprovedEvents = lazy(() => import("@/pages/ApprovedEvents"));
+const EventDetails = lazy(() => import("@/pages/EventDetails"));
+const ModerateEvents = lazy(() => import("@/pages/ModerateEvents"));
+const MyEvents = lazy(() => import("@/pages/MyEvents"));
+const EditMyEvent = lazy(() => import("@/pages/EditMyEvent"));
+const EditEvent = lazy(() => import("@/pages/EditEvent"));
+const EventsReport = lazy(() => import("@/pages/EventsReport"));
 
 const AppLoader = () => (
   <div className="min-h-[40vh] grid place-content-center text-emerald-600">Loading…</div>
@@ -109,6 +109,10 @@ function App() {
                   <Route path="confirm-membership/:planName" element={<ConfirmMembershipPage />} />
                   <Route path="contact" element={<ContactUsPage />} />
                   <Route path="reviews" element={<ReviewsPage />} />
+                  <Route path="renew-membership" element={<RenewPage />} />
+                  <Route path="renewal-success" element={<RenewalSuccessPage />} />
+                  <Route path="forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="reset-password/:token" element={<ResetPasswordPage />} />
 
                   {/* Sports detail */}
                   <Route path="sports/tennis" element={<TennisPage />} />
@@ -139,10 +143,7 @@ function App() {
                   <Route element={<CoachLayout />}> 
                     <Route path="dashboard" element={<CoachDashboard />} />
                     <Route path="training-sessions" element={<ManageTrainingsPage />} />
-                      <Route path="feedbacks" element={<FeedbacksPage />} />
-                   
-                    {/* If you later add a FeedbacksPage, enable the line below */}
-                    {/* <Route path="feedbacks" element={<FeedbacksPage />} /> */}
+                    <Route path="feedbacks" element={<FeedbacksPage />} />
                   </Route>
                 </Route>
 
@@ -157,6 +158,8 @@ function App() {
                     <Route path="attendance" element={<AttendancePage />} />
                     <Route path="salaries" element={<SalaryPage />} />
                     <Route path="reviews" element={<ManageReviewsPage />} />
+                    <Route path="user-management" element={<UserManagementPage />} />
+                    <Route path="sponsorship-management" element={<SponsorshipManagementPage />} />
                     <Route path="events/moderate" element={<ModerateEvents />} />
                     <Route path="events/:id/edit" element={<EditEvent />} />
                     <Route path="events/report" element={<EventsReport />} />

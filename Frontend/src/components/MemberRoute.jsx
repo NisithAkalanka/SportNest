@@ -1,11 +1,13 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../context/MemberAuthContext'; // ✅ useAuth hook
 
 const MemberRoute = () => {
-  // ★★★ මේ file එක, කලින් වගේම 'userInfo' key එක පරීක්ෂා කරනවා ★★★
-  const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+  const { user } = useAuth();
 
-  // userInfo තියෙනවා නම් විතරයි, ඊළඟ පිටුවට යන්න දෙන්නේ
-  return userInfo ? <Outlet /> : <Navigate to="/login" replace />;
+  // If user is logged in, render the nested route (Outlet)
+  // Otherwise, redirect to login
+  return user ? <Outlet /> : <Navigate to="/login" replace />;
 };
+
 export default MemberRoute;

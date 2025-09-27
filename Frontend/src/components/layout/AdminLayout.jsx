@@ -1,10 +1,20 @@
 import React, { useContext } from 'react';
-import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom'; 
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'; 
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  faSignOutAlt, faBoxOpen, faUsers, faTachometerAlt, faStore, 
-  faCalendarCheck, faFileInvoiceDollar, faUserTie, faCommentDots, faClipboardList
+  faSignOutAlt,
+  faBoxOpen,
+  faUsers,
+  faTachometerAlt,
+  faStore,
+  faCalendarCheck,
+  faFileInvoiceDollar,
+  faUserTie,
+  faCommentDots,
+  faClipboardList,
+  faUserFriends,
+  faHandshake
 } from '@fortawesome/free-solid-svg-icons';
 
 import { Button } from '@/components/ui/button';
@@ -63,6 +73,20 @@ const AdminLayout = () => {
             <li className="mb-2">
               <NavLink to="/admin-dashboard/suppliers" className={itemClass}>
                 <FontAwesomeIcon icon={faUsers} className="mr-3 w-5" /> Suppliers
+              </NavLink>
+            </li>
+
+            {/* User Management (Ayuni) */}
+            <li className="mb-2">
+              <NavLink to="/admin-dashboard/user-management" className={itemClass}>
+                <FontAwesomeIcon icon={faUserFriends} className="mr-3 w-5" /> User Management
+              </NavLink>
+            </li>
+
+            {/* Sponsorship Management (Ayuni) */}
+            <li className="mb-2">
+              <NavLink to="/admin-dashboard/sponsorship-management" className={itemClass}>
+                <FontAwesomeIcon icon={faHandshake} className="mr-3 w-5" /> Sponsorship
               </NavLink>
             </li>
 

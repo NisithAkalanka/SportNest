@@ -1,118 +1,170 @@
-// File: backend/controllers/playerController.js (Updated with the new logic)
+// File: Backend/controllers/playerController.js — CORRECTED FOR SCHEMA CHANGE
 
 const Player = require('../models/PlayerModel');
-const Member = require('../models/memberModel');
 
-/**
- * @desc    Register the logged-in member for a specific sport.
- * @note    This function is now simpler. It NO LONGER changes the member's main role.
- */
+// ================== Register Player (Schema-safe) ==================
 const registerPlayer = async (req, res) => {
-    const { 
-        sportName, fullName, clubId, membershipId, dateOfBirth, 
-        contactNumber, emergencyContactName, emergencyContactNumber, skillLevel, healthHistory 
-    } = req.body;
-    
-    const memberId = req.user._id;
+  const {
+    sportName, fullName, clubId, membershipId, dateOfBirth, contactNumber,
+    emergencyContactName, emergencyContactNumber, skillLevel, healthHistory,
+  } = req.body;
 
-    try {
-        const existingPlayer = await Player.findOne({ member: memberId, sportName: sportName });
-        
-        if (existingPlayer) {
-            return res.status(400).json({ message: `You are already registered for ${sportName}.` });
-        }
-        
-        // Just create the player profile. No need to update the Member role anymore.
-        const player = await Player.create({
-            member: memberId, clubId, fullName, membershipId, sportName,
-            dateOfBirth: new Date(dateOfBirth), contactNumber, emergencyContactName,
-            emergencyContactNumber, skillLevel, healthHistory
-        });
+  // req.user._id comes from your authentication middleware (e.g., 'protect')
+  const memberObjectId = req.user?._id; 
 
-        res.status(201).json({ message: `Successfully registered for ${sportName}!`, player });
-
-    } catch (error) {
-        console.error("Player Registration Error:", error);
-        res.status(500).json({ message: `Server error during player registration: ${error.message}` });
-    }
-};
-
-
-/**
- * @desc    Get a simplified list of unique players for dropdowns.
- * @logic   It now fetches anyone who has at least one registration in the 'Player' collection.
- * @route   GET /api/players/simple
- * @access  Private (Coach/Admin)
- */
-const getSimplePlayerList = async (req, res) => {
   try {
-    // 1. Authorize: Only coaches and admins can access this. (No change here)
-    const role = req.user?.role?.toLowerCase();
-    if (role !== 'coach' && role !== 'admin') {
-      return res.status(403).json({ message: 'Forbidden: You do not have permission to access this list.' });
+    if (!memberObjectId) {
+      return res.status(401).json({ message: 'Unauthorized. You must be logged in to register as a player.' });
+    }
+      
+    // ★★★ නිවැรදි කරන ලදී: Check if a Player Profile for this member already exists ★★★
+    // This is more robust than checking for sport, as one member gets one profile.
+    const existingProfile = await Player.findOne({ member: memberObjectId });
+
+    if (existingProfile) {
+      return res.status(400).json({ message: 'You already have a player profile. You can update it from your dashboard.' });
     }
 
-    // ★★★★★★★ START: THE NEW LOGIC YOU SUGGESTED ★★★★★★★
-
-    // 2. Find all entries in the 'Player' collection.
-    //    Then, use .populate() to fetch the 'firstName', 'lastName', and 'clubId' 
-    //    from the referenced 'Member' document for each player.
-    const allPlayerRegistrations = await Player.find({})
-                                                .populate({
-                                                    path: 'member',
-                                                    select: 'firstName lastName clubId' // Select only these fields from the Member model
-                                                })
-                                                .lean();
-
-    if (!allPlayerRegistrations || allPlayerRegistrations.length === 0) {
-        return res.status(404).json({ message: 'No players have registered for any sport yet.' });
-    }
-    
-    // 3. Process the list to create a UNIQUE list of players.
-    //    A single member might be registered for multiple sports, but we only want to show them once in the dropdown.
-    const uniquePlayers = new Map();
-
-    allPlayerRegistrations.forEach(registration => {
-        // Check if the populated member data exists
-        if (registration.member) {
-            const memberId = registration.member._id.toString();
-            // If we haven't already added this member to our map, add them now.
-            if (!uniquePlayers.has(memberId)) {
-                uniquePlayers.set(memberId, {
-                    _id: memberId,
-                    displayName: `${registration.member.firstName} ${registration.member.lastName}`,
-                    clubId: registration.member.clubId || '',
-                });
-            }
-        }
+    // Create the new player profile document
+    const player = await Player.create({
+      member: memberObjectId, // ★★★ නිවැรදි කරන ලදී: Using the corrected 'member' field name ★★★
+      clubId,
+      fullName,
+      membershipId,
+      sportName,
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+      contactNumber,
+      emergencyContactName,
+      emergencyContactNumber,
+      skillLevel,
+      healthHistory,
     });
 
-    // 4. Convert the Map values to an array to send as a response.
-    const playerList = Array.from(uniquePlayers.values());
-
-    // ★★★★★★★ END: THE NEW LOGIC ★★★★★★★
-
-    res.status(200).json(playerList);
+    return res.status(201).json({ message: `Successfully registered for ${sportName}!`, player });
 
   } catch (error) {
-    console.error('Error in getSimplePlayerList:', error);
-    res.status(500).json({ message: 'Server error while fetching player list.' });
+    console.error('Player Registration Error:', error);
+    // Handle potential duplicate key error on 'member' field gracefully
+    if (error.code === 11000) {
+        return res.status(400).json({ message: 'A player profile for this member already exists.' });
+    }
+    return res.status(500).json({ message: `Server error during player registration: ${error.message}` });
+  }
+};
+
+// ================== Get My Profiles (Schema-safe) ==================
+const getMyProfiles = async (req, res) => {
+  try {
+    const myId = req.user?._id;
+    if (!myId) return res.status(401).json({ message: 'Unauthorized' });
+
+    // ★★★ නිවැรදි කරන ලදී: Querying using the 'member' field ★★★
+    const playerProfiles = await Player.find({ member: myId });
+
+    return res.status(200).json(playerProfiles);
+  } catch (error) {
+    console.error('Get My Profiles Error:', error);
+    return res.status(500).json({ message: 'Server error while fetching profiles.' });
   }
 };
 
 
-// --- Other functions (getMyProfiles, etc.) remain unchanged ---
+// ================== Update My Profile (by profile ID) ==================
+const updateMyProfile = async (req, res) => {
+    try {
+        const { contactNumber, emergencyContactName, emergencyContactNumber, skillLevel, healthHistory } = req.body;
+        const player = await Player.findById(req.params.id);
 
-const getMyProfiles = async (req, res) => { /* ... no changes ... */ };
-const updateMyProfile = async (req, res) => { /* ... no changes ... */ };
-const deleteMyProfile = async (req, res) => { /* ... no changes ... */ };
+        if (!player) {
+            return res.status(404).json({ message: 'Player profile not found.' });
+        }
+        
+        // ★★★ නිවැรදි කරන ලදී: Authorization check using the 'member' field ★★★
+        const isOwner = player.member && player.member.toString() === req.user?._id?.toString();
 
+        if (!isOwner) {
+            return res.status(403).json({ message: 'User not authorized to update this profile.' });
+        }
 
-// --- EXPORTS ---
+        player.contactNumber = contactNumber ?? player.contactNumber;
+        player.emergencyContactName = emergencyContactName ?? player.emergencyContactName;
+        player.emergencyContactNumber = emergencyContactNumber ?? player.emergencyContactNumber;
+        player.skillLevel = skillLevel ?? player.skillLevel;
+        player.healthHistory = healthHistory ?? player.healthHistory;
+
+        const updatedPlayer = await player.save();
+        return res.status(200).json(updatedPlayer);
+    } catch (error) {
+        console.error('Player Profile Update Error:', error);
+        return res.status(500).json({ message: 'Server error while updating player profile.' });
+    }
+};
+
+// ================== Delete My Profile (by profile ID) ==================
+const deleteMyProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const profile = await Player.findById(id);
+
+    if (!profile) {
+      return res.status(404).json({ message: 'Player profile not found.' });
+    }
+
+    // ★★★ නිවැรදි කරන ලදී: Authorization check using the 'member' field ★★★
+    const isOwner = profile.member && profile.member.toString() === req.user?._id?.toString();
+    const isAdmin = (req.user?.role || '').toLowerCase() === 'admin';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: 'Not authorized to delete this profile.' });
+    }
+
+    await Player.findByIdAndDelete(id);
+    return res.status(200).json({ message: 'Profile (registration) deleted successfully.' });
+  } catch (error) {
+    console.error('Delete My Profile Error:', error);
+    return res.status(500).json({ message: 'Server error while deleting profile.' });
+  }
+};
+
+// ================== Get Simple Player List (For Coach/Admin) ==================
+const getSimplePlayerList = async (req, res) => {
+    try {
+        const role = (req.user?.role || '').toLowerCase();
+        if (role !== 'coach' && role !== 'admin') {
+            return res.status(403).json({ message: 'Forbidden: You do not have permission.' });
+        }
+
+        // ★★★ නිවැรදි කරන ලදී: Populate works correctly now with the 'member' path ★★★
+        const registrations = await Player.find({}).populate({
+            path: 'member',
+            select: 'firstName lastName clubId'
+        }).lean();
+
+        if (!registrations || registrations.length === 0) {
+            return res.status(200).json([]);
+        }
+
+        // The logic to create a unique list is still good
+        const playerList = registrations
+            .filter(reg => reg.member) // Only include profiles that have a linked member
+            .map(reg => ({
+                _id: reg.member._id, // Send the MEMBER's ID to the frontend
+                displayName: `${reg.member.firstName || ''} ${reg.member.lastName || ''}`.trim(),
+                clubId: reg.member.clubId || '',
+            }));
+            
+        return res.status(200).json(playerList);
+
+    } catch (error) {
+        console.error('Error in getSimplePlayerList:', error);
+        return res.status(500).json({ message: 'Server error while fetching player list.' });
+    }
+};
+
 module.exports = {
-    registerPlayer,
-    getMyProfiles,
-    updateMyProfile,
-    deleteMyProfile,
-    getSimplePlayerList
+  registerPlayer,
+  getMyProfiles,
+  updateMyProfile,
+  deleteMyProfile,
+  getSimplePlayerList,
 };

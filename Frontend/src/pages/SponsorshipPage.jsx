@@ -1,8 +1,6 @@
-// frontend/src/pages/SponsorshipPage.jsx
-
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { FaTrophy, FaCheckCircle, FaDownload } from 'react-icons/fa';
+import { FaTrophy, FaCheckCircle, FaDownload, FaArrowLeft, FaUserGraduate, FaUserShield, FaCrown } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -13,9 +11,18 @@ const sponsorshipPlans = [
     { name: 'Platinum', price: 250000, features: ['All Gold benefits', 'Main event sponsorship', 'Banner at all events'] }
 ];
 
+const membershipPlanDetails = [
+    { name: 'Student Membership', price: '500 LKR/year', icon: <FaUserGraduate className="text-blue-500 mx-auto text-3xl mb-2" /> },
+    { name: 'Ordinary Membership', price: '1500 LKR/year', icon: <FaUserShield className="text-green-500 mx-auto text-3xl mb-2" /> },
+    { name: 'Life Membership', price: '10,000 LKR/lifetime', icon: <FaCrown className="text-yellow-500 mx-auto text-3xl mb-2" /> }
+];
+
 const SponsorshipPage = () => {
     const navigate = useNavigate();
-    const pdfContentRef = useRef(null);//
+    const pdfContentRef = useRef(null);
+
+    // ★★★ 1. PDF එකේ පෙන්වීමට දිනය සහ වෙලාව තබාගැනීමට අලුත් state එකක් ★★★
+    const [downloadTimestamp, setDownloadTimestamp] = useState('');
     
     const [formData, setFormData] = useState({
         fullName: '',
@@ -52,29 +59,23 @@ const SponsorshipPage = () => {
             case 'contactPerson':
                 const nameRegex = /^[A-Za-z\s]+$/;
                 return nameRegex.test(value) ? '' : 'This field must contain only letters and spaces.';
-            
             case 'email':
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 return emailRegex.test(value) ? '' : 'Please enter a valid email address (e.g., user@domain.com).';
-
             case 'phoneNumber':
                 const phoneRegex = /^(0\d{9}|\+94\d{9})$/;
                 return phoneRegex.test(value) ? '' : 'Invalid phone number (e.g., 0771234567 or +94771234567).';
-            
             case 'address':
                 return value.length <= 50 ? '' : 'Address cannot be longer than 50 characters.';
-            
             case 'startDate':
                 const minStartDate = new Date('2025-09-01T00:00:00Z');
                 const selectedStartDate = new Date(value);
                 return selectedStartDate >= minStartDate ? '' : 'Start date must be on or after September 1, 2025.';
-
             case 'endDate':
                  if (!formData.startDate) return '';
                  const startDateForEndCheck = new Date(formData.startDate);
                  const selectedEndDate = new Date(value);
                  return selectedEndDate > startDateForEndCheck ? '' : 'End date must be after the start date.';
-
             default:
                 return '';
         }
@@ -84,7 +85,6 @@ const SponsorshipPage = () => {
         const { name, value, type, checked } = e.target;
         const newValue = type === 'checkbox' ? checked : value;
         setFormData(prev => ({ ...prev, [name]: newValue }));
-        
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
@@ -105,30 +105,23 @@ const SponsorshipPage = () => {
         e.preventDefault();
         setError('');
         setSuccess('');
-
         const validationErrors = {};
         Object.keys(formData).forEach(name => {
-            if (name !== 'LastName') { // 'LastName' field is not in the state, so skip it.
+            if (name !== 'LastName') {
                 const errorMessage = validateField(name, formData[name]);
-                if (errorMessage) {
-                    validationErrors[name] = errorMessage;
-                }
+                if (errorMessage) validationErrors[name] = errorMessage;
             }
         });
-        
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             setError('Please correct the errors highlighted below.');
             return;
         }
-
         if (!formData.agreedToTerms || !formData.agreedToLogoUsage) {
             setError('Please agree to the terms and conditions and logo usage.');
             return;
         }
-        
         setIsSubmitting(true);
-
         try {
             const response = await axios.post('/api/sponsorships', formData);
             const { sponsorshipId, accessToken, message } = response.data;
@@ -146,23 +139,64 @@ const SponsorshipPage = () => {
             setIsSubmitting(false);
         }
     };
-    
-    const handleDownloadPDF = () => {       //
-        const input = pdfContentRef.current;
-        if (!input) return;
-        html2canvas(input, { scale: 2 }).then((canvas) => {
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save("Sponsorship-Details-SportNest.pdf");
+
+    // ★★★ 2. PDF Download function එක state update කරන ලෙස වෙනස් කර ඇත ★★★
+    const handleDownloadPDF = () => {
+        // ලස්සනට format කරපු දිනය සහ වෙලාව හදාගන්නවා
+        const formattedTimestamp = new Date().toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
         });
+        // state එක update කරනවා. මේකෙන් timestamp එක PDF content එකේ පෙන්වන්න trigger වෙනවා
+        setDownloadTimestamp(formattedTimestamp);
     };
+
+    // ★★★ 3. state එක update වුණාට පස්සේ PDF එක generate කරන්න අලුත් useEffect hook එකක් ★★★
+    useEffect(() => {
+        // timestamp එකේ අගයක් තියෙනවා නම් විතරක් (button එක click කළාට පස්සේ) මේක run වෙනවා
+        if (downloadTimestamp) {
+            const input = pdfContentRef.current;
+            if (!input) return;
+
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+            const timeStr = `${hours}-${minutes}-${seconds}`;
+            const filename = `SportNest-Sponsorship-Details_${dateStr}_${timeStr}.pdf`;
+
+            html2canvas(input, { scale: 2, useCORS: true }).then((canvas) => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save(filename);
+                // PDF එක save කළාට පස්සේ timestamp එක අයින් කරනවා
+                setDownloadTimestamp('');
+            });
+        }
+    }, [downloadTimestamp]); // මේ hook එක downloadTimestamp state එක වෙනස් වෙද්දී විතරක් run වෙනවා
 
     return (
         <div className="bg-gray-100">
             <div className="container mx-auto py-16 px-4">
+                
+                <div className="mb-8">
+                    <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 font-semibold">
+                        <FaArrowLeft />
+                        Back
+                    </button>
+                </div>
 
                 <div className="text-center mb-12">
                     <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">Partner with Us</h1>
@@ -171,27 +205,54 @@ const SponsorshipPage = () => {
 
                 <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-md mb-16">
                     <div ref={pdfContentRef} className="p-8 sm:p-10">
-                        <div className="space-y-8">
+                        <div className="space-y-6">
+                            <div className="text-center pb-4 border-b">
+                                <h1 className="text-3xl font-bold text-gray-800">SportNest Club</h1>
+                                <p className="text-gray-500">Sponsorship Details</p>
+                            </div>
+
+                            {/* ★★★ 4. PDF එකේ විතරක් පෙනෙන ලෙස Timestamp එක මෙතැනට එකතු කර ඇත ★★★ */}
+                            {downloadTimestamp && (
+                                <div className="text-center text-xs text-gray-500 pt-2 pb-2 border-b">
+                                    <strong>Document Generated On:</strong> {downloadTimestamp}
+                                </div>
+                            )}
+
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-800 mb-3">Sponsorship Opportunities</h2>
-                                <p className="text-gray-600 leading-relaxed">
-                                    Partnering with SportNest Sports Club is a rewarding way to promote your brand while making a real difference in the community. As one of the region’s most active and recognized clubs, we organize tournaments, training programs, and community events that attract players, families, and supporters throughout the year. Sponsorship with us is not just financial support—it is an investment in youth development, healthy lifestyles, and long-term community impact.
+                                <h2 className="text-xl font-bold text-gray-800 mb-2">Sponsorship Opportunities</h2>
+                                <p className="text-sm text-gray-600 leading-relaxed">
+                                    Partnering with SportNest is a rewarding way to promote your brand while investing in youth development, healthy lifestyles, and community impact through our various sporting events and programs.
                                 </p>
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-800 mb-4">Requirements for Sponsors</h2>
-                                <ul className="space-y-3">
-                                    {[ 'A valid company registration or business profile for verification', 'Contact person details including name, designation, phone, and email', 'High-quality brand assets (logo files, brand guidelines, preferred taglines)', 'A clear agreement on the sponsorship duration, chosen package, and payment terms', 'A signed sponsorship form or Memorandum of Understanding (MOU) to confirm the partnership'].map(req => (<li key={req} className="flex items-start"><FaCheckCircle className="text-green-500 mt-1 mr-3 flex-shrink-0" /><span className="text-gray-700">{req}</span></li>))}
+                                <h2 className="text-xl font-bold text-gray-800 mb-3">Requirements for Sponsors</h2>
+                                <ul className="space-y-2 text-sm">
+                                    {[ 'Valid company/business registration', 'Official contact person details (Name, Phone, Email)', 'High-quality brand assets (logo, guidelines)', 'Signed agreement or Memorandum of Understanding (MOU)'].map(req => (<li key={req} className="flex items-start"><FaCheckCircle className="text-green-500 mt-1 mr-2 flex-shrink-0" /><span className="text-gray-700">{req}</span></li>))}
                                 </ul>
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-800 mb-4">Benefits of Sponsorship</h2>
-                                <ul className="space-y-3">
-                                    {[ 'Brand Exposure: Logos featured on team jerseys, event banners, and digital promotions', 'Digital Presence: Regular mentions on our official website and social media pages', 'Event Recognition: Announcements, displays, and branding opportunities during tournaments and community activities', 'Community Engagement: Direct interaction with youth, families, and local audiences through outreach events', 'CSR Value: Positive contribution towards sports, health, and youth empowerment initiatives', 'Exclusive Perks: Complimentary VIP passes, meet-and-greet opportunities, and priority for future partnerships'].map(ben => (<li key={ben} className="flex items-start"><FaCheckCircle className="text-green-500 mt-1 mr-3 flex-shrink-0" /><span className="text-gray-700">{ben}</span></li>))}
+                                <h2 className="text-xl font-bold text-gray-800 mb-3">Benefits of Sponsorship</h2>
+                                <ul className="space-y-2 text-sm">
+                                    {[ 'Brand Exposure on jerseys, event banners & digital media', 'Regular mentions on our official website & social pages', 'Community Engagement with players, families & local audiences', 'Positive CSR value through supporting youth sports & health', 'Exclusive Perks like VIP passes & future partnership priority'].map(ben => (<li key={ben} className="flex items-start"><FaCheckCircle className="text-green-500 mt-1 mr-2 flex-shrink-0" /><span className="text-gray-700">{ben}</span></li>))}
                                 </ul>
                             </div>
-                            <p className="text-gray-600 leading-relaxed pt-4 border-t mt-8">
-                                By sponsoring SportNest, your organization strengthens its brand presence while demonstrating a commitment to community growth and sporting excellence. Together, we can inspire athletes, create memorable experiences, and achieve mutual success.
+                            <div className="pt-6 mt-6 border-t">
+                                <h2 className="text-xl font-bold text-gray-800 mb-2">Complimentary Membership for Our Sponsors</h2>
+                                <p className="text-sm text-gray-600 leading-relaxed mb-4">
+                                    As our valued partner, you are entitled to **one complimentary membership plan** of your choice. This allows you to become an integral part of our community.
+                                </p>
+                                <div className="grid grid-cols-3 gap-4 text-center">
+                                    {membershipPlanDetails.map(plan => (
+                                        <div key={plan.name} className="border p-3 rounded-lg">
+                                            {plan.icon}
+                                            <h4 className="font-semibold text-sm">{plan.name}</h4>
+                                            <p className="text-xs font-semibold text-gray-600">{plan.price}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-500 leading-relaxed pt-4 border-t mt-6">
+                                By sponsoring SportNest, your organization strengthens its brand presence while demonstrating a commitment to community growth and sporting excellence.
                             </p>
                         </div>
                     </div>
@@ -209,7 +270,6 @@ const SponsorshipPage = () => {
                      <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">Sponsorship Application Form</h2>
                     {error && <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md mb-6">{error}</div>}
                     {success && <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-6">{success}</div>}
-
                     {!success && <>
                         <fieldset className="border rounded-lg p-4 mb-6">
                             <legend className="font-bold text-lg px-2">1. Sponsorship Information</legend>
@@ -219,17 +279,10 @@ const SponsorshipPage = () => {
                                <div><input name="organizationName" value={formData.organizationName} onChange={handleChange} onBlur={handleBlur} placeholder="Organization Name *" required className="input-field" /><p className="text-red-500 text-xs mt-1 h-4">{errors.organizationName}</p></div>
                                <div><input name="contactPerson" value={formData.contactPerson} onChange={handleChange} onBlur={handleBlur} placeholder="Contact Person Name *" required className="input-field" /><p className="text-red-500 text-xs mt-1 h-4">{errors.contactPerson}</p></div>
                                <div><input type="email" name="email" value={formData.email} onChange={handleChange} onBlur={handleBlur} placeholder="Email Address *" required className="input-field" /><p className="text-red-500 text-xs mt-1 h-4">{errors.email}</p></div>
-                               <div>
-                                    <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} onBlur={handleBlur} placeholder="Phone Number *" required className="input-field" />
-                                    <p className="text-red-500 text-xs mt-1 h-4">{errors.phoneNumber}</p>
-                               </div>
-                               <div className="md:col-span-2">
-                                 <input name="address" value={formData.address} onChange={handleChange} onBlur={handleBlur} placeholder="Full Address (Street, City, Country) *" required className="input-field" />
-                                 <p className="text-red-500 text-xs mt-1 h-4">{errors.address}</p>
-                               </div>
+                               <div><input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} onBlur={handleBlur} placeholder="Phone Number *" required className="input-field" /><p className="text-red-500 text-xs mt-1 h-4">{errors.phoneNumber}</p></div>
+                               <div className="md:col-span-2"><input name="address" value={formData.address} onChange={handleChange} onBlur={handleBlur} placeholder="Full Address (Street, City, Country) *" required className="input-field" /><p className="text-red-500 text-xs mt-1 h-4">{errors.address}</p></div>
                             </div>
                         </fieldset>
-                        
                         <fieldset className="border rounded-lg p-4 mb-6">
                              <legend className="font-bold text-lg px-2">2. Sponsorship Details</legend>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 mt-2">
@@ -239,7 +292,6 @@ const SponsorshipPage = () => {
                                  <div><label className="form-label">Sponsorship End Date *</label><input type="date" name="endDate" value={formData.endDate} onChange={handleChange} onBlur={handleBlur} required className="input-field"/><p className="text-red-500 text-xs mt-1 h-4">{errors.endDate}</p></div>
                             </div>
                         </fieldset>
-                        
                         <fieldset className="mb-6"><legend className="font-bold text-lg mb-2">4. Agreement & Conditions</legend><div className="space-y-2 mt-2"><label className="flex items-center"><input type="checkbox" name="agreedToTerms" checked={formData.agreedToTerms} onChange={handleChange} required className="mr-3 h-5 w-5"/> I agree to the terms and conditions.</label><label className="flex items-center"><input type="checkbox" name="agreedToLogoUsage" checked={formData.agreedToLogoUsage} onChange={handleChange} required className="mr-3 h-5 w-5"/> I allow the club to use my brand/logo.</label></div></fieldset>
                         <button type="submit" disabled={isSubmitting} className="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 disabled:bg-gray-400">{isSubmitting ? 'Submitting...' : 'Submit Application'}</button>
                     </>}

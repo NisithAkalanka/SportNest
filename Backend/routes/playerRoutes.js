@@ -1,34 +1,37 @@
-// File: backend/routes/playerRoutes.js (FINAL & CORRECTED VERSION)
+// File: backend/routes/playerRoutes.js (FINAL MERGED & CLEAN)
 
 const express = require('express');
 const router = express.Router();
 
 const protect = require('../middleware/authMiddleware');
 
-// ★★★ 1. IMPORT THE NEW CONTROLLER FUNCTION ★★★
+// ★★★ Controller functions ★★★
 const {
   registerPlayer,
   getMyProfiles,
   updateMyProfile,
   deleteMyProfile,
-  getSimplePlayerList // Import the function we created in the controller
+  getSimplePlayerList,
 } = require('../controllers/playerController');
 
-// NOTE: We don't need to import the 'Player' model here anymore,
-// because the controller is now handling all the database logic.
+// ─── Routes ────────────────────────────────
 
-// ─── EXISTING ROUTES (No changes needed here) ────────────────────────────────
+// 🔸 Player Registration (login protect)
 router.post('/register', protect, registerPlayer);
+
+// 🔸 Get my profiles
 router.get('/my-profiles', protect, getMyProfiles);
+
+// 🔸 Update profile (by ID)
 router.put('/profile/:id', protect, updateMyProfile);
+
+// 🔸 Delete profile (by ID)
 router.delete('/profile/:id', protect, deleteMyProfile);
 
-
-// ─── NEW: Simple list for coach dropdown (CLEANED UP) ──────────────────────
-// ★★★ 2. THE FIX: The route now points cleanly to the controller function ★★★
-// All the complicated logic has been removed from this file and is now
-// correctly located inside `playerController.js`.
+// 🔸 Simple player list (coach/admin only)
+//    Primary endpoint kept for FE compatibility (main2)
 router.get('/simple', protect, getSimplePlayerList);
+//    Backward-compatible alias (from Ayuni)
+router.get('/simple-list', protect, getSimplePlayerList);
 
-
-module.exports = router;
+module.exports = router;//orig

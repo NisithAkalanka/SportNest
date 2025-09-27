@@ -15,7 +15,7 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
     const [formData, setFormData] = useState({
         fullName: '', 
         clubId: '', 
-        membershipId: '', // Membership ID සඳහා නව ක්ෂේත්‍රය
+        membershipId: '', 
         contactNumber: '', 
         dateOfBirth: '',
         emergencyContactName: '', 
@@ -24,7 +24,8 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
         healthHistory: ''
     });
 
-    const [error, setError] = useState('');
+    const [error, setError] = useState(''); // General error message for submission
+    const [errors, setErrors] = useState({}); // Individual field errors සඳහා වන state එක
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -32,21 +33,88 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
         if (user) {
             setFormData(prev => ({
                 ...prev,
-                // ★★★ 'user.name' වෙනුවට 'user.firstName' සහ 'lastName' භාවිතා කිරීම
                 fullName: (user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : '',
                 clubId: user.clubId || '',
+                membershipId: user.membershipId || '', 
                 contactNumber: user.contactNumber || ''
             }));
         }
     }, [user]);
+    
+    // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+    // ★★★ ඔබගේ අවශ්‍යතාවය පරිදි යාවත්කාලීන කළ validation function එක ★★★
+    // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+    const validate = () => {
+        const newErrors = {};
 
-    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-    const handleSelectChange = (value) => setFormData({ ...formData, skillLevel: value });
+        // Membership ID Validation
+        if (!formData.membershipId) {
+            newErrors.membershipId = "Membership ID is required.";
+        } else if (!/^MEM-\d{6,}$/.test(formData.membershipId)) {
+            newErrors.membershipId = "Invalid format. Use MEM-xxxxxx.";
+        }
+
+        // Date of Birth Validation
+        if (!formData.dateOfBirth) {
+            newErrors.dateOfBirth = "Date of Birth is required.";
+        } else {
+            const selectedDate = new Date(formData.dateOfBirth);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Compare dates only
+            if (selectedDate >= today) {
+                newErrors.dateOfBirth = "Date of Birth must be in the past.";
+            }
+        }
+
+        // Emergency Contact Name Validation
+        if (!formData.emergencyContactName) {
+            newErrors.emergencyContactName = "Emergency contact name is required.";
+        } else if (!/^[A-Za-z\s]+$/.test(formData.emergencyContactName)) {
+            newErrors.emergencyContactName = "Name can only contain letters and spaces.";
+        } else if (formData.emergencyContactName.trim().length < 3) {
+            newErrors.emergencyContactName = "Name must be at least 3 characters long.";
+        }
+
+        // Emergency Contact Number Validation
+        if (!formData.emergencyContactNumber) {
+            newErrors.emergencyContactNumber = "Emergency contact number is required.";
+        } else if (!/^(?:\+94\d{9}|0\d{9})$/.test(formData.emergencyContactNumber)) {
+            newErrors.emergencyContactNumber = "Use a valid format: 0xxxxxxxxx or +94xxxxxxxxx.";
+        }
+
+        // Health History Validation (Optional field)
+        if (formData.healthHistory) {
+            const words = formData.healthHistory.trim().split(/\s+/).filter(Boolean);
+            if (words.length > 150) {
+                newErrors.healthHistory = `Cannot exceed 150 words. You currently have ${words.length} words.`;
+            }
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0; // දෝෂ නොමැතිනම් 'true' ලෙස return කරයි
+    };
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        if(errors[name]) {
+            setErrors(prev => ({...prev, [name]: null}));
+        }
+    };
+    
+    const handleSelectChange = (value) => {
+        setFormData({ ...formData, skillLevel: value });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError(''); setSuccess(''); setLoading(true);
+        setError(''); setSuccess(''); 
 
+        if (!validate()) {
+            return; 
+        }
+
+        setLoading(true);
         const token = JSON.parse(localStorage.getItem('userInfo'))?.token;
         if (!token) {
             setError("You must be logged in to register.");
@@ -54,13 +122,10 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
             return;
         }
         
-        // ★★★ 'clubId' එක user object එකෙන් නැවත ලබාගැනීම (Form එකේ disabled නිසා)
         const registrationData = { 
             ...formData, 
             sportName,
-            fullName: (user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : '',
-            clubId: user.clubId,
-         };
+        };
         const config = { headers: { Authorization: `Bearer ${token}` } };
         
         try {
@@ -77,6 +142,8 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
         }
     };
     
+    const maxDate = new Date().toISOString().split("T")[0];
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
             <div className="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -86,7 +153,7 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
                 {success && <div className="bg-green-100 text-green-700 p-3 rounded mb-4">{success}</div>}
 
                 {!success && (
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                             <div>
                                <Label htmlFor="fullName">Full Name*</Label>
@@ -96,26 +163,29 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
                                <Label htmlFor="clubId">Club ID*</Label>
                                <Input id="clubId" name="clubId" value={formData.clubId} required className="bg-gray-100 cursor-not-allowed" disabled />
                             </div>
-                            {/* ★★★ Membership ID සඳහා නව input ක්ෂේත්‍රය ★★★ */}
                             <div className="md:col-span-2">
                                 <Label htmlFor="membershipId">Membership ID*</Label>
-                                <Input id="membershipId" name="membershipId" value={formData.membershipId} onChange={handleChange} required placeholder="Enter your Active Membership ID"/>
+                                <Input id="membershipId" name="membershipId" value={formData.membershipId} readOnly required className="bg-gray-100 cursor-not-allowed" />
+                                {errors.membershipId && <p className="text-red-500 text-xs mt-1">{errors.membershipId}</p>}
                             </div>
                             <div>
                                <Label htmlFor="contactNumber">Contact Number*</Label>
-                               <Input id="contactNumber" type="tel" name="contactNumber" value={formData.contactNumber} onChange={handleChange} required />
+                               <Input id="contactNumber" type="tel" name="contactNumber" value={formData.contactNumber} readOnly required className="bg-gray-100 cursor-not-allowed" />
                             </div>
                             <div>
                                 <Label htmlFor="dateOfBirth">Date of Birth*</Label>
-                                <Input id="dateOfBirth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} required />
+                                <Input id="dateOfBirth" name="dateOfBirth" type="date" value={formData.dateOfBirth} onChange={handleChange} max={maxDate} required />
+                                {errors.dateOfBirth && <p className="text-red-500 text-xs mt-1">{errors.dateOfBirth}</p>}
                             </div>
                              <div>
                                 <Label htmlFor="emergencyContactName">Emergency Contact Name*</Label>
                                 <Input id="emergencyContactName" name="emergencyContactName" value={formData.emergencyContactName} onChange={handleChange} required />
+                                {errors.emergencyContactName && <p className="text-red-500 text-xs mt-1">{errors.emergencyContactName}</p>}
                             </div>
                             <div>
                                 <Label htmlFor="emergencyContactNumber">Emergency Contact Number*</Label>
                                 <Input id="emergencyContactNumber" name="emergencyContactNumber" type="tel" value={formData.emergencyContactNumber} onChange={handleChange} required />
+                                {errors.emergencyContactNumber && <p className="text-red-500 text-xs mt-1">{errors.emergencyContactNumber}</p>}
                             </div>
                              <div className="md:col-span-2">
                                 <Label htmlFor="skillLevel">Skill Level*</Label>
@@ -132,6 +202,8 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
                              <div className="md:col-span-2">
                                <Label htmlFor="healthHistory">Health History (Optional)</Label>
                                <Textarea id="healthHistory" name="healthHistory" value={formData.healthHistory} onChange={handleChange} rows="3" placeholder="Mention any injuries or health issues" />
+                               {/* ★★★ Health History දෝෂ පණිවිඩය පෙන්වීම සඳහා ★★★ */}
+                               {errors.healthHistory && <p className="text-red-500 text-xs mt-1">{errors.healthHistory}</p>}
                            </div>
                         </div>
 
