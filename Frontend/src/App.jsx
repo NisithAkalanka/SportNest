@@ -21,6 +21,9 @@ import MemberRoute from "@/components/MemberRoute";
 import HomePage from "@/pages/HomePage";
 import Shop from "@/pages/Shop";
 import CartPage from "@/pages/CartPage";
+import ShippingPage from "@/pages/ShippingPage";
+import PaymentPage from "@/pages/PaymentPage";
+import OrderSuccessPage from "@/pages/OrderSuccessPage";
 import SportsHomePage from "@/pages/SportsHomePage";
 import RegisterPage from "@/pages/RegisterPage";
 import MemberLoginPage from "@/pages/MemberLoginPage";
@@ -29,6 +32,8 @@ import ClubHomePage from "@/pages/ClubHomePage";
 import SponsorshipPage from "@/pages/SponsorshipPage";
 import MembershipPlansPage from "@/pages/MembershipPlansPage";
 import ConfirmMembershipPage from "@/pages/ConfirmMembershipPage";
+import MembershipPaymentPage from "@/pages/MembershipPaymentPage";
+import DriverConfirmationPage from "@/pages/DriverConfirmationPage";
 import AboutPage from "@/pages/AboutPage";
 import AchievementsPage from "@/pages/AchievementsPage";
 import ContactUsPage from "@/pages/ContactUsPage";
@@ -68,6 +73,10 @@ import ManageCoachesPage from "@/pages/ManageCoachesPage";
 import ManageReviewsPage from "@/pages/ManageReviewsPage";
 import UserManagementPage from "@/pages/UserManagementPage";
 import SponsorshipManagementPage from "@/components/admin/SponsorshipManagementPage";
+import DeliveryManagement from "@/pages/DeliveryManagement";
+import DriverManagement from "@/pages/DriverManagement";
+import Vehicle from "@/pages/Vehicle";
+import FinancialManagement from "@/pages/FinancialManagement";
 
 // Events (lazy)
 const SubmitEvent = lazy(() => import("@/pages/SubmitEvent"));
@@ -83,6 +92,11 @@ const AppLoader = () => (
   <div className="min-h-[40vh] grid place-content-center text-emerald-600">Loading…</div>
 );
 
+// ★ NEW (event payment pages)
+const EventPaymentPage = lazy(() => import('@/pages/EventPaymentPage'));
+const EventPaymentSuccessPage = lazy(() => import('@/pages/EventPaymentSuccessPage'));
+const EventTicketPage = lazy(() => import('@/pages/EventTicketPage'));
+
 function App() {
   return (
     <AdminAuthProvider>
@@ -97,6 +111,9 @@ function App() {
                   <Route index element={<HomePage />} />
                   <Route path="shop" element={<Shop />} />
                   <Route path="cart" element={<CartPage />} />
+                  <Route path="shipping" element={<ShippingPage />} />
+                  <Route path="payment" element={<PaymentPage />} />
+                  <Route path="order-success" element={<OrderSuccessPage />} />
                   <Route path="sports" element={<SportsHomePage />} />
                   <Route path="register" element={<RegisterPage />} />
                   <Route path="login" element={<MemberLoginPage />} />
@@ -113,6 +130,8 @@ function App() {
                   <Route path="renewal-success" element={<RenewalSuccessPage />} />
                   <Route path="forgot-password" element={<ForgotPasswordPage />} />
                   <Route path="reset-password/:token" element={<ResetPasswordPage />} />
+                  <Route path="membership-payment" element={<MembershipPaymentPage />} />
+                  <Route path="driver/confirm-delivery/:token" element={<DriverConfirmationPage />} />
 
                   {/* Sports detail */}
                   <Route path="sports/tennis" element={<TennisPage />} />
@@ -125,6 +144,9 @@ function App() {
                   <Route path="events" element={<ApprovedEvents />} />
                   <Route path="events/submit" element={<SubmitEvent />} />
                   <Route path="events/:id" element={<EventDetails />} />
+                  <Route path="events/payment" element={<EventPaymentPage />} />
+                  <Route path="events/payment-success" element={<EventPaymentSuccessPage />} />
+                  <Route path="events/ticket" element={<EventTicketPage />} />
 
                   {/* Member-protected (under Public) */}
                   <Route element={<MemberRoute />}> 
@@ -160,6 +182,12 @@ function App() {
                     <Route path="reviews" element={<ManageReviewsPage />} />
                     <Route path="user-management" element={<UserManagementPage />} />
                     <Route path="sponsorship-management" element={<SponsorshipManagementPage />} />
+                    <Route path="delivery" element={<DeliveryManagement />} />
+                    <Route path="drivers" element={<DriverManagement />} />
+                    <Route path="vehicles" element={<Vehicle />} />
+                    <Route path="financial" element={<FinancialManagement />} />
+
+                    {/* Admin: events moderation + edit + report */}
                     <Route path="events/moderate" element={<ModerateEvents />} />
                     <Route path="events/:id/edit" element={<EditEvent />} />
                     <Route path="events/report" element={<EventsReport />} />

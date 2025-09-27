@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'; 
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
+import {
   faSignOutAlt,
   faBoxOpen,
   faUsers,
@@ -14,9 +14,12 @@ import {
   faCommentDots,
   faClipboardList,
   faUserFriends,
-  faHandshake
+  faHandshake,
+  faTruck,
+  faCar,
+  faTruckMoving,
+  faChartLine
 } from '@fortawesome/free-solid-svg-icons';
-
 import { Button } from '@/components/ui/button';
 import { AdminAuthContext } from '@/context/AdminAuthContext';
 
@@ -117,6 +120,28 @@ const AdminLayout = () => {
             <li className="mb-2">
               <NavLink to="/admin-dashboard/reviews" className={itemClass}>
                 <FontAwesomeIcon icon={faCommentDots} className="mr-3 w-5" /> Manage Reviews
+              </NavLink>
+            </li>
+
+            {/* Delivery & Logistics */}
+            <li className="mb-2">
+              <NavLink to="/admin-dashboard/delivery" className={itemClass}>
+                <FontAwesomeIcon icon={faTruck} className="mr-3 w-5" /> Delivery Management
+              </NavLink>
+            </li>
+            <li className="mb-2">
+              <NavLink to="/admin-dashboard/drivers" className={itemClass}>
+                <FontAwesomeIcon icon={faCar} className="mr-3 w-5" /> Driver Management
+              </NavLink>
+            </li>
+            <li className="mb-2">
+              <NavLink to="/admin-dashboard/vehicles" className={itemClass}>
+                <FontAwesomeIcon icon={faTruckMoving} className="mr-3 w-5" /> Vehicle Management
+              </NavLink>
+            </li>
+            <li className="mb-2">
+              <NavLink to="/admin-dashboard/financial" className={itemClass}>
+                <FontAwesomeIcon icon={faChartLine} className="mr-3 w-5" /> Financial Management
               </NavLink>
             </li>
           </ul>

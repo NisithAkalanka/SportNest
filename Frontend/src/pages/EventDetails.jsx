@@ -1,13 +1,14 @@
 // src/pages/EventDetails.jsx
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { getEvent, registerEvent } from "@/services/eventsApi";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { getEvent } from "@/services/eventsApi";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
 export default function EventDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [ev, setEv] = useState(null);
 
   // form states
@@ -54,11 +55,16 @@ export default function EventDetails() {
 
     try {
       setSaving(true);
-      const { data } = await registerEvent(id, { name, email, phone });
-      setMsg(`✅ Registered (${data.registeredCount}/${data.capacity})`);
-      setName(""); setEmail(""); setPhone("");
+      // Navigate to payment page with event and registration data
+      navigate('/events/payment', {
+        state: {
+          eventData: ev,
+          registrationData: { name, email, phone },
+          amount: ev?.registrationFee || 200,
+        }
+      });
     } catch (e) {
-      setMsg(e?.response?.data?.error || "❌ Failed to register");
+      setMsg("Failed to proceed to payment");
     } finally {
       setSaving(false);
     }
