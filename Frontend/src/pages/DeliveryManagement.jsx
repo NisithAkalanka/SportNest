@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
@@ -11,6 +12,39 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTruck, faPlus, faEdit, faTrash, faDownload, faCalendarAlt, faFilePdf } from '@fortawesome/free-solid-svg-icons';
 import api from '@/api';
 import jsPDF from 'jspdf';
+
+// Utility functions for datetime handling
+const toDatetimeLocal = (date) => {
+  if (!date) return '';
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return '';
+  
+  // Format as YYYY-MM-DDTHH:MM for datetime-local input
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+const getSuggestedDeliveryDate = () => {
+  const now = new Date();
+  const currentHour = now.getHours();
+  
+  // If it's before 7 PM, suggest 3 hours from now
+  if (currentHour < 19) {
+    const suggested = new Date(now.getTime() + (3 * 60 * 60 * 1000)); // 3 hours from now
+    return suggested;
+  } else {
+    // If it's after 7 PM, suggest tomorrow at 10 AM
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(10, 0, 0, 0);
+    return tomorrow;
+  }
+};
 
 const DeliveryManagement = () => {
   const [deliveries, setDeliveries] = useState([]);
@@ -202,6 +236,27 @@ const DeliveryManagement = () => {
       }
     }
     
+    // Handle delivery date validation and auto-correction
+    if (name === 'deliveryDate') {
+      const selectedDate = new Date(value);
+      const now = new Date();
+      
+      // If the selected date is in the past, auto-correct to a future time
+      if (selectedDate < now) {
+        const correctedDate = getSuggestedDeliveryDate();
+        setFormData(prev => ({
+          ...prev,
+          [name]: toDatetimeLocal(correctedDate)
+        }));
+        setToast({ 
+          type: 'info', 
+          msg: 'Date was in the past. Auto-corrected to a future time.' 
+        });
+        setTimeout(() => setToast(null), 3000);
+        return;
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -380,11 +435,26 @@ const DeliveryManagement = () => {
 
   const openEditDialog = (delivery) => {
     setSelectedDelivery(delivery);
+    
+    // Properly format the delivery date for datetime-local input
+    let formattedDate = '';
+    if (delivery.deliveryDate) {
+      try {
+        const date = new Date(delivery.deliveryDate);
+        if (!isNaN(date.getTime())) {
+          formattedDate = toDatetimeLocal(date);
+        }
+      } catch (error) {
+        console.warn('Error formatting delivery date:', error);
+        formattedDate = '';
+      }
+    }
+    
     setFormData({
       orderId: delivery.orderId,
       customer: delivery.customer,
       address: delivery.address,
-      deliveryDate: new Date(delivery.deliveryDate).toISOString().slice(0, 16),
+      deliveryDate: formattedDate,
       status: delivery.status,
       notes: delivery.notes || '',
       driverId: delivery.driver || 'none'
@@ -779,17 +849,38 @@ const DeliveryManagement = () => {
             </div>
             <div>
               <Label htmlFor="deliveryDate">Delivery Date</Label>
-              <div className="relative">
-                <Input
-                  id="deliveryDate"
-                  name="deliveryDate"
-                  type="datetime-local"
-                  value={formData.deliveryDate}
-                  onChange={handleInputChange}
-                  required
-                />
-                <FontAwesomeIcon icon={faCalendarAlt} className="absolute right-3 top-3 text-gray-400" />
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <Input
+                    id="deliveryDate"
+                    name="deliveryDate"
+                    type="datetime-local"
+                    value={formData.deliveryDate}
+                    onChange={handleInputChange}
+                    required
+                    min={toDatetimeLocal(new Date())}
+                    className="w-full"
+                  />
+                  <FontAwesomeIcon icon={faCalendarAlt} className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    setFormData(prev => ({
+                      ...prev,
+                      deliveryDate: toDatetimeLocal(getSuggestedDeliveryDate()),
+                    }))
+                  }
+                  title="Auto suggest a suitable time"
+                  className="whitespace-nowrap"
+                >
+                  Auto
+                </Button>
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Auto suggests now + 3h (or tomorrow 10:00 AM if after 7 PM).
+              </p>
             </div>
             <div>
               <Label htmlFor="status">Status</Label>
@@ -1013,15 +1104,43 @@ const DeliveryManagement = () => {
               </div>
               <div>
                 <Label htmlFor="edit-deliveryDate">Delivery Date</Label>
-                <Input
-                  id="edit-deliveryDate"
-                  name="deliveryDate"
-                  type="datetime-local"
-                  value={formData.deliveryDate}
-                  onChange={handleInputChange}
-                  required
-                />
+                <div className="flex gap-2">
+                  <div className="flex-1 relative">
+                    <Input
+                      id="edit-deliveryDate"
+                      name="deliveryDate"
+                      type="datetime-local"
+                      value={formData.deliveryDate}
+                      onChange={handleInputChange}
+                      required
+                      min={toDatetimeLocal(new Date())}
+                      className="w-full"
+                    />
+                    <FontAwesomeIcon
+                      icon={faCalendarAlt}
+                      className="absolute right-3 top-3 text-gray-400 pointer-events-none"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      setFormData(prev => ({
+                        ...prev,
+                        deliveryDate: toDatetimeLocal(getSuggestedDeliveryDate()),
+                      }))
+                    }
+                    title="Auto suggest a suitable time"
+                    className="whitespace-nowrap"
+                  >
+                    Auto
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Auto suggests now + 3h (or tomorrow 10:00 AM if after 7 PM).
+                </p>
               </div>
+
               <div>
                 <Label htmlFor="edit-status">Status</Label>
                 <Select value={formData.status} onValueChange={handleStatusChange}>

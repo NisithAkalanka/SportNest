@@ -33,6 +33,12 @@ const PaymentPage = () => {
     saveCard: false
   });
 
+  const [validationErrors, setValidationErrors] = useState({
+    cardName: '',
+    cardNumber: '',
+    cvc: ''
+  });
+
   // Calculate total amount
   const subtotal = cartItems.reduce((total, item) => {
     return total + (item.item?.price || 0) * item.quantity;
@@ -53,15 +59,84 @@ const PaymentPage = () => {
   }, [cartItemCount, navigate, location.state]);
 
   const handleInputChange = (field, value) => {
+    let processedValue = value;
+    let error = '';
+
+    // Validate card name - only letters, spaces, and common name characters
+    if (field === 'cardName') {
+      const lettersOnlyRegex = /^[a-zA-Z\s.'-]*$/;
+      if (value && !lettersOnlyRegex.test(value)) {
+        error = 'Name can only contain letters, spaces, periods, apostrophes, and hyphens';
+      } else {
+        error = '';
+      }
+    }
+
+    // Validate card number - only digits, max 16 digits
+    if (field === 'cardNumber') {
+      const digitsOnly = value.replace(/\D/g, ''); // Remove non-digits
+      if (digitsOnly.length > 16) {
+        processedValue = digitsOnly.slice(0, 16);
+      } else {
+        processedValue = digitsOnly;
+      }
+      
+      if (processedValue && processedValue.length !== 16) {
+        error = 'Card number must be exactly 16 digits';
+      } else {
+        error = '';
+      }
+    }
+
+    // Validate CVC - only digits, max 3 digits
+    if (field === 'cvc') {
+      const digitsOnly = value.replace(/\D/g, ''); // Remove non-digits
+      if (digitsOnly.length > 3) {
+        processedValue = digitsOnly.slice(0, 3);
+      } else {
+        processedValue = digitsOnly;
+      }
+      
+      if (processedValue && processedValue.length !== 3) {
+        error = 'CVC must be exactly 3 digits';
+      } else {
+        error = '';
+      }
+    }
+
+    // Update validation errors
+    setValidationErrors(prev => ({
+      ...prev,
+      [field]: error
+    }));
+
+    // Update form data
     setPaymentForm(prev => ({
       ...prev,
-      [field]: value
+      [field]: processedValue
     }));
   };
 
   const handleAddPaymentMethod = () => {
+    // Check for validation errors
+    if (validationErrors.cardName || validationErrors.cardNumber || validationErrors.cvc) {
+      alert('Please fix the validation errors before proceeding');
+      return;
+    }
+
     if (!paymentForm.cardName || !paymentForm.cardNumber || !paymentForm.expiryMonth || !paymentForm.expiryYear || !paymentForm.cvc) {
       alert('Please fill in all required fields');
+      return;
+    }
+
+    // Additional validation for exact lengths
+    if (paymentForm.cardNumber.length !== 16) {
+      alert('Card number must be exactly 16 digits');
+      return;
+    }
+
+    if (paymentForm.cvc.length !== 3) {
+      alert('CVC must be exactly 3 digits');
       return;
     }
 
@@ -86,6 +161,11 @@ const PaymentPage = () => {
       cvc: '',
       saveCard: false
     });
+    setValidationErrors({
+      cardName: '',
+      cardNumber: '',
+      cvc: ''
+    });
     alert('Payment method added successfully!');
   };
 
@@ -106,8 +186,25 @@ const PaymentPage = () => {
   };
 
   const handleUpdatePaymentMethod = () => {
+    // Check for validation errors
+    if (validationErrors.cardName || validationErrors.cardNumber || validationErrors.cvc) {
+      alert('Please fix the validation errors before proceeding');
+      return;
+    }
+
     if (!paymentForm.cardName || !paymentForm.cardNumber || !paymentForm.expiryMonth || !paymentForm.expiryYear || !paymentForm.cvc) {
       alert('Please fill in all required fields');
+      return;
+    }
+
+    // Additional validation for exact lengths
+    if (paymentForm.cardNumber.length !== 16) {
+      alert('Card number must be exactly 16 digits');
+      return;
+    }
+
+    if (paymentForm.cvc.length !== 3) {
+      alert('CVC must be exactly 3 digits');
       return;
     }
 
@@ -126,6 +223,11 @@ const PaymentPage = () => {
       expiryYear: '',
       cvc: '',
       saveCard: false
+    });
+    setValidationErrors({
+      cardName: '',
+      cardNumber: '',
+      cvc: ''
     });
     alert('Payment method updated successfully!');
   };
@@ -330,8 +432,11 @@ const PaymentPage = () => {
                         value={paymentForm.cardName}
                         onChange={(e) => handleInputChange('cardName', e.target.value)}
                         placeholder="As shown on the card"
-                        className="h-12"
+                        className={`h-12 ${validationErrors.cardName ? 'border-red-500' : ''}`}
                       />
+                      {validationErrors.cardName && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.cardName}</p>
+                      )}
                     </div>
                     <div>
                       <Label htmlFor="cardNumber">Card Number *</Label>
@@ -339,9 +444,13 @@ const PaymentPage = () => {
                         id="cardNumber"
                         value={paymentForm.cardNumber}
                         onChange={(e) => handleInputChange('cardNumber', e.target.value)}
-                        placeholder="1234 5678 9012 3456"
-                        className="h-12"
+                        placeholder="1234567890123456"
+                        className={`h-12 ${validationErrors.cardNumber ? 'border-red-500' : ''}`}
+                        maxLength={16}
                       />
+                      {validationErrors.cardNumber && (
+                        <p className="text-red-500 text-sm mt-1">{validationErrors.cardNumber}</p>
+                      )}
                     </div>
                     <div className="grid grid-cols-3 gap-4">
                       <div>
@@ -377,8 +486,12 @@ const PaymentPage = () => {
                           value={paymentForm.cvc}
                           onChange={(e) => handleInputChange('cvc', e.target.value)}
                           placeholder="123"
-                          className="h-12"
+                          className={`h-12 ${validationErrors.cvc ? 'border-red-500' : ''}`}
+                          maxLength={3}
                         />
+                        {validationErrors.cvc && (
+                          <p className="text-red-500 text-sm mt-1">{validationErrors.cvc}</p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -396,6 +509,11 @@ const PaymentPage = () => {
                           setIsAddingPayment(false);
                           setIsEditingPayment(false);
                           setEditingPaymentId(null);
+                          setValidationErrors({
+                            cardName: '',
+                            cardNumber: '',
+                            cvc: ''
+                          });
                         }}
                       >
                         Cancel
