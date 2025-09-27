@@ -1,8 +1,11 @@
-// src/pages/LoginPage.jsx (FINAL MERGED)
+// Frontend/src/pages/MemberLoginPage.jsx — FINAL MERGED & CLEAN
 import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../api/axiosConfig';   // ✅ use shared axios instance
-import { AuthContext } from '../context/MemberAuthContext';
+import api from '@/api'; // ✅ shared axios instance with /api base
+import { AuthContext } from '@/context/MemberAuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 // --- Password Visibility Toggle Icons ---
 const EyeOpenIcon = () => (
@@ -11,7 +14,6 @@ const EyeOpenIcon = () => (
     <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
   </svg>
 );
-
 const EyeClosedIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
     <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2 2 0 01-2.828 2.828l-1.515-1.514A4 4 0 0010 14a4 4 0 10-2.032-7.44z" clipRule="evenodd" />
@@ -19,7 +21,7 @@ const EyeClosedIcon = () => (
   </svg>
 );
 
-const LoginPage = () => {
+const MemberLoginPage = () => {
   const navigate = useNavigate();
   const { user, login } = useContext(AuthContext);
 
@@ -33,7 +35,7 @@ const LoginPage = () => {
   useEffect(() => {
     if (user) {
       if (user.role === 'Admin') navigate('/admin-dashboard');
-      else if (user.role === 'Coach') navigate('/coach-dashboard');
+      else if (user.role === 'Coach') navigate('/coach/dashboard');
       else navigate('/member-dashboard');
     }
   }, [user, navigate]);
@@ -42,27 +44,28 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
 
-    // --- 1. Validation ---
-    if (!email || !password) {
+    // --- Validation ---
+    const emailLc = String(email).trim().toLowerCase();
+    if (!emailLc || !password) {
       setError('Please enter both email and password.');
       return;
     }
-    if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(email)) {
+    if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(emailLc)) {
       setError('Please enter a valid lowercase email (e.g., yourname@example.com).');
       return;
     }
 
-    // --- 2. API Request ---
+    // --- API Request ---
     setIsSubmitting(true);
     try {
-      const { data } = await api.post('/members/login', { email, password });
+      const { data } = await api.post('/members/login', { email: emailLc, password });
 
       // Context login handles localStorage + state update
       login(data);
 
       // Redirect based on role
       if (data.role === 'Admin') navigate('/admin-dashboard');
-      else if (data.role === 'Coach') navigate('/coach-dashboard');
+      else if (data.role === 'Coach') navigate('/coach/dashboard');
       else navigate('/member-dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid email or password.');
@@ -84,23 +87,23 @@ const LoginPage = () => {
 
           {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
-            <input
+            <Label htmlFor="email">Email Address</Label>
+            <Input
               id="email"
               name="email"
               type="email"
               autoComplete="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+              onChange={(e) => setEmail(e.target.value.toLowerCase())}
+              className="mt-1"
             />
           </div>
 
           {/* Password */}
           <div className="relative">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-            <input
+            <Label htmlFor="password">Password</Label>
+            <Input
               id="password"
               name="password"
               type={showPassword ? 'text' : 'password'}
@@ -108,12 +111,13 @@ const LoginPage = () => {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+              className="mt-1 pr-10"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 top-7 hover:text-gray-700"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? <EyeClosedIcon /> : <EyeOpenIcon />}
             </button>
@@ -128,13 +132,13 @@ const LoginPage = () => {
 
           {/* Submit */}
           <div>
-            <button
+            <Button
               type="submit"
               disabled={isSubmitting}
-              className="relative flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-orange-500 border border-transparent rounded-md group hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
+              className="relative flex justify-center w-full text-white font-medium"
             >
               {isSubmitting ? 'Signing In...' : 'Sign In'}
-            </button>
+            </Button>
           </div>
 
           {/* Register */}
@@ -152,4 +156,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default MemberLoginPage;

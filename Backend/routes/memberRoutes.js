@@ -1,8 +1,7 @@
-// File: backend/routes/memberRoutes.js
-
 const express = require('express');
 const router = express.Router();
-const protect = require('../middleware/authMiddleware'); 
+const protect = require('../middleware/authMiddleware');
+const protectAdmin = require('../middleware/adminMiddleware'); // ★ Admin middleware එකත් import කරගන්නවා
 const upload = require('../middleware/uploadMiddleware');
 
 const {
@@ -10,7 +9,7 @@ const {
     loginMember,
     getMyUserProfile,
     updateMyUserProfile,
-    removeProfilePhoto,   // ✅ NEW IMPORT
+    removeProfilePhoto,
     deleteMyUserProfile,
     forgotPassword,
     resetPassword,
@@ -22,42 +21,39 @@ const {
     cancelMembership,
     renewMembership,
     getMembershipPlans
-} = require('../controllers/memberController'); 
+} = require('../controllers/memberController');
 
-// --- PUBLIC ROUTES (ඕනෑම කෙනෙකුට පිවිසිය හැකි මාර්ග) ---
+// --- PUBLIC ROUTES (ආරක්ෂාවක් නැති, ඕනෑම කෙනෙකුට පිවිසිය හැකි මාර්ග) ---
+
+// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+// ★★★ මෙන්න නිවැරදි කරන ලද වැදගත්ම කොටස ★★★
+// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+// Register වීම සඳහා protect middleware එකක් අවශ්‍ය නැහැ
 router.post('/register', registerMember); 
+
 router.post('/login', loginMember);
-
-// ★★★ "Forgot Password" සඳහා POST මාර්ගය ★★★
 router.post('/forgot-password', forgotPassword);
-
-// ★★★ "Reset Password" සඳහා PATCH මාර්ගය ★★★
 router.patch('/reset-password/:token', resetPassword);
-
-// ★★★ PUBLIC ROUTE: Membership plans එක ලබාගැනීම (Login අවශ්‍ය නෑ) ★★★
 router.get('/membership-plans', getMembershipPlans);
 
-// --- PROTECTED ROUTES (ලොග් වූ අයට පමණක්) ---
+// --- PROTECTED ROUTES (ලොග් වූ සාමාන්‍ය member කෙනෙකුට පමණක්) ---
 router.route('/my-profile')
     .get(protect, getMyUserProfile)
     .put(protect, upload.single('profileImage'), updateMyUserProfile)
     .delete(protect, deleteMyUserProfile);
-
-// ★★★ Profile Photo එක මකා දැමීම සඳහා නව Route එක ★★★
 router.delete('/my-profile/photo', protect, removeProfilePhoto);
-
 router.post('/subscribe', protect, subscribeToMembership);
 router.delete('/membership', protect, cancelMembership);
 router.post('/renew', protect, renewMembership);
 
-// --- ADMIN ONLY ROUTES ---
-router.route('/')
-    .get(protect, getAllMembers) 
-    .post(protect, registerMember); 
+// --- ADMIN ONLY ROUTES (Admin කෙනෙකුට පමණක්) ---
+// Admin කෙනෙක් විසින් සියලුම members ලා බැලීමට
+router.route('/').get(protectAdmin, getAllMembers); 
 
+// Admin කෙනෙක් විසින් එක් member කෙනෙක්ව බැලීමට, update කිරීමට, delete කිරීමට
 router.route('/:id')
-    .get(protect, getMemberById)
-    .put(protect, updateMember)
-    .delete(protect, deleteMember);
+    .get(protectAdmin, getMemberById)
+    .put(protectAdmin, updateMember)
+    .delete(protectAdmin, deleteMember);
 
-module.exports = router;
+module.exports = router;//ayunis

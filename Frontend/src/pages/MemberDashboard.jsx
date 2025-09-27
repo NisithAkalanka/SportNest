@@ -75,7 +75,7 @@ const MemberDashboard = () => {
         age: md?.age || '',
         nic: md?.nic || '',
         gender: md?.gender || 'Male',
-        profileImage: md?.profileImage || '/uploads/default-avatar.png',
+        profileImage:  data.memberDetails.profileImage || '/uploads/default-avatar.png',
       };
 
       setFormData(initialData);
@@ -399,6 +399,19 @@ const MemberDashboard = () => {
                 )}
               </CardContent>
             </Card>
+              
+                        {/* ★★★ MyReview component එක ඉවත් කර, සරල Link එකක් පමණක් තැබීම ★★★ */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Club Review</CardTitle>
+                                <CardDescription>Your feedback is valuable to us. Share or update your experience on our official reviews page.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="text-center">
+                                 <Link to="/reviews">
+                                    <Button style={{ backgroundColor: '#FF6700' }}>Go to Reviews Page</Button>
+                                 </Link>
+                            </CardContent>
+                        </Card>
           </div>
         </div>
 
@@ -411,4 +424,4 @@ const MemberDashboard = () => {
   );
 };
 
-export default MemberDashboard;
+export default MemberDashboard;//original

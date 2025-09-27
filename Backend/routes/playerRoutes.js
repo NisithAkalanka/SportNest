@@ -34,4 +34,4 @@ router.get('/simple', protect, getSimplePlayerList);
 //    Backward-compatible alias (from Ayuni)
 router.get('/simple-list', protect, getSimplePlayerList);
 
-module.exports = router;
+module.exports = router;//orig

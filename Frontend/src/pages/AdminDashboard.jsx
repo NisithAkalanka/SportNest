@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '@/api';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -15,11 +16,12 @@ const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [toast, setToast] = useState(null);
-
+  
   const [preorderOpen, setPreorderOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [preQty, setPreQty] = useState(10);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   const fetchStats = async () => {
     setIsLoading(true);
@@ -42,9 +44,7 @@ const AdminDashboard = () => {
   // --- Inventory pie data (safe fallbacks) ---
   const lowCount = stats?.lowStockItems?.length || 0;
   const expCount = stats?.expiringSoonItems?.length || 0;
-  const totalItems = typeof stats?.totalInventoryItems === 'number'
-    ? stats.totalInventoryItems
-    : (stats?.totalItems ?? stats?.totalActiveItems ?? stats?.totalUniqueItems);
+  const totalItems = (stats?.totalItems ?? stats?.totalActiveItems ?? stats?.totalUniqueItems);
   const healthyCount = typeof totalItems === 'number' ? Math.max(0, totalItems - lowCount - expCount) : null;
 
   const inventoryPieData = [
@@ -145,27 +145,26 @@ const AdminDashboard = () => {
         </Button>
       </div>
 
-      {/* Quick summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Total Revenue</CardTitle><FontAwesomeIcon icon={faDollarSign} className="h-4 w-4 text-gray-400" /></CardHeader>
-          <CardContent><div className="text-2xl font-bold">Rs. {Number(stats.totalRevenue || 0).toFixed(2)}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold">Rs. {stats.totalRevenue.toFixed(2)}</div></CardContent>
         </Card>
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Items Sold</CardTitle><FontAwesomeIcon icon={faShoppingCart} className="h-4 w-4 text-gray-400" /></CardHeader>
-          <CardContent><div className="text-2xl font-bold">+{stats.totalItemsSold || 0}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold">+{stats.totalItemsSold}</div></CardContent>
         </Card>
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Total Orders</CardTitle><FontAwesomeIcon icon={faClipboardList} className="h-4 w-4 text-gray-400" /></CardHeader>
-          <CardContent><div className="text-2xl font-bold">{stats.totalOrders || 0}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold">{stats.totalOrders}</div></CardContent>
         </Card>
          <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Total Suppliers</CardTitle><FontAwesomeIcon icon={faUsers} className="h-4 w-4 text-gray-400" /></CardHeader>
-          <CardContent><div className="text-2xl font-bold">{stats.totalSuppliers || 0}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold">{stats.totalSuppliers}</div></CardContent>
         </Card>
       </div>
 
-      {/* Inventory Overview (Pie) & Top Selling */}
+      {/* Inventory Overview (Pie) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
@@ -201,6 +200,7 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* Top Selling Items */}
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle>Top Selling Items</CardTitle>
@@ -245,51 +245,7 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Ayuni extras: Expiring within 30 days & Recent Suppliers */}
-      <div className="grid gap-6 md:grid-cols-2 mb-12">
-        <Card>
-          <CardHeader>
-            <CardTitle>Expiring within 30 Days</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {Array.isArray(stats?.expiringWithin30Days) && stats.expiringWithin30Days.length > 0 ? (
-              <ul className="space-y-2">
-                {stats.expiringWithin30Days.map((it, idx) => (
-                  <li key={idx} className="flex justify-between text-sm">
-                    <span>{it.name}</span>
-                    <span className="text-gray-500">{formatDate(it.expiryDate)}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500 text-sm">No items expiring in the next 30 days.</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Suppliers</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {Array.isArray(stats?.recentSuppliers) && stats.recentSuppliers.length > 0 ? (
-              <ul className="space-y-2">
-                {stats.recentSuppliers.map((sup, idx) => (
-                  <li key={idx} className="flex justify-between text-sm">
-                    <span>{sup.name}</span>
-                    <span className="text-gray-500">{sup.phone}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500 text-sm">No recent suppliers.</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Action Center */}
+      
       <h2 className="text-2xl font-semibold text-gray-700 mb-4">Action Center</h2>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card className="flex flex-col border-yellow-400 shadow-sm hover:shadow-lg transition-shadow">
@@ -301,7 +257,7 @@ const AdminDashboard = () => {
               <Table>
                 <TableHeader><TableRow><TableHead>Item</TableHead><TableHead>Qty Left</TableHead><TableHead className="text-right">Action</TableHead></TableRow></TableHeader>
                 <TableBody>
-                  {stats.lowStockItems?.length > 0 ? (stats.lowStockItems.map(it => (
+                  {stats.lowStockItems.length > 0 ? (stats.lowStockItems.map(it => (
                     <TableRow key={it._id}>
                       <TableCell className="font-medium">{it.name}</TableCell>
                       <TableCell className="font-bold text-yellow-600">{it.quantity}</TableCell>
@@ -322,7 +278,7 @@ const AdminDashboard = () => {
               <Table>
                 <TableHeader><TableRow><TableHead>Item</TableHead><TableHead>Expires On</TableHead><TableHead className="text-right">Action</TableHead></TableRow></TableHeader>
                 <TableBody>
-                  {stats.expiringSoonItems?.length > 0 ? (stats.expiringSoonItems.map(it => (
+                  {stats.expiringSoonItems.length > 0 ? (stats.expiringSoonItems.map(it => (
                     <TableRow key={it._id}>
                       <TableCell className="font-medium">{it.name} <span className="text-xs text-gray-500">({it.quantity} units)</span></TableCell>
                       <TableCell className="font-mono text-red-600 font-semibold">{formatDate(it.expiryDate)}</TableCell>

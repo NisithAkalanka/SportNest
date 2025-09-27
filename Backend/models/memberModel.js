@@ -54,4 +54,4 @@ memberSchema.methods.createPasswordResetToken = function() {
     return resetToken; 
 };
 
-module.exports = mongoose.models.Member || mongoose.model('Member', memberSchema);
+module.exports = mongoose.models.Member || mongoose.model('Member', memberSchema);//ayni

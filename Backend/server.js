@@ -21,6 +21,7 @@ if (!jwtSecret) {
 
 const app = express();
 
+
 // --- DB Connection ---
 mongoose.set('strictQuery', false);
 connectDB();
@@ -78,6 +79,14 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/trainings', trainingRoutes);
 app.use('/api/preorders', preorderRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/suppliers', require('./routes/supplierRoutes'));
+
+
+// Backend/server.js
+// ... අනෙකුත් routes ...
+app.use('/api/sponsorships', require('./routes/sponsorshipRoutes'));
+// Other middlewares...
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // --- Health check ---
 app.get('/', (req, res) => {
@@ -104,4 +113,4 @@ app.listen(PORT, () => {
   } catch (e) {
     console.warn('Scheduler failed to start:', e.message);
   }
-});
+});//original

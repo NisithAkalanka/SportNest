@@ -1,5 +1,3 @@
-// File: Frontend/src/pages/TrainingsPage.jsx
-
 import React, { useEffect, useState, useCallback } from "react";
 import moment from "moment";
 import { FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaSearch } from "react-icons/fa";
@@ -25,6 +23,8 @@ const TrainingsPage = () => {
 
   const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
   const userId = userInfo?._id || userInfo?.id;
+  const userRole = (userInfo?.role || "").toLowerCase();
+  const canRegister = userRole === "player";
 
   // --- fetch all trainings (all coaches)
   const fetchSessions = useCallback(async () => {
@@ -44,6 +44,10 @@ const TrainingsPage = () => {
 
   // --- Register / Unregister
   const handleRegister = async (id) => {
+    if (!canRegister) {
+      alert("Only players can register for training sessions.");
+      return;
+    }
     try {
       await trainingApi.registerSession(id);
       fetchSessions();
@@ -181,9 +185,13 @@ const TrainingsPage = () => {
                       ) : (
                         <button
                           onClick={() => handleRegister(session._id)}
-                          className="mt-4 w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-semibold"
+                          disabled={!canRegister}
+                          title={canRegister ? "Register for this session" : "Only players can register"}
+                          className={`mt-4 w-full px-4 py-2 rounded-lg font-semibold ${
+                            canRegister ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-300 cursor-not-allowed'
+                          }`}
                         >
-                          Register
+                          {canRegister ? 'Register' : 'Players Only'}
                         </button>
                       )}
                     </div>
