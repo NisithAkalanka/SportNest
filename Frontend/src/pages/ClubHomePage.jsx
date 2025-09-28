@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-// 'Renew Membership' සඳහා FaSyncAlt අයිකනය අලුතෙන් import කර ඇත.
+// 'Renew Membership' sadaha FaSyncAlt icon import 
 import { FaInfoCircle, FaUserPlus, FaTrophy, FaHandshake, FaSyncAlt } from 'react-icons/fa';
 
-// clubSections array එකට "Renew Membership" එකතු කර ඇත.
+// clubSections array ekata "Renew Membership" ekathu kara atha.
 const clubSections = [
     {
         title: "Our Story",
@@ -19,12 +19,12 @@ const clubSections = [
         icon: <FaUserPlus />,
         backgroundImage: "https://images.unsplash.com/photo-1556742212-5b321f3c261b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80"
     },
-    // ★★★ මෙතැන අලුතෙන් "Renew Membership" Card එක එකතු කර ඇත ★★★
+    
     {
         title: "Renew Membership",
         description: "Renew your existing membership plan here and continue enjoying exclusive benefits without interruption.",
-        link: "/renew-membership", // RenewPage එකට යන link එක
-        icon: <FaSyncAlt />, // අලුත් අයිකනය
+        link: "/renew-membership", 
+        icon: <FaSyncAlt />, 
         backgroundImage: "https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80"
     },
     {
@@ -54,7 +54,7 @@ const ClubHomePage = () => {
                     </p>
                 </div>
 
-                {/* Card ව්‍යුහය grid-cols-5 ලෙස වෙනස් කර, සියලුම cards එක පේළියක පෙන්වීමට සලස්වා ඇත */}
+                {/* Card structure grid-cols-5 lesa change kara, siyaluma cards eka peliayakata penwima sadaha */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
                     {clubSections.map((section) => (
                         <Link 

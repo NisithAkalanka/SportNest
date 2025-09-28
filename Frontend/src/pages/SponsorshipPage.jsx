@@ -21,7 +21,7 @@ const SponsorshipPage = () => {
     const navigate = useNavigate();
     const pdfContentRef = useRef(null);
 
-    // ★★★ 1. PDF එකේ පෙන්වීමට දිනය සහ වෙලාව තබාගැනීමට අලුත් state එකක් ★★★
+    //  PDF eke date and time penwimata state ekak
     const [downloadTimestamp, setDownloadTimestamp] = useState('');
     
     const [formData, setFormData] = useState({
@@ -140,9 +140,9 @@ const SponsorshipPage = () => {
         }
     };
 
-    // ★★★ 2. PDF Download function එක state update කරන ලෙස වෙනස් කර ඇත ★★★
+    // PDF Download function eka state update  
     const handleDownloadPDF = () => {
-        // ලස්සනට format කරපු දිනය සහ වෙලාව හදාගන්නවා
+        // format karapu date and time
         const formattedTimestamp = new Date().toLocaleString('en-US', {
             year: 'numeric',
             month: 'long',
@@ -152,13 +152,13 @@ const SponsorshipPage = () => {
             second: '2-digit',
             hour12: true
         });
-        // state එක update කරනවා. මේකෙන් timestamp එක PDF content එකේ පෙන්වන්න trigger වෙනවා
+        // state  update and timestamp eka PDF content eke penwanwanna trigger wenawa
         setDownloadTimestamp(formattedTimestamp);
     };
 
-    // ★★★ 3. state එක update වුණාට පස්සේ PDF එක generate කරන්න අලුත් useEffect hook එකක් ★★★
+    // state eka update unata passe PDF eka generate karanna new useEffect hook 
     useEffect(() => {
-        // timestamp එකේ අගයක් තියෙනවා නම් විතරක් (button එක click කළාට පස්සේ) මේක run වෙනවා
+        // timestamp eke agayak tiyanawan witrak (button eka click kalata passe) meka run wenawa
         if (downloadTimestamp) {
             const input = pdfContentRef.current;
             if (!input) return;
@@ -181,11 +181,11 @@ const SponsorshipPage = () => {
                 const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
                 pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
                 pdf.save(filename);
-                // PDF එක save කළාට පස්සේ timestamp එක අයින් කරනවා
+                // PDF eka save kalata passe timestamp eka remove karanawa
                 setDownloadTimestamp('');
             });
         }
-    }, [downloadTimestamp]); // මේ hook එක downloadTimestamp state එක වෙනස් වෙද්දී විතරක් run වෙනවා
+    }, [downloadTimestamp]); // hook eka downloadTimestamp stateeka wenas weddi run wenawa
 
     return (
         <div className="bg-gray-100">
@@ -211,7 +211,7 @@ const SponsorshipPage = () => {
                                 <p className="text-gray-500">Sponsorship Details</p>
                             </div>
 
-                            {/* ★★★ 4. PDF එකේ විතරක් පෙනෙන ලෙස Timestamp එක මෙතැනට එකතු කර ඇත ★★★ */}
+                            {/* ★★★ 4. PDF eke Timestamp  */}
                             {downloadTimestamp && (
                                 <div className="text-center text-xs text-gray-500 pt-2 pb-2 border-b">
                                     <strong>Document Generated On:</strong> {downloadTimestamp}

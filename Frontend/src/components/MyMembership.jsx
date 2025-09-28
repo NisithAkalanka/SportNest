@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-// මෙම currentPlan දත්ත backend එකෙන් ලබාගත යුතුය. 
-// දැනට අපි උදාහරණයක් ලෙස මෙය භාවිතා කරමු.
+//  currentPlan data backend eken labagathayuthui
+
 const MyMembership = ({ currentPlan = { name: 'Ordinary Membership', expiryDate: '2026-09-17' } }) => {
     
     if (!currentPlan) {
@@ -20,8 +20,8 @@ const MyMembership = ({ currentPlan = { name: 'Ordinary Membership', expiryDate:
     const handleDelete = () => {
         if(window.confirm('Are you sure you want to cancel your membership? This action cannot be undone.')) {
             console.log('Deleting membership...');
-            // මෙතැනදී Backend එකට API call එකක් යැවිය යුතුය
-            // උදා: axios.delete('/api/membership/cancel');
+            // metanadi Backend ekata  API call ekak send kala yuthui
+            // axios.delete('/api/membership/cancel');
             alert('Your membership has been cancelled.');
         }
     }
@@ -34,7 +34,7 @@ const MyMembership = ({ currentPlan = { name: 'Ordinary Membership', expiryDate:
                 <p className="text-gray-500">Expires on: {currentPlan.expiryDate}</p>
 
                 <div className="flex gap-4 mt-6">
-                    {/* සාමාජිකත්වය Edit කිරීම යනු වෙනත් Plan එකක් තේරීමයි */}
+                    {/* membership edit mean, changed membership */}
                     <Link to="/membership-plans" className="flex-1 text-center px-4 py-2 bg-yellow-500 text-white font-semibold rounded-md hover:bg-yellow-600">
                         Switch Plan
                     </Link>

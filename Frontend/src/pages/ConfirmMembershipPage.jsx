@@ -1,4 +1,4 @@
-// src/pages/ConfirmMembershipPage.jsx
+
 
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -9,7 +9,7 @@ import { FaEdit } from 'react-icons/fa';
 const allPlans = [
     { name: 'Student Membership', price: '20,000 LKR', period: '/ year' },
     { name: 'Ordinary Membership', price: '60,000 LKR', period: '/ year' },
-    { name: 'Life Time Membership', price: '100,000 LKR', period: '/ lifetime' } // ✅ FIXED
+    { name: 'Life Time Membership', price: '100,000 LKR', period: '/ lifetime' } 
 ];
 
 const ConfirmMembershipPage = () => {

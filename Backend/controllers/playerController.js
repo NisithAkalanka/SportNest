@@ -9,7 +9,7 @@ const registerPlayer = async (req, res) => {
 
   const sport = req.body.sport || req.body.selectedSport || req.body.sportName || req.body.game || req.body.discipline;
 
-  // req.user._id comes from your authentication middleware (e.g., 'protect')
+  // req.user._id comes from your authentication middleware 
   const memberObjectId = req.user?._id; 
 
   try {
@@ -17,7 +17,7 @@ const registerPlayer = async (req, res) => {
       return res.status(401).json({ message: 'Unauthorized. You must be logged in to register as a player.' });
     }
       
-    // ★★★ නිවැරදි කරන ලදී: Check if a Player Profile for this member already exists ★★★
+    // Check if a Player Profile for this member already exists 
     const existingProfile = await Player.findOne({ member: memberObjectId, sportName: sport });
 
     if (existingProfile) {
@@ -26,7 +26,7 @@ const registerPlayer = async (req, res) => {
 
     // Create the new player profile document
     const player = await Player.create({
-      member: memberObjectId, // ★★★ නිවැරදි කරන ලදී: Using the corrected 'member' field name ★★★
+      member: memberObjectId, 
       clubId,
       fullName,
       membershipId,
@@ -78,7 +78,7 @@ const updateMyProfile = async (req, res) => {
             return res.status(404).json({ message: 'Player profile not found.' });
         }
         
-        // ★★★ නිවැරදි කරන ලදී: Authorization check using the 'member' field ★★★
+        // Authorization check using the 'member' field 
         const isOwner = player.member && player.member.toString() === req.user?._id?.toString();
 
         if (!isOwner) {
@@ -133,7 +133,7 @@ const getSimplePlayerList = async (req, res) => {
             return res.status(403).json({ message: 'Forbidden: You do not have permission.' });
         }
 
-        // ★★★ නිවැරදි කරන ලදී: Populate works correctly now with the 'member' path ★★★
+        // Populate works correctly now with the 'member' path 
         const registrations = await Player.find({}).populate({
             path: 'member',
             select: 'firstName lastName clubId'

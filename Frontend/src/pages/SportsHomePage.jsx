@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/context/MemberAuthContext';
 import PlayerRegistrationModal from '@/components/PlayerRegistrationModal';
 
-// ★★★ Sports data (merged: main2 local assets + Ayuni improvements) ★★★
+//  Sports data (merged: main2 local assets + Ayuni improvements) 
 const sportsData = [
   {
     name: 'Tennis',

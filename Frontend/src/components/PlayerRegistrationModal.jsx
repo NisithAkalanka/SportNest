@@ -1,4 +1,4 @@
-// Frontend/src/components/PlayerRegistrationModal.jsx
+
 
 import React, { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
@@ -25,7 +25,7 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
     });
 
     const [error, setError] = useState(''); // General error message for submission
-    const [errors, setErrors] = useState({}); // Individual field errors සඳහා වන state එක
+    const [errors, setErrors] = useState({}); // Individual field errors sadaha wana state eka
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -41,9 +41,9 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
         }
     }, [user]);
     
-    // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-    // ★★★ ඔබගේ අවශ්‍යතාවය පරිදි යාවත්කාලීන කළ validation function එක ★★★
-    // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+    
+    // restore karana lada validation function එක 
+    
     const validate = () => {
         const newErrors = {};
 
@@ -91,7 +91,7 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
         }
 
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0; // දෝෂ නොමැතිනම් 'true' ලෙස return කරයි
+        return Object.keys(newErrors).length === 0; // without error display the true
     };
 
     const handleChange = (e) => {

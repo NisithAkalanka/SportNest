@@ -1,4 +1,4 @@
-// File: Frontend/src/pages/DetailsListPage.jsx
+
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
@@ -7,7 +7,7 @@ import DataTable from '../components/admin/DataTable';
 import { FaArrowLeft } from 'react-icons/fa';
 
 const DetailsListPage = () => {
-    // URL එකෙන් ගතික කොටස් ලබාගැනීම. උදා: /users/plan/Student%20Membership -> type='users', filter='plan', value='Student%20Membership'
+    // URL . /users/plan/Student%20Membership -> type='users', filter='plan', value='Student%20Membership'
     const { type, filter, value } = useParams();
 
     const [dataList, setDataList] = useState([]);
@@ -16,7 +16,7 @@ const DetailsListPage = () => {
     const [title, setTitle] = useState('');
 
     const columns = useMemo(() => {
-        // 'users' යනුවෙන් එන සියලුම දේ සඳහා මෙම table එක පෙන්වයි
+        // 'users' see the table columns for users
         if (type === 'users') {
             return [
                 { header: 'Full Name', accessor: 'fullName' },
@@ -29,7 +29,7 @@ const DetailsListPage = () => {
         if (type === 'players') {
             return [
                 { header: 'Full Name', accessor: 'fullName' },
-                { header: 'Email', accessor: 'memberId.email' }, // populate කර ඇති විට
+                { header: 'Email', accessor: 'memberId.email' }, // populate 
                 { header: 'Sport', accessor: 'sportName' },
                 { header: 'Skill Level', accessor: 'skillLevel' },
             ];
@@ -38,13 +38,13 @@ const DetailsListPage = () => {
     }, [type]);
     
     useEffect(() => {
-        // URL එකට අනුව නිවැරදි API endpoint එක ගොඩනැගීම
+        // URL ,create API endpoint based on type, filter, and value
         let endpoint = '';
         if(type && filter && value){
-             // Plan සහ Sport සඳහා (උදා: /users/plan/Student%20Membership)
+             // Plan and Sport සඳහා 
             endpoint = `/api/admin/${type}/${filter}/${value}`;
         } else if (type && filter) {
-             // Status සහ All සඳහා (උදා: /users/status/active)
+             // Status and  All 
              endpoint = `/api/admin/${type}/${filter}`;
         }
        

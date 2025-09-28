@@ -1,4 +1,4 @@
-// File: backend/controllers/memberController.js
+
 
 const Member = require('../models/memberModel');
 const Player = require('../models/PlayerModel');
@@ -116,7 +116,7 @@ const loginMember = async (req, res) => {
     }
 };
 
-// 3. Get logged-in user's full profile
+// Get logged-in user's full profile
 const getMyUserProfile = async (req, res) => {
     try {
         const userId = req.user?._id || req.user?.id;
@@ -136,7 +136,7 @@ const getMyUserProfile = async (req, res) => {
     }
 };
 
-// 4. Update logged-in user's profile
+//  Update logged-in user's profile
 const updateMyUserProfile = async (req, res) => {
     try {
         const member = await Member.findById(req.user.id);
@@ -193,7 +193,7 @@ const updateMyUserProfile = async (req, res) => {
     }
 };
 
-// 4.1 Remove profile photo (NEW)
+//  Remove profile photo (NEW)
 const removeProfilePhoto = async (req, res) => {
     try {
         const member = await Member.findById(req.user.id);
@@ -227,7 +227,7 @@ const removeProfilePhoto = async (req, res) => {
     }
 };
 
-// 5. Delete logged-in user's account
+//  Delete logged-in user's account
 const deleteMyUserProfile = async (req, res) => {
     try {
         const member = await Member.findById(req.user.id);
@@ -241,7 +241,7 @@ const deleteMyUserProfile = async (req, res) => {
     }
 };
 
-// 6. Get all members (Admin)
+//  Get all members (Admin)
 const getAllMembers = async (req, res) => {
     try {
         const members = await Member.find({});
@@ -251,7 +251,7 @@ const getAllMembers = async (req, res) => {
     }
 };
 
-// 7. Get member by ID (Admin)
+//  Get member by ID (Admin)
 const getMemberById = async (req, res) => {
     const { id } = req.params;
     try {
@@ -263,7 +263,7 @@ const getMemberById = async (req, res) => {
     }
 };
 
-// 8. Update member (Admin)
+//  Update member (Admin)
 const updateMember = async (req, res) => {
     const { id } = req.params;
     try {
@@ -306,7 +306,7 @@ const updateMember = async (req, res) => {
     }
 };
 
-// 9. Delete member (Admin)
+//  Delete member (Admin)
 const deleteMember = async (req, res) => {
     const { id } = req.params;
     try {
@@ -547,7 +547,7 @@ module.exports = {
     loginMember,
     getMyUserProfile,
     updateMyUserProfile,
-    removeProfilePhoto,   // ✅ NEW FUNCTION EXPORTED
+    removeProfilePhoto,   
     deleteMyUserProfile,
     getAllMembers,
     getMemberById,

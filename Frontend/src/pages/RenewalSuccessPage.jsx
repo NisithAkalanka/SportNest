@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaCheckCircle } from 'react-icons/fa'; // Icon එකක් import කරගන්නවා
+import { FaCheckCircle } from 'react-icons/fa'; // Icon ekak import karagannawa
 
 const RenewalSuccessPage = () => {
     const navigate = useNavigate();
@@ -9,7 +9,7 @@ const RenewalSuccessPage = () => {
         <div className="bg-gray-50 min-h-screen flex items-center justify-center">
             <div className="max-w-lg w-full text-center bg-white p-10 rounded-xl shadow-lg">
                 <div className="flex justify-center mb-4">
-                    {/* සාර්ථක බව පෙන්වන Icon එක */}
+                    {/* success icon */}
                     <FaCheckCircle className="text-green-500 text-6xl" />
                 </div>
                 <h1 className="text-3xl font-extrabold text-gray-900 mb-2">
@@ -19,9 +19,9 @@ const RenewalSuccessPage = () => {
                     Your membership renewal details have been successfully submitted. Please proceed to payment to complete the process and activate your plan.
                 </p>
                 
-                {/* ★★★ Payment එකට යන්න Button එක ★★★ */}
+                {/*  Payment button */}
                 <button
-                    onClick={() => navigate('/payment')} // Payment page එකට navigate කරනවා
+                    onClick={() => navigate('/payment')} // Payment page ekata navigate karanawa
                     className="w-full max-w-xs mx-auto flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                     Proceed to Payment

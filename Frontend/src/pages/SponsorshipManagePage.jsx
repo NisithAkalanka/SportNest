@@ -3,13 +3,13 @@ import axios from 'axios';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { FaFilePdf, FaArrowLeft } from 'react-icons/fa'; // FaArrowLeft import කරගන්නවා
+import { FaFilePdf, FaArrowLeft } from 'react-icons/fa'; 
 
-// ★★★ PDF එකට 'createdAt' දත්තය පෙන්වීමට PDFLayout එක යාවත්කාලීන කර ඇත ★★★
+//  PDF ekata 'createdAt' data penwimata PDFLayoutyawathkalina kara atha
 const PDFLayout = React.forwardRef(({ data }, ref) => {
     if (!data) return null;
 
-    // දිනය සහ වෙලාව ලස්සනට format කරන function එකක්
+    // date and time beautiful format karana function ekak
     const formatDateTime = (isoString) => {
         if (!isoString) return 'N/A';
         return new Date(isoString).toLocaleString('en-US', {
@@ -32,7 +32,7 @@ const PDFLayout = React.forwardRef(({ data }, ref) => {
                 <FaFilePdf className="text-4xl text-blue-600" />
             </div>
             
-            {/* ★★★ Application එක submit කරපු වෙලාව මෙතැන පෙන්වයි ★★★ */}
+            {/*  Application eka submit karapu time metana penwai  */}
             <div className="mt-6 text-sm text-gray-700 bg-gray-50 p-3 rounded-md">
                 <p><strong>Application Submitted On:</strong> {formatDateTime(data.createdAt)}</p>
             </div>

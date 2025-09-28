@@ -1,4 +1,4 @@
-// Frontend/src/pages/RegisterPage.jsx — UPGRADED UI (matches Login styling)
+
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/context/MemberAuthContext';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-// --- Inline SVG Icons (no extra deps) ---
+//  Inline SVG Icons (no extra deps) 
 const EyeOpenIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
@@ -22,7 +22,7 @@ const EyeClosedIcon = () => (
   </svg>
 );
 
-// NIC එකෙන් වයස ගණනය කරන function එක
+// NIC eken wayasa gananaya karana function eka
 const calculateAgeFromNIC = (nic) => {
   if (!nic || nic.length !== 12) return null;
   let year = parseInt(nic.substring(0, 4), 10);

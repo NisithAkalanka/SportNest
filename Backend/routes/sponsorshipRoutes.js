@@ -1,4 +1,4 @@
-// Backend/routes/sponsorshipRoutes.js
+
 
 const express = require('express');
 const router = express.Router();
@@ -11,7 +11,7 @@ const {
     updateSponsorship,
     deleteSponsorship,
     getAllSponsorships,
-    sendInvitationEmail // ★★★ approveSponsorship වෙනුවට මෙය import කරන්න
+    sendInvitationEmail //  approveSponsorship import 
 } = require('../controllers/sponsorshipController');
 
 // --- Public Routes ---
@@ -20,10 +20,10 @@ router.get('/:id', getSponsorshipForEditing);           // Retrieve sponsorship 
 router.put('/:id', updateSponsorship);                  // Update sponsorship (within 5 hours)
 router.delete('/:id', deleteSponsorship);               // Delete sponsorship (within 5 hours)
 
-// --- Admin Routes ---
+//  Admin Routes 
 router.get('/admin/all', protect, getAllSponsorships);  // Get all sponsorships (admin only)
 
-// ★★★ 'approve' route එක ඉවත් කරලා 'send-invitation' එක යොදනවා ★★★
+// 'remove approve' functionality replaced with 'send invitation email'
 router.post('/admin/send-invitation/:id', protect, sendInvitationEmail);
 
 module.exports = router;

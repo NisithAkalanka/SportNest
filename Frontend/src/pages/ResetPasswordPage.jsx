@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 
 const ResetPasswordPage = () => {
-    // URL එකෙන් :token කොටස ලබා ගැනීම
+    // URL  :get token 
     const { token } = useParams();
     const navigate = useNavigate();
 
@@ -26,11 +26,11 @@ const ResetPasswordPage = () => {
         setMessage('');
 
         try {
-            // Backend එකට token එක සහ අලුත් password එක යැවීම
+            // Backend ekata token eka and new passsword yawima
             await axios.patch(`/api/members/reset-password/${token}`, { password });
             setMessage({ type: 'success', text: 'Password reset successful! Redirecting to login...' });
             
-            // තත්පර 2කට පසු login පිටුවට යොමු කිරීම
+            // 2sec login pituwata yomu wima
             setTimeout(() => {
                 navigate('/login');
             }, 2000);

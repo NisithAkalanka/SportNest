@@ -1,4 +1,4 @@
-// src/pages/RenewMembershipPage.jsx
+
 
 import React, { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -10,7 +10,7 @@ const RenewMembershipPage = () => {
     const navigate = useNavigate();
     const { user } = useContext(AuthContext);
 
-    // ★★★ formData හි ආරම්භක අගයන් හිස්ව තැබීම ★★★
+    //  formData eke data hiswa tabima
     const [formData, setFormData] = useState({
         membershipId: '',
         fullName: '',
@@ -24,14 +24,14 @@ const RenewMembershipPage = () => {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        // ★★★ දත්ත ලබා ගැනීමේ වඩාත් ස්ථාවර ක්‍රමය ★★★
+        //  data laba ganime sthawara kramaya
         const fetchMemberDetails = async () => {
             if (!user) {
                 navigate('/login');
                 return;
             }
             try {
-                // API call එකක් මගින් profile විස්තර ලබා ගැනීම
+                // API call ekak magin profile data labaganima
                 const config = { headers: { Authorization: `Bearer ${user.token}` } };
                 const { data } = await axios.get('/api/members/my-profile', config);
 
@@ -59,7 +59,7 @@ const RenewMembershipPage = () => {
             }
         };
 
-        // dashboard එකෙන් state එක ලැබුනොත් එය භාවිතා කිරීම (වේගවත් නිසා)
+        // if receive any data from state, use it to pre-fill the form
         if (state?.membershipId) {
             setFormData(prev => ({
                 ...prev,
@@ -67,10 +67,10 @@ const RenewMembershipPage = () => {
                 currentPlan: state.currentPlan,
                 newPlan: state.currentPlan,
             }));
-            // State එකෙන් දත්ත ලැබුනත්, full name සහ email ලබාගැනීමට API call එක යැවීම
+            // Also fetch other details from API to ensure up-to-date info
             fetchMemberDetails();
         } else if (user) {
-            // State එක නොමැතිනම් (උදා: පිටුව refresh කළ විට) API call එකෙන් සියල්ල ලබා ගැනීම
+            // No state data, but user is logged in - fetch details from API
             fetchMemberDetails();
         } else {
             navigate('/login');
@@ -82,7 +82,7 @@ const RenewMembershipPage = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // ★★★ `handleSubmit` function එක `renewal-success` පිටුවට යොමු වන සේ වෙනස් කරන ලදී ★★★
+    // redirect to RenewalSuccessPage after successful submission
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -94,7 +94,7 @@ const RenewMembershipPage = () => {
 
             await axios.post('/api/members/renew', submissionData, config);
 
-            // සාර්ථක වූ පසු, alert එකක් වෙනුවට RenewalSuccessPage එකට යොමු කිරීම
+            // if successful, redirect to success page
             navigate('/renewal-success');
 
         } catch (err)
@@ -130,7 +130,7 @@ const RenewMembershipPage = () => {
                             <input type="text" value={formData.membershipId} readOnly className="w-full mt-1 p-2 border rounded-md bg-gray-100 cursor-not-allowed"/>
                         </div>
                         
-                        {/* ★★★ Full Name සහ Email ස්වයංක්‍රීයව පිරී, වෙනස් කළ නොහැකි ලෙස සකස් කරන ලදී ★★★ */}
+                        {/*set validations*/}
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Full Name</label>
                             <input name="fullName" type="text" value={formData.fullName} readOnly className="w-full mt-1 p-2 border rounded-md bg-gray-100 cursor-not-allowed"/>

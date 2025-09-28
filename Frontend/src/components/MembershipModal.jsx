@@ -1,19 +1,19 @@
-// src/components/MembershipModal.jsx
+
 
 import React, { useState, useContext } from 'react';
-import { AuthContext } from '../context/MemberAuthContext'; // ඔබගේ Auth Context එක import කරගන්න
+import { AuthContext } from '../context/MemberAuthContext'; 
 
 const MembershipModal = ({ plan, onClose, onSubmit }) => {
-    // AuthContext එකෙන් login වී සිටින පරිශීලකයාගේ තොරතුරු ලබාගනිමු
+    // get user from AuthContext
     const { user } = useContext(AuthContext); 
     
-    // user object එකේ id, firstName, lastName ඇති බව උපකල්පනය කරමු.
+    // user object eke id, firstName, lastName athi baawa upkalpanaya kirima
     const [fullName, setFullName] = useState(`${user.firstName} ${user.lastName}` || '');
 
     const handleSubmit = (e) => {
         e.preventDefault();
         const formData = {
-            userId: user.id, // Login වී සිටින userගේ ID එක
+            userId: user.id, // Login userid
             userName: fullName,
             planName: plan.name,
             price: plan.price

@@ -1,11 +1,11 @@
 const RenewedMembership = require('../models/RenewedMembership');
 
-// සාමාජිකත්වය අලුත් කිරීමේ function එක
+// renew membership function
 exports.createRenewal = async (req, res) => {
     try {
         const { membershipId, name, email, previousPlan, newPlan } = req.body;
 
-        // අලුත් renewal object එකක් සාදනවා
+        //  create renewal object 
         const newRenewal = new RenewedMembership({
             membershipId,
             name,
@@ -14,7 +14,7 @@ exports.createRenewal = async (req, res) => {
             newPlan
         });
 
-        // Database එකේ save කරනවා
+        // Database  save 
         await newRenewal.save();
 
         res.status(201).json({ success: true, message: 'Membership renewal successful!', data: newRenewal });

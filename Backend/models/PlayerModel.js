@@ -1,9 +1,8 @@
-// File: Backend/models/PlayerModel.js
+
 
 const mongoose = require('mongoose');
 
 const playerSchema = new mongoose.Schema({
-    // ★★★ නිවැරදි කරන ලදී: Field එකේ නම 'memberId' සිට 'member' ලෙස වෙනස් කරන ලදී. ★★★
     member: {
         type: mongoose.Schema.Types.ObjectId,
         required: [true, 'Member reference is required'],

@@ -4,7 +4,7 @@ const Sponsorship = require('../models/SponsorshipModel');
 const sendEmail = require('../utils/email');
 const crypto = require('crypto');
 
-// --- 1. Register Sponsorship Application (Public) ---
+//  Register Sponsorship Application (Public) 
 const registerSponsorship = async (req, res) => {
     const {
         fullName, organizationName, contactPerson, email, phoneNumber, address,
@@ -53,7 +53,7 @@ const registerSponsorship = async (req, res) => {
     }
 };
 
-// --- 2. Retrieve Sponsorship for Editing (with Access Token) ---
+//  Retrieve Sponsorship for Editing (with Access Token) 
 const getSponsorshipForEditing = async (req, res) => {
     try {
         const { id } = req.params;
@@ -75,7 +75,7 @@ const getSponsorshipForEditing = async (req, res) => {
     }
 };
 
-// --- 3. Update Sponsorship Application (within 5 hours) ---
+// Update Sponsorship Application (within 5 hours) 
 const updateSponsorship = async (req, res) => {
     try {
         const sponsorship = await Sponsorship.findById(req.params.id);
@@ -97,7 +97,7 @@ const updateSponsorship = async (req, res) => {
     }
 };
 
-// --- 4. Delete Sponsorship Application (within 5 hours) ---
+//  Delete Sponsorship Application (within 5 hours) 
 const deleteSponsorship = async (req, res) => {
     try {
         const sponsorship = await Sponsorship.findById(req.params.id);
@@ -117,7 +117,7 @@ const deleteSponsorship = async (req, res) => {
     }
 };
 
-// --- 5. Admin: Get All Sponsorship Applications ---
+//  Admin: Get All Sponsorship Applications 
 const getAllSponsorships = async (req, res) => {
     try {
         const applications = await Sponsorship.find({}).sort({ createdAt: -1 }); // latest first
@@ -127,7 +127,7 @@ const getAllSponsorships = async (req, res) => {
     }
 };
 
-// --- 6. Admin: Send Invitation Email (instead of approval) ---
+//  Admin: Send Invitation Email (instead of approval) 
 const sendInvitationEmail = async (req, res) => {
     try {
         const sponsorship = await Sponsorship.findById(req.params.id);

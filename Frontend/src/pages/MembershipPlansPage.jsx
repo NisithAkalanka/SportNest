@@ -1,11 +1,11 @@
-// Frontend/src/pages/MembershipPlansPage.jsx
+
 
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../context/MemberAuthContext";
 
-// 🟠 Single Plan Card Component
+//  Single Plan Card Component
 const PlanCard = ({ plan, onSelect }) => (
   <div className="bg-white rounded-2xl shadow-lg p-8 border-t-4 border-orange-500 flex flex-col hover:shadow-xl transition duration-300">
     <h2 className="text-2xl font-bold text-gray-800">{plan.name}</h2>
@@ -51,13 +51,13 @@ const MembershipPlansPage = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // 🔹 Fetch Plans (Public)
+  //  Fetch Plans (Public)
   useEffect(() => {
     const fetchPlans = async () => {
       try {
         const { data } = await axios.get("/api/members/membership-plans");
 
-        // 🔥 Override prices manually
+        //  Override prices manually
         const updatedPlans = data.map((plan) => {
           if (plan.name === "Student Membership") return { ...plan, price: 20000 };
           if (plan.name === "Ordinary Membership") return { ...plan, price: 60000 };
@@ -75,7 +75,7 @@ const MembershipPlansPage = () => {
     fetchPlans();
   }, []);
 
-  // 🔹 Handle Plan Selection
+  //  Handle Plan Selection
   const handleSelectPlan = (selectedPlan) => {
     if (!user) {
       navigate("/login", {

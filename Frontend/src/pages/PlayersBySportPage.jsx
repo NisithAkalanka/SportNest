@@ -96,19 +96,19 @@ const UserManagementPage = () => {
               icon={<FaUsers />}
               label="All Members"
               value={summary.totalMembers}
-              to="/admin-dashboard/user-management/plan/all" // ✅ View Details
+              to="/admin-dashboard/user-management/plan/all" //  View Details
             />
             <DetailRow
               icon={<FaUserCheck />}
               label="Active Memberships"
               value={summary.membersWithPlan}
-              to="/admin-dashboard/user-management/plan/active" // ✅ View Details
+              to="/admin-dashboard/user-management/plan/active" //  View Details
             />
             <DetailRow
               icon={<FaUserTimes />}
               label="No Membership Plan"
               value={summary.membersWithoutPlan}
-              to="/admin-dashboard/user-management/plan/inactive" // ✅ View Details
+              to="/admin-dashboard/user-management/plan/inactive" //  View Details
             />
             <hr className="my-2" />
             <DetailRow

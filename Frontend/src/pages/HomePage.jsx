@@ -75,7 +75,7 @@ const HomePage = () => {
 
   return (
     <div className="text-gray-800">
-      {/* ★★★ 1. Hero Section (Configurable background + overlay + right-side glass card) ★★★ */}
+      {/*  1. Hero Section (Configurable background + overlay + right-side glass card)  */}
       <section className="relative min-h-[80vh] md:h-screen grid md:grid-cols-2 items-center overflow-hidden">
         {/* Background image for best LCP handling */}
         <img

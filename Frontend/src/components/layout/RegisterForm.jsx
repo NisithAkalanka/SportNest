@@ -32,7 +32,7 @@ function RegisterForm() {
             return;
         }
 
-        // --- ★★★ THIS IS THE UPDATED LOGIC BLOCK ★★★ ---
+        //  THIS IS THE UPDATED LOGIC BLOCK 
         try {
             const config = { headers: { 'Content-Type': 'application/json' } };
             const { data } = await axios.post('/api/members/register', formData, config);

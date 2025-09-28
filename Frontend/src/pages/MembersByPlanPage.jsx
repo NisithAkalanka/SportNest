@@ -27,7 +27,7 @@ const MembersByPlanPage = () => {
       let apiUrl = '';
       if (planName === 'all') {
         setTitle("All Members");
-        apiUrl = '/api/admin/users/all';   // ✅ All Members
+        apiUrl = '/api/admin/users/all';   //  All Members
       } else if (planName === 'active') {
         setTitle("All Members with an 'Active' Plan");
         apiUrl = '/api/admin/users/status/active';

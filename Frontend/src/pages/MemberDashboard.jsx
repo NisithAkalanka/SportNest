@@ -1,4 +1,4 @@
-// src/pages/MemberDashboard.jsx — UPGRADED UI (polished, responsive)
+
 
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import api from '@/api';

@@ -10,10 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 
 
 const PlayerEditModal = ({ profile, onClose, onUpdate }) => {
-    // AuthContext එකෙන් login වී සිටින user ගේ දත්ත ලබාගැනීම
+    // find the logged in user from context
     const { user } = useContext(AuthContext);
     
-    // පෝරමයේ දත්ත ගබඩා කර තබාගැනීමට state එකක්
+    // store form data in state
     const [formData, setFormData] = useState({
         contactNumber: '',
         emergencyContactName: '',
@@ -21,13 +21,13 @@ const PlayerEditModal = ({ profile, onClose, onUpdate }) => {
         skillLevel: 'Beginner',
     });
     
-    // දත්ත save වන විට 'Saving...' ලෙස පෙන්වීමට state එකක්
+    // Loading state 
     const [loading, setLoading] = useState(false);
-    // දෝෂ පණිවිඩ පෙන්වීමට state එකක්
+    // Error message state 
     const [error, setError] = useState('');
 
 
-    // Modal එක open වන විට, 'profile' prop එකෙන් එන දත්ත වලින් පෝරමය පිරවීම
+    // fill form data when profile prop changes
     useEffect(() => {
         if (profile) {
             setFormData({
@@ -40,29 +40,29 @@ const PlayerEditModal = ({ profile, onClose, onUpdate }) => {
     }, [profile]);
 
 
-    // Input fields වල ටයිප් කරන විට state එක යාවත්කාලීන කිරීම
+    // restore form data when profile prop changes
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-    // Skill Level select කරන විට state එක යාවත්කාලීන කිරීම
+    // restore skill level when changed
     const handleSelectChange = (value) => setFormData({ ...formData, skillLevel: value });
 
-    // 'Save Changes' බොත්තම එබූ විට ක්‍රියාත්මක වන function එක
+    // 'Save Changes' button click kala wita ena function eka
     const handleSubmit = async (e) => {
-        e.preventDefault(); // පෝරමය submit වීම නැවැත්වීම
+        e.preventDefault(); // poramaya submit wima nawatwima
         setLoading(true);
         setError('');
         
         try {
-            // Local storage එකෙන් token එක ලබාගැනීම
+            // get the token from logged in user
             const token = user?.token;
-            // API request එකට අවශ්‍ය headers සකස් කිරීම
+            // API request ekata awashya headers sakas kirima
             const config = { headers: { Authorization: `Bearer ${token}` } };
             
-            // Backend එකේ අදාළ route එකට 'PUT' request එකක් යැවීම
+            // Backend eke adala route ekata 'PUT' request ekak yawima
             await axios.put(`/api/players/profile/${profile._id}`, formData, config);
             
             alert("Update successful!");
-            onUpdate(); // Dashboard එකේ දත්ත refetch කිරීමට signal එකක් යැවීම
-            onClose();  // Modal එක close කිරීම
+            onUpdate(); // Dashboard eke data refetch kirimata signal ekak yawima
+            onClose();  // close Modal 
         
         } catch (error) {
             setError(error.response?.data?.message || 'Update failed. Please try again.');
@@ -73,10 +73,10 @@ const PlayerEditModal = ({ profile, onClose, onUpdate }) => {
         }
     };
     
-    // profile prop එක load වී නොමැතිනම්, modal එක නොපෙන්වීම
+    // profile prop eka load wi nomathinam modal eka nopenwima
     if (!profile) return null;
 
-    // Modal එකේ JSX (HTML) ව්‍යුහය
+    // Modal eke JSX (HTML) structure eka
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
             <div className="bg-white p-8 rounded-lg w-full max-w-md shadow-2xl">

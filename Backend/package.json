@@ -13,12 +13,14 @@
   "description": "",
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "body-parser": "^1.20.3",
     "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
     "date-fns-tz": "^3.2.0",
     "dotenv": "^17.2.1",
     "express": "^4.21.2",
     "express-async-handler": "^1.2.0",
+    "html-pdf": "3.0.1",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
     "jspdf": "^3.0.3",
@@ -28,9 +30,13 @@
     "multer-storage-cloudinary": "^4.0.0",
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.6",
-    "pdf-creator-node": "^2.3.5",
+    "pdf-creator-node": "1.4.0",
     "pdfkit": "^0.17.2",
-    "qrcode": "^1.5.4"
+    "phantomjs-prebuilt": "2.1.16",
+    "qrcode": "^1.5.4",
+    "raw-body": "^2.5.2",
+    "safer-buffer": "^2.1.2",
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

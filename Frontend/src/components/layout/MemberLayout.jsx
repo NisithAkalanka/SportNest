@@ -7,8 +7,8 @@ import { faSignOutAlt, faUser, faTachometerAlt, faShieldAlt } from '@fortawesome
 const MemberLayout = () => {
   const navigate = useNavigate();
   
-  // AuthContext එකෙන් logout function එක ගත්තා නම් තවත් හොඳයි.
-  // දැනට අපි localStorage එක remove කරමු.
+  
+  // dan api localStorage eka remove karamu
   const handleLogout = () => {
     localStorage.removeItem('userInfo');
     navigate('/login');
@@ -35,7 +35,6 @@ const MemberLayout = () => {
                 My Sports Profile
               </Link>
             </li>
-            {/* ඔබට අවශ්‍ය නම්, 'Membership' වැනි තවත් links මෙතැනට එකතු කළ හැක */}
           </ul>
         </nav>
 
@@ -47,7 +46,7 @@ const MemberLayout = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 p-10 overflow-auto">
-        <Outlet /> {/* මෙතැනට MemberDashboard, PlayerProfile වගේ pages load වෙනවා */}
+        <Outlet /> {/* metanata MemberDashboard, PlayerProfile wage pages load wenawa */}
       </main>
       
     </div>

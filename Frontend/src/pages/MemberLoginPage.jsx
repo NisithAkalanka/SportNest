@@ -1,7 +1,7 @@
-// Frontend/src/pages/MemberLoginPage.jsx — UPGRADED UI (responsive + accessible)
+
 import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '@/api'; // ✅ shared axios instance with /api base
+import api from '@/api'; //  shared axios instance with /api base
 import { AuthContext } from '@/context/MemberAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
