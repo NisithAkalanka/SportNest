@@ -1,4 +1,3 @@
-// src/pages/SubmitEvent.jsx
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { submitEvent } from "@/services/eventsApi";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
-/** 🔸 Pre-defined venues with auto facilities + default requested items */
+/**  Pre-defined venues with auto facilities + default requested items */
 const VENUES = [
   {
     id: "court-a",
@@ -61,7 +60,7 @@ export default function SubmitEvent() {
   }, []);
   const toISO = (d) => d.toISOString().slice(0, 10);
 
-  // 🔸 Word count for description
+  //  Word count for description
   const descWords = form.description.trim().split(/\s+/).filter(Boolean).length;
 
   const addReq = () => {
@@ -81,7 +80,7 @@ export default function SubmitEvent() {
       requestedItems: f.requestedItems.filter((_, i) => i !== idx),
     }));
 
-  /** 🔸 Auto-fill facilities & defaults when venue is selected */
+  /**  Auto-fill facilities & defaults when venue is selected */
   const onVenueSelect = (id) => {
     setSelectedVenueId(id);
     const v = VENUES.find((x) => x.id === id);

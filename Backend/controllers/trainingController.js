@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Training = require('../models/Training');
 
-// 1. අලුත් Training Session එකක්
+// new Training Session 
 const createTrainingSession = asyncHandler(async (req, res) => {
   const { title, date, startTime, endTime, location, capacity } = req.body;
 
@@ -17,7 +17,7 @@ const createTrainingSession = asyncHandler(async (req, res) => {
       startTime,
       endTime,
       location,
-      capacity: capacity || 20, // 👈 default 20
+      capacity: capacity || 20, //  default 20
       coach: req.user.id,
     });
     res.status(201).json(training);
@@ -26,7 +26,7 @@ const createTrainingSession = asyncHandler(async (req, res) => {
   }
 });
 
-// 2. දැනට තියෙන sessions ඔක්කොම
+// All sessions
 const getAllTrainings = asyncHandler(async (req, res) => {
   const sessions = await Training.find({})
     .populate('coach', 'firstName lastName')
@@ -34,14 +34,14 @@ const getAllTrainings = asyncHandler(async (req, res) => {
   res.json(sessions);
 });
 
-// 3. Coach ගේ sessions විතරක්
+//  Coach only sessions 
 const getMySessions = asyncHandler(async (req, res) => {
   const sessions = await Training.find({ coach: req.user.id })
     .populate('participants', 'firstName lastName');
   res.json(sessions);
 });
 
-// 4. Session එකක් update කරන්න
+//  Session update
 const updateSession = asyncHandler(async (req, res) => {
   const { title, date, startTime, endTime, location, capacity } = req.body;
   const session = await Training.findById(req.params.id);
@@ -66,7 +66,7 @@ const updateSession = asyncHandler(async (req, res) => {
   }
 });
 
-// 5. Session එකක් delete කරන්න
+//  Session  delete 
 const deleteSession = asyncHandler(async (req, res) => {
   const session = await Training.findById(req.params.id);
 
@@ -79,7 +79,7 @@ const deleteSession = asyncHandler(async (req, res) => {
   }
 });
 
-// 6. Player register
+//  Player register
 const registerForTraining = asyncHandler(async (req, res) => {
   const session = await Training.findById(req.params.id);
   if (!session) {
@@ -92,7 +92,7 @@ const registerForTraining = asyncHandler(async (req, res) => {
     throw new Error('Already registered');
   }
 
-  // 🔴 Capacity check
+  //  Capacity check
   if (session.participants.length >= session.capacity) {
     res.status(400);
     throw new Error('Session is full');
@@ -104,7 +104,7 @@ const registerForTraining = asyncHandler(async (req, res) => {
   res.json({ message: 'Registered successfully', session });
 });
 
-// 7. Player unregister
+//  Player unregister
 const unregisterFromTraining = asyncHandler(async (req, res) => {
   const session = await Training.findById(req.params.id);
   if (!session) {
@@ -120,7 +120,7 @@ const unregisterFromTraining = asyncHandler(async (req, res) => {
   res.json({ message: 'Unregistered successfully', session });
 });
 
-// 8. Coach summary (Dashboard cards)
+//  Coach summary (Dashboard cards)
 const getCoachSummary = asyncHandler(async (req, res) => {
   const coachId = req.user.id;
   const sessions = await Training.find({ coach: coachId }).populate('participants');
@@ -165,5 +165,5 @@ module.exports = {
   deleteSession,
   registerForTraining,
   unregisterFromTraining,
-  getCoachSummary,//original
+  getCoachSummary,
 };
