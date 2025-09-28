@@ -9,26 +9,43 @@ export const MemberAuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-    if (userInfo) {
-      setUser(userInfo);
+    try {
+      const raw = localStorage.getItem('userInfo');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setUser(parsed);
+        // Mirror token separately for contexts/utilities that read `token` directly
+        if (parsed?.token) {
+          localStorage.setItem('token', parsed.token);
+        }
+      }
+    } catch (e) {
+      console.warn('Invalid userInfo in localStorage:', e);
+      localStorage.removeItem('userInfo');
+      localStorage.removeItem('token');
     }
   }, []);
 
-  // ✅ Updated login function (clear old, save new, update state)
+  // ✅ Unified login function (clear old, save new, update state, mirror token)
   const login = (userData) => {
-    // 1. Remove old session data
+    // 1) Clear old
     localStorage.removeItem('userInfo');
+    localStorage.removeItem('token');
 
-    // 2. Save fresh, full user data
+    // 2) Save fresh
     localStorage.setItem('userInfo', JSON.stringify(userData));
+    if (userData?.token) {
+      localStorage.setItem('token', userData.token);
+    }
 
-    // 3. Update context state
+    // 3) Update context state
     setUser(userData);
   };
 
+  // ✅ Unified logout (clear both keys)
   const logout = () => {
     localStorage.removeItem('userInfo');
+    localStorage.removeItem('token');
     setUser(null);
   };
 
@@ -40,6 +57,4 @@ export const MemberAuthProvider = ({ children }) => {
 };
 
 // Custom hook for easier usage
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);

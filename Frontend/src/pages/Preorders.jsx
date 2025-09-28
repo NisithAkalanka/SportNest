@@ -38,6 +38,7 @@ const Preorders = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPreorder, setCurrentPreorder] = useState(null);
   const [expiryDate, setExpiryDate] = useState('');
+  const [needsExpiry, setNeedsExpiry] = useState(false);
 
   // Edit Modal සඳහා states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -48,6 +49,13 @@ const Preorders = () => {
   twoYearsFromNow.setFullYear(today.getFullYear() + 2);
   const minDate = today.toISOString().split('T')[0];
   const maxDate = twoYearsFromNow.toISOString().split('T')[0];
+
+  const itemRequiresExpiry = (item) => {
+    const explicit = item?.requiresExpiry === true;
+    const cat = (item?.category || item?.type || item?.categoryName || '').toString().toLowerCase();
+    const byName = (item?.name || '').toString().toLowerCase();
+    return explicit || /supplement|nutrition|consumable|food/.test(cat) || /supplement|nutrition/.test(byName);
+  };
 
   const showToast = (message, type = 'success') => {
     let style = 'bg-green-600';
@@ -88,18 +96,23 @@ const Preorders = () => {
   const handleOpenReceiveModal = (preorder) => {
     setCurrentPreorder(preorder);
     setExpiryDate('');
+    setNeedsExpiry(itemRequiresExpiry(preorder?.item));
     setIsModalOpen(true);
   };
 
   const handleConfirmReceive = async () => {
-    if (!expiryDate || !currentPreorder) {
-      return showToast('Please select a valid expiry date.', 'error');
+    if (!currentPreorder) return;
+
+    const payload = { status: 'received' };
+    if (needsExpiry) {
+      if (!expiryDate) {
+        return showToast('Please select a valid expiry date.', 'error');
+      }
+      payload.expiryDate = expiryDate;
     }
+
     try {
-      await api.put(`/preorders/${currentPreorder._id}/status`, {
-        status: 'received',
-        expiryDate: expiryDate
-      });
+      await api.put(`/preorders/${currentPreorder._id}/status`, payload);
       showToast('Order received and inventory updated!');
       setIsModalOpen(false);
       load();
@@ -274,20 +287,34 @@ const Preorders = () => {
       {/* Receive Stock Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[425px] bg-white">
-            <DialogHeader>
-                <DialogTitle>Receive Stock: {currentPreorder?.item?.name}</DialogTitle>
-                <DialogDescription>Please enter the expiry date for the new stock.</DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-                <div className="grid w-full items-center gap-1.5">
-                    <Label htmlFor="expiry-date">Expiry Date</Label>
-                    <Input type="date" id="expiry-date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} min={minDate} max={maxDate} className="focus-visible:ring-emerald-500" />
-                </div>
-            </div>
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-                <Button onClick={handleConfirmReceive} className="bg-emerald-600 hover:bg-emerald-700 text-white">Confirm & Receive</Button>
-            </DialogFooter>
+          <DialogHeader>
+            <DialogTitle>Receive Stock: {currentPreorder?.item?.name}</DialogTitle>
+            <DialogDescription>
+              {needsExpiry
+                ? 'Please enter the expiry date for the new stock.'
+                : "No expiry date is required for this item."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {needsExpiry && (
+              <div className="grid w-full items-center gap-1.5">
+                <Label htmlFor="expiry-date">Expiry Date</Label>
+                <Input
+                  type="date"
+                  id="expiry-date"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                  min={minDate}
+                  max={maxDate}
+                  className="focus-visible:ring-emerald-500"
+                />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleConfirmReceive} className="bg-emerald-600 hover:bg-emerald-700 text-white">Confirm & Receive</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       

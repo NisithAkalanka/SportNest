@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FaCheckCircle, FaCreditCard } from 'react-icons/fa';
+import { FaCheckCircle, FaCreditCard, FaUser } from 'react-icons/fa';
 
 const SubscriptionSuccessPage = () => {
     const location = useLocation();
@@ -25,9 +25,23 @@ const SubscriptionSuccessPage = () => {
     }
 
     const handlePayNow = () => {
-        // මෙතැනදී, ඔබගේ payment gateway එකට (උදා: PayHere) යොමු කිරීමට අවශ්‍ය කේතය යොදන්න
-        alert('Redirecting to payment gateway...');
-        // උදාහරණයක්: window.location.href = 'https://sandbox.payhere.lk/...';
+        // Membership payment page එකට redirect කිරීම
+        navigate('/membership-payment', {
+            state: {
+                planName,
+                membershipId,
+                planPrice: getPlanPrice(planName)
+            }
+        });
+    };
+
+    const getPlanPrice = (planName) => {
+        const prices = {
+            'Student Membership': 500,
+            'Ordinary Membership': 1500,
+            'Life Membership': 10000
+        };
+        return prices[planName] || 0;
     };
 
     return (
@@ -44,14 +58,22 @@ const SubscriptionSuccessPage = () => {
                 </div>
 
                 <div className="mt-8 space-y-4">
-                    <button 
-                        onClick={handlePayNow} 
-                        className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                        <FaCreditCard />
-                        Pay Now
-                    </button>
-                    
+                    <div className="flex gap-4">
+                        <button 
+                            onClick={() => navigate('/member-dashboard')} 
+                            className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            <FaUser />
+                            User
+                        </button>
+                        <button 
+                            onClick={handlePayNow} 
+                            className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            <FaCreditCard />
+                            Pay Now
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

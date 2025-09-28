@@ -1,5 +1,3 @@
-// File: Backend/controllers/playerController.js — CORRECTED FOR SCHEMA CHANGE
-
 const Player = require('../models/PlayerModel');
 
 // ================== Register Player (Schema-safe) ==================
@@ -9,6 +7,8 @@ const registerPlayer = async (req, res) => {
     emergencyContactName, emergencyContactNumber, skillLevel, healthHistory,
   } = req.body;
 
+  const sport = req.body.sport || req.body.selectedSport || req.body.sportName || req.body.game || req.body.discipline;
+
   // req.user._id comes from your authentication middleware (e.g., 'protect')
   const memberObjectId = req.user?._id; 
 
@@ -17,21 +17,20 @@ const registerPlayer = async (req, res) => {
       return res.status(401).json({ message: 'Unauthorized. You must be logged in to register as a player.' });
     }
       
-    // ★★★ නිවැรදි කරන ලදී: Check if a Player Profile for this member already exists ★★★
-    // This is more robust than checking for sport, as one member gets one profile.
-    const existingProfile = await Player.findOne({ member: memberObjectId });
+    // ★★★ නිවැරදි කරන ලදී: Check if a Player Profile for this member already exists ★★★
+    const existingProfile = await Player.findOne({ member: memberObjectId, sportName: sport });
 
     if (existingProfile) {
-      return res.status(400).json({ message: 'You already have a player profile. You can update it from your dashboard.' });
+      return res.status(409).json({ message: 'You are already registered for this sport.' });
     }
 
     // Create the new player profile document
     const player = await Player.create({
-      member: memberObjectId, // ★★★ නිවැรදි කරන ලදී: Using the corrected 'member' field name ★★★
+      member: memberObjectId, // ★★★ නිවැරදි කරන ලදී: Using the corrected 'member' field name ★★★
       clubId,
       fullName,
       membershipId,
-      sportName,
+      sportName: sport,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
       contactNumber,
       emergencyContactName,
@@ -40,7 +39,7 @@ const registerPlayer = async (req, res) => {
       healthHistory,
     });
 
-    return res.status(201).json({ message: `Successfully registered for ${sportName}!`, player });
+    return res.status(201).json({ message: `Successfully registered for ${sport || sportName}!`, player });
 
   } catch (error) {
     console.error('Player Registration Error:', error);
@@ -58,7 +57,7 @@ const getMyProfiles = async (req, res) => {
     const myId = req.user?._id;
     if (!myId) return res.status(401).json({ message: 'Unauthorized' });
 
-    // ★★★ නිවැรදි කරන ලදී: Querying using the 'member' field ★★★
+    // ★★★ නිවැරදි කරන ලදී: Querying using the 'member' field ★★★
     const playerProfiles = await Player.find({ member: myId });
 
     return res.status(200).json(playerProfiles);
@@ -79,7 +78,7 @@ const updateMyProfile = async (req, res) => {
             return res.status(404).json({ message: 'Player profile not found.' });
         }
         
-        // ★★★ නිවැรදි කරන ලදී: Authorization check using the 'member' field ★★★
+        // ★★★ නිවැරදි කරන ලදී: Authorization check using the 'member' field ★★★
         const isOwner = player.member && player.member.toString() === req.user?._id?.toString();
 
         if (!isOwner) {
@@ -110,7 +109,7 @@ const deleteMyProfile = async (req, res) => {
       return res.status(404).json({ message: 'Player profile not found.' });
     }
 
-    // ★★★ නිවැรදි කරන ලදී: Authorization check using the 'member' field ★★★
+    // ★★★ නිවැරදි කරන ලදී: Authorization check using the 'member' field ★★★
     const isOwner = profile.member && profile.member.toString() === req.user?._id?.toString();
     const isAdmin = (req.user?.role || '').toLowerCase() === 'admin';
 
@@ -134,7 +133,7 @@ const getSimplePlayerList = async (req, res) => {
             return res.status(403).json({ message: 'Forbidden: You do not have permission.' });
         }
 
-        // ★★★ නිවැรදි කරන ලදී: Populate works correctly now with the 'member' path ★★★
+        // ★★★ නිවැරදි කරන ලදී: Populate works correctly now with the 'member' path ★★★
         const registrations = await Player.find({}).populate({
             path: 'member',
             select: 'firstName lastName clubId'
@@ -166,5 +165,5 @@ module.exports = {
   getMyProfiles,
   updateMyProfile,
   deleteMyProfile,
-  getSimplePlayerList,
+  getSimplePlayerList,//nethmi
 };

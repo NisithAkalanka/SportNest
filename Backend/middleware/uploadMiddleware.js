@@ -4,10 +4,11 @@ const fs = require('fs');
 
 // --- Common image validation ---
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
-  if (extname && mimetype) {
+  // accept common image types
+  const allowed = /jpeg|jpg|png|gif|webp|svg\+xml/;
+  const extname = allowed.test(path.extname(file.originalname).toLowerCase());
+  const isImageMime = (file.mimetype || '').startsWith('image/');
+  if (extname && isImageMime) {
     cb(null, true);
   } else {
     cb(new Error('Images only!'));
@@ -36,14 +37,14 @@ if (useCloudinary) {
   storage = new CloudinaryStorage({
     cloudinary,
     params: {
-      folder: process.env.CLOUDINARY_FOLDER || 'sportnest-items',
-      allowed_formats: ['jpeg', 'png', 'jpg', 'gif'],
-      transformation: [{ width: 500, height: 500, crop: 'limit' }],
+      folder: process.env.CLOUDINARY_FOLDER || 'sportnest-profile',
+      allowed_formats: ['jpeg', 'png', 'jpg', 'gif', 'webp'],
+      transformation: [{ width: 800, height: 800, crop: 'limit' }],
     },
   });
 } else {
   // Local disk fallback (matches previous implementation)
-  const uploadDir = path.join(__dirname, '../uploads/profilePics');
+  const uploadDir = path.join(__dirname, '../uploads');
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
@@ -53,7 +54,9 @@ if (useCloudinary) {
       cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-      cb(null, Date.now() + '-' + file.originalname);
+      const ext = path.extname(file.originalname).toLowerCase();
+      const base = path.basename(file.originalname, ext).replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-]/g, '');
+      cb(null, `${base}-${Date.now()}${ext}`);
     },
   });
 }

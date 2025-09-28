@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
-import { useCart } from '../context/CartContext';
+import React, { useState, useEffect } from 'react';
+import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrashAlt, faSpinner, faPlus, faMinus, faTag, faGift, faTruck } from '@fortawesome/free-solid-svg-icons';
 import {
@@ -17,9 +16,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 
 const CartPage = () => {
+  const navigate = useNavigate();
   const {
     cartItems,
     cartItemCount,
@@ -41,18 +41,9 @@ const CartPage = () => {
   const [freeShip, setFreeShip] = useState(false);
   const [giftWrap, setGiftWrap] = useState(false);
 
-  // Checkout flow (confirm -> POST -> refresh cart)
-  const handleCheckout = async () => {
-    if (!window.confirm('Are you sure you want to place this order?')) return;
-    try {
-      const publicApi = axios.create({ baseURL: 'http://localhost:5002/api' });
-      const { data } = await publicApi.post('/orders/checkout');
-      alert(data?.msg || 'Order placed successfully!');
-      await fetchCart();
-    } catch (error) {
-      console.error('Checkout failed:', error);
-      alert(`Checkout failed: ${error.response?.data?.msg || 'Please try again.'}`);
-    }
+  // Checkout → go to Shipping details page
+  const handleCheckout = () => {
+    navigate('/shipping');
   };
 
   // Remove item using Context
@@ -62,7 +53,7 @@ const CartPage = () => {
       await removeFromCartAndUpdate(cartItemId);
     } catch (error) {
       console.error('Remove failed:', error);
-      alert(`Failed to remove item: ${error.response?.data?.msg || 'Please try again.'}`);
+      alert(`Failed to remove item: ${error?.response?.data?.msg || 'Please try again.'}`);
     } finally {
       setIsUpdating(null);
     }
@@ -75,7 +66,7 @@ const CartPage = () => {
     try {
       await updateCartItemQuantityAndUpdate(cartItemId, newQuantity);
     } catch (error) {
-      alert(error.response?.data?.msg || 'Could not update quantity. Not enough stock.');
+      alert(error?.response?.data?.msg || 'Could not update quantity. Not enough stock.');
       await fetchCart(); // make sure UI reflects server state
     } finally {
       setIsUpdating(null);
@@ -128,7 +119,7 @@ const CartPage = () => {
   const grandTotal = Math.max(0, totalAmount - discountAmount + shippingCost + wrapCost);
 
   // Sync local quantities when cart items change
-  React.useEffect(() => {
+  useEffect(() => {
     const map = {};
     cartItems.forEach(ci => {
       if (ci?._id) map[ci._id] = ci.quantity || 1;
@@ -157,7 +148,7 @@ const CartPage = () => {
           <div className="flex-1 h-px bg-slate-200 mx-3"></div>
           <div className="flex items-center gap-2">
             <span className="h-8 w-8 grid place-content-center rounded-full bg-slate-200 text-slate-600 text-sm font-semibold">2</span>
-            <span className="text-sm text-slate-600">Details</span>
+            <span className="text-sm text-slate-600">Shipping</span>
           </div>
           <div className="flex-1 h-px bg-slate-200 mx-3"></div>
           <div className="flex items-center gap-2">

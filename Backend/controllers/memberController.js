@@ -5,6 +5,7 @@ const Player = require('../models/PlayerModel');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const sendEmail = require('../utils/email');
+const path = require('path');
 
 // Helper function to generate a JWT token
 const generateToken = (id) => {
@@ -124,7 +125,9 @@ const getMyUserProfile = async (req, res) => {
         const memberDetails = await Member.findById(userId).select('-password');
         if (!memberDetails) return res.status(404).json({ message: 'User not found.' });
 
-        const playerProfiles = await Player.find({ memberId: userId }); 
+        const playerProfiles = await Player.find({
+            $or: [{ member: userId }, { memberId: userId }]
+        });
         res.status(200).json({ memberDetails, playerProfiles });
 
     } catch (error) {
@@ -147,7 +150,23 @@ const updateMyUserProfile = async (req, res) => {
             member.gender = req.body.gender || member.gender;
 
             if (req.file) {
-                member.profileImage = `/uploads/profilePics/${req.file.filename}`;
+                let imageUrl = '';
+                // Cloudinary (full https URL)
+                if (req.file.path && /^https?:\/\//i.test(req.file.path)) {
+                    imageUrl = req.file.path;
+                } else if (req.file.filename) {
+                    // Local disk storage
+                    imageUrl = `/uploads/${req.file.filename}`;
+                } else if (req.file.path) {
+                    // Any other driver: try to normalize path under /uploads
+                    const p = req.file.path.replace(/\\/g, '/');
+                    const idx = p.lastIndexOf('/uploads/');
+                    imageUrl = idx !== -1 ? p.substring(idx) : `/uploads/${path.basename(p)}`;
+                }
+                if (!imageUrl) {
+                    return res.status(400).json({ message: 'Images only!' });
+                }
+                member.profileImage = imageUrl;
             }
 
             const updatedMember = await member.save();
@@ -213,7 +232,7 @@ const deleteMyUserProfile = async (req, res) => {
     try {
         const member = await Member.findById(req.user.id);
         if (!member) return res.status(404).json({ message: "User not found." });
-        await Player.deleteMany({ memberId: req.user.id });
+        await Player.deleteMany({ $or: [{ member: req.user.id }, { memberId: req.user.id }] });
         await member.deleteOne();
         res.status(200).json({ message: "Account has been permanently deleted." });
     } catch (error) {
@@ -257,7 +276,20 @@ const updateMember = async (req, res) => {
         member.role = req.body.role || member.role;
 
         if (req.file) {
-            member.profileImage = `/uploads/profilePics/${req.file.filename}`;
+            let imageUrl = '';
+            if (req.file.path && /^https?:\/\//i.test(req.file.path)) {
+                imageUrl = req.file.path;
+            } else if (req.file.filename) {
+                imageUrl = `/uploads/${req.file.filename}`;
+            } else if (req.file.path) {
+                const p = req.file.path.replace(/\\/g, '/');
+                const idx = p.lastIndexOf('/uploads/');
+                imageUrl = idx !== -1 ? p.substring(idx) : `/uploads/${path.basename(p)}`;
+            }
+            if (!imageUrl) {
+                return res.status(400).json({ message: 'Images only!' });
+            }
+            member.profileImage = imageUrl;
         }
 
         const updatedMember = await member.save();
@@ -280,7 +312,7 @@ const deleteMember = async (req, res) => {
     try {
         const member = await Member.findById(id);
         if (!member) { return res.status(404).json({ message: 'Member not found' }); }
-        await Player.deleteMany({ memberId: id });
+        await Player.deleteMany({ $or: [{ member: id }, { memberId: id }] });
         await member.deleteOne();
         res.status(200).json({ message: "Member has been permanently deleted." });
     } catch (error) {
@@ -412,7 +444,7 @@ const renewMembership = async (req, res) => {
             return res.status(400).json({ message: 'New plan is required for renewal.' });
         }
 
-        const member = await Member.findById(req.user.id);
+        const member = await Member.findById(req.user.id || req.user._id);
         if (!member) {
             return res.status(404).json({ message: 'Member not found' });
         }
@@ -420,10 +452,16 @@ const renewMembership = async (req, res) => {
         member.membershipPlan = newPlan;
         member.membershipStatus = 'Active';
 
-        if (newPlan === 'Life Membership') {
-            member.membershipExpiresAt = new Date(new Date().setFullYear(new Date().getFullYear() + 100));
+        // Life / Lifetime plans: set a far-future expiry
+        const isLife = /life/i.test(newPlan);
+        if (isLife) {
+            const now = new Date();
+            now.setFullYear(now.getFullYear() + 100);
+            member.membershipExpiresAt = now;
         } else {
-            member.membershipExpiresAt = new Date(new Date().setFullYear(new Date().getFullYear() + 1));
+            const now = new Date();
+            now.setFullYear(now.getFullYear() + 1);
+            member.membershipExpiresAt = now;
         }
 
         const updatedMember = await member.save();
@@ -449,6 +487,61 @@ const renewMembership = async (req, res) => {
     }
 };
 
+const processMembershipPayment = async (req, res) => {
+    const userId = req.user._id || req.user.id;
+    const { membershipId, planName, planPrice, paymentMethod } = req.body;
+    
+    if (!membershipId || !planName || !planPrice) {
+        return res.status(400).json({ message: 'Membership ID, plan name, and plan price are required.' });
+    }
+
+    try {
+        const member = await Member.findById(userId);
+        if (!member) {
+            return res.status(404).json({ message: 'Member not found.' });
+        }
+
+        // Verify membership details match
+        if (member.membershipId !== membershipId || member.membershipPlan !== planName) {
+            return res.status(400).json({ message: 'Membership details do not match.' });
+        }
+
+        // Create payment record (optional: persist with a MembershipPayment model)
+        const paymentData = {
+            membershipId,
+            planName,
+            amount: planPrice,
+            paymentMethod: paymentMethod ? {
+                cardName: paymentMethod.cardName,
+                cardNumber: paymentMethod.cardNumber,
+                expiryMonth: paymentMethod.expiryMonth,
+                expiryYear: paymentMethod.expiryYear
+            } : null,
+            status: 'completed',
+            transactionId: `MEM_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            paymentDate: new Date()
+        };
+
+        // Update membership status to active upon successful payment
+        member.membershipStatus = 'Active';
+        member.paymentDate = new Date();
+        await member.save();
+
+        res.status(200).json({
+            message: 'Membership payment processed successfully',
+            paymentId: paymentData.transactionId,
+            membershipId: member.membershipId,
+            planName: member.membershipPlan,
+            status: member.membershipStatus
+        });
+
+    } catch (error) {
+        console.error('Membership Payment Error:', error);
+        res.status(500).json({ message: 'Server error during membership payment processing.' });
+    }
+};
+
+// Final exports
 module.exports = {
     registerMember,
     loginMember,
@@ -465,5 +558,6 @@ module.exports = {
     getMembershipPlans,
     subscribeToMembership,
     cancelMembership,
-    renewMembership
-};//ayuni
+    renewMembership,
+    processMembershipPayment,
+};

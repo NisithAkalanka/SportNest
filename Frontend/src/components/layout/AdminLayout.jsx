@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'; 
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
+import {
   faSignOutAlt,
   faBoxOpen,
   faUsers,
@@ -14,17 +14,20 @@ import {
   faCommentDots,
   faClipboardList,
   faUserFriends,
-  faHandshake
+  faHandshake,
+  faTruck,
+  faCar,
+  faTruckMoving,
+  faChartLine
 } from '@fortawesome/free-solid-svg-icons';
-
 import { Button } from '@/components/ui/button';
 import { AdminAuthContext } from '@/context/AdminAuthContext';
 
 const itemClass = ({ isActive }) =>
-  `flex items-center p-3 rounded-lg border-l-4 transition-colors ${
+  `flex items-center w-full gap-3 p-3 rounded-md border-l-4 text-sm font-medium transition-colors ${
     isActive
-      ? 'bg-emerald-600 border-emerald-500 text-white'
-      : 'border-transparent text-white/90 hover:bg-white/10'
+      ? 'bg-emerald-600 border-emerald-400 text-white shadow'
+      : 'border-transparent text-white/90 hover:bg-white/10 hover:border-emerald-400'
   }`;
 
 const AdminLayout = () => {
@@ -37,18 +40,14 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="w-64 text-white p-5 flex flex-col flex-shrink-0 bg-[#0D1B2A] border-r border-white/10">
-        <h1 className="text-2xl font-bold mb-10 text-center">SportNest Admin</h1>
-        <nav className="flex-grow">
+      <aside className="w-64 md:w-72 text-white p-5 flex flex-col shrink-0 bg-[#0D1B2A] border-r border-white/10 sticky top-0 self-start h-dvh overflow-y-auto">
+        <h1 className="text-2xl font-bold mb-6 text-center">SportNest Admin</h1>
+        <nav className="flex-grow space-y-1">
           <ul>
             {/* Quick link to public shop */}
-            <li className="mb-2">
-              <NavLink to="/shop" className={itemClass}>
-                <FontAwesomeIcon icon={faStore} className="mr-3 w-5" /> View Shop
-              </NavLink>
-            </li>
+            
 
             <hr className="my-2 border-white/10" />
 
@@ -119,6 +118,28 @@ const AdminLayout = () => {
                 <FontAwesomeIcon icon={faCommentDots} className="mr-3 w-5" /> Manage Reviews
               </NavLink>
             </li>
+
+            {/* Delivery & Logistics */}
+            <li className="mb-2">
+              <NavLink to="/admin-dashboard/delivery" className={itemClass}>
+                <FontAwesomeIcon icon={faTruck} className="mr-3 w-5" /> Delivery Management
+              </NavLink>
+            </li>
+            <li className="mb-2">
+              <NavLink to="/admin-dashboard/drivers" className={itemClass}>
+                <FontAwesomeIcon icon={faCar} className="mr-3 w-5" /> Driver Management
+              </NavLink>
+            </li>
+            <li className="mb-2">
+              <NavLink to="/admin-dashboard/vehicles" className={itemClass}>
+                <FontAwesomeIcon icon={faTruckMoving} className="mr-3 w-5" /> Vehicle Management
+              </NavLink>
+            </li>
+            <li className="mb-2">
+              <NavLink to="/admin-dashboard/financial" className={itemClass}>
+                <FontAwesomeIcon icon={faChartLine} className="mr-3 w-5" /> Financial Management
+              </NavLink>
+            </li>
           </ul>
         </nav>
 
@@ -129,8 +150,10 @@ const AdminLayout = () => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-10 overflow-auto bg-gradient-to-b from-slate-50 via-white to-slate-50">
-        <Outlet />
+      <main className="flex-1 min-w-0 p-6 md:p-10 overflow-x-hidden bg-gradient-to-b from-slate-50 via-white to-slate-50">
+        <div className="max-w-7xl mx-auto w-full">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

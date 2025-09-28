@@ -78,6 +78,9 @@ const ManageInventory = () => {
         else if (/\d/.test(value)) errorMsg = 'Name cannot contain numbers.';
         else if (/[@#$%^&*!]/.test(value)) errorMsg = 'Name cannot contain special characters like @#$%^&*!.';
         break;
+      case 'description':
+        if (value && value.length > 120) errorMsg = 'Description must be 120 characters or fewer (max 120).';
+        break;
       case 'quantity':
         if (value === '' || value === null) errorMsg = 'Quantity is required.';
         else if (isNaN(value) || !Number.isInteger(Number(value))) errorMsg = 'Must be a whole number.';
@@ -154,6 +157,11 @@ const ManageInventory = () => {
         }
       }
     });
+
+    // Optional description length guard
+    if (formData.description && !validateField('description', formData.description)) {
+      isFormValid = false;
+    }
 
     if (!formData._id && !imageFile) {
       setErrors(prev => ({ ...prev, image: 'An image is required for new items.' }));
@@ -377,7 +385,9 @@ const ManageInventory = () => {
                       onChange={handleInputChange}
                       placeholder="Provide a brief description for the shop page..."
                       className="h-24 focus-visible:ring-emerald-500"
+                      maxLength={120}
                     />
+                    {errors.description && <p className="text-red-600 text-xs mt-1">{errors.description}</p>}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 items-end">

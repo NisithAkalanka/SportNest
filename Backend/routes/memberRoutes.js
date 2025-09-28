@@ -20,7 +20,8 @@ const {
     subscribeToMembership,
     cancelMembership,
     renewMembership,
-    getMembershipPlans
+    getMembershipPlans,
+    processMembershipPayment
 } = require('../controllers/memberController');
 
 // --- PUBLIC ROUTES (ආරක්ෂාවක් නැති, ඕනෑම කෙනෙකුට පිවිසිය හැකි මාර්ග) ---
@@ -43,6 +44,11 @@ router.route('/my-profile')
     .delete(protect, deleteMyUserProfile);
 router.delete('/my-profile/photo', protect, removeProfilePhoto);
 router.post('/subscribe', protect, subscribeToMembership);
+
+// ★ Membership Payment Route
+router.post('/process-membership-payment', protect, processMembershipPayment);
+
+// ★ Membership Cancellation Route
 router.delete('/membership', protect, cancelMembership);
 router.post('/renew', protect, renewMembership);
 

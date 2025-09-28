@@ -1,9 +1,12 @@
 // src/pages/ApprovedEvents.jsx
 import { useEffect, useState } from "react";
-import { listApproved, registerEvent } from "@/services/eventsApi";
-import { Link } from "react-router-dom";
+import { listApproved } from "@/services/eventsApi";
+import { Link, useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCreditCard } from "@fortawesome/free-solid-svg-icons";
 
 export default function ApprovedEvents() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
@@ -29,11 +32,9 @@ export default function ApprovedEvents() {
 
   const onKeyDown = (e) => e.key === "Enter" && load();
 
-  // Sort items client-side for a better browsing experience
+  // Client-side sort
   const sortedItems = [...items].sort((a, b) => {
-    if (sortBy === "name-asc") {
-      return (a.name || "").localeCompare(b.name || "");
-    }
+    if (sortBy === "name-asc") return (a.name || "").localeCompare(b.name || "");
     const ad = a.date ? new Date(a.date).getTime() : Infinity;
     const bd = b.date ? new Date(b.date).getTime() : Infinity;
     return sortBy === "date-desc" ? bd - ad : ad - bd;
@@ -60,7 +61,7 @@ export default function ApprovedEvents() {
       {/* Controls */}
       <div className="container mx-auto px-4">
         <div className="relative z-10 -mt-10 flex flex-col md:flex-row md:items-center gap-3">
-          {/* Search input card */}
+          {/* Search */}
           <div className="flex-1 bg-white rounded-2xl shadow-lg ring-1 ring-gray-200 p-2 pl-3 focus-within:ring-2 focus-within:ring-emerald-500 flex items-center">
             <input
               className="flex-1 bg-transparent outline-none placeholder:text-gray-400"
@@ -82,7 +83,7 @@ export default function ApprovedEvents() {
             )}
           </div>
 
-          {/* Filter button */}
+          {/* Filter */}
           <button
             onClick={load}
             className="inline-flex items-center gap-2 h-12 px-5 rounded-2xl border-2 border-emerald-600 bg-white text-emerald-700 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition hover:bg-emerald-600 hover:text-white"
@@ -106,7 +107,7 @@ export default function ApprovedEvents() {
             <option value="name-asc">Name: A–Z</option>
           </select>
 
-          {/* Create button */}
+          {/* Create */}
           <Link to="/events/submit" title="Create a new event">
             <button className="h-12 px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition">
               + Create Event
@@ -186,6 +187,7 @@ function EventRow({ ev, reload }) {
             <InfoPill label="Time" value={time} />
             <InfoPill label="Capacity" value={cap} />
             <InfoPill label="Registered" value={reg} />
+            <InfoPill label="Fee" value={ev.registrationFee ? `Rs. ${ev.registrationFee}` : "Rs. 200"} />
           </div>
 
           <div className="mt-4">
@@ -231,6 +233,7 @@ function InfoPill({ label, value }) {
 
 /* ---------- Quick Register ---------- */
 function RegisterInline({ ev, onDone }) {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -238,37 +241,29 @@ function RegisterInline({ ev, onDone }) {
   const [saving, setSaving] = useState(false);
 
   // ✅ validation helpers
-  const validateEmail = (email) => /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);
-  const validatePhone = (phone) => /^\\d{10}$/.test(phone); // exactly 10 digits
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePhone = (phone) => /^\d{10}$/.test(phone);
 
   const click = async () => {
     setMsg("");
 
-    if (!name.trim()) {
-      setMsg("⚠️ Please enter your name");
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      setMsg("⚠️ Please enter a valid email");
-      return;
-    }
-
-    if (!validatePhone(phone)) {
-      setMsg("⚠️ Phone number must be 10 digits");
-      return;
-    }
+    if (!name.trim()) return setMsg("⚠️ Please enter your name");
+    if (!validateEmail(email)) return setMsg("⚠️ Please enter a valid email");
+    if (!validatePhone(phone)) return setMsg("⚠️ Phone number must be 10 digits");
 
     try {
       setSaving(true);
-      const { data } = await registerEvent(ev._id, { name, email, phone });
-      setMsg(`✅ Registered! (${data.registeredCount}/${data.capacity})`);
-      setName("");
-      setEmail("");
-      setPhone("");
+      // Go to payment page with event + registration data
+      navigate("/events/payment", {
+        state: {
+          eventData: ev,
+          registrationData: { name, email, phone },
+          amount: ev.registrationFee || 200,
+        },
+      });
       onDone?.();
-    } catch (e) {
-      setMsg(e?.response?.data?.error || "❌ Registration failed");
+    } catch {
+      setMsg("Failed to proceed to payment");
     } finally {
       setSaving(false);
     }
@@ -276,7 +271,9 @@ function RegisterInline({ ev, onDone }) {
 
   return (
     <div className="rounded-2xl border border-slate-200 p-4 bg-white w-full sm:w-[260px] shadow-sm">
-      <div className="text-sm font-medium mb-2">Quick register</div>
+      <div className="text-sm font-medium mb-2">
+        Quick register {ev.registrationFee ? `(Rs. ${ev.registrationFee})` : "(Rs. 200)"}
+      </div>
       <input
         className="w-full mb-2 rounded-xl border px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
         placeholder="Name"
@@ -298,9 +295,10 @@ function RegisterInline({ ev, onDone }) {
       <button
         onClick={click}
         disabled={saving}
-        className="w-full rounded-2xl px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-60 shadow hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition"
+        className="w-full rounded-2xl px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-60 shadow hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition flex items-center justify-center"
       >
-        {saving ? "Registering…" : "Register"}
+        <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
+        {saving ? "Processing…" : "Register"}
       </button>
       {msg && <div className="text-xs mt-2 text-gray-700">{msg}</div>}
     </div>
@@ -336,7 +334,9 @@ function EventSkeleton() {
 function SkeletonList() {
   return (
     <div className="grid gap-5">
-      {[0,1,2].map(i => <EventSkeleton key={i} />)}
+      {[0, 1, 2].map((i) => (
+        <EventSkeleton key={i} />
+      ))}
     </div>
   );
 }
