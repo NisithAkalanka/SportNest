@@ -48,3 +48,4 @@ Backend/generated/
 
 # --- Package managers (DON'T ignore lockfiles; keep consistency) ---
 # keep package-lock.json files committed
+printf "node_modules/\n**/.vite/\ndist/\nbuild/\nFrontend/node_modules/\nBackend/node_modules/\n.env\n" >> .gitignore
