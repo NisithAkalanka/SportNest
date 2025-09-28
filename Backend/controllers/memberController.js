@@ -5,6 +5,7 @@ const Player = require('../models/PlayerModel');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const sendEmail = require('../utils/email');
+const path = require('path');
 
 // Helper function to generate a JWT token
 const generateToken = (id) => {
@@ -124,7 +125,9 @@ const getMyUserProfile = async (req, res) => {
         const memberDetails = await Member.findById(userId).select('-password');
         if (!memberDetails) return res.status(404).json({ message: 'User not found.' });
 
-        const playerProfiles = await Player.find({ memberId: userId }); 
+        const playerProfiles = await Player.find({
+            $or: [{ member: userId }, { memberId: userId }]
+        });
         res.status(200).json({ memberDetails, playerProfiles });
 
     } catch (error) {
@@ -147,7 +150,23 @@ const updateMyUserProfile = async (req, res) => {
             member.gender = req.body.gender || member.gender;
 
             if (req.file) {
-                member.profileImage = `/uploads/profilePics/${req.file.filename}`;
+                let imageUrl = '';
+                // Cloudinary (full https URL)
+                if (req.file.path && /^https?:\/\//i.test(req.file.path)) {
+                    imageUrl = req.file.path;
+                } else if (req.file.filename) {
+                    // Local disk storage
+                    imageUrl = `/uploads/${req.file.filename}`;
+                } else if (req.file.path) {
+                    // Any other driver: try to normalize path under /uploads
+                    const p = req.file.path.replace(/\\/g, '/');
+                    const idx = p.lastIndexOf('/uploads/');
+                    imageUrl = idx !== -1 ? p.substring(idx) : `/uploads/${path.basename(p)}`;
+                }
+                if (!imageUrl) {
+                    return res.status(400).json({ message: 'Images only!' });
+                }
+                member.profileImage = imageUrl;
             }
 
             const updatedMember = await member.save();
@@ -213,7 +232,7 @@ const deleteMyUserProfile = async (req, res) => {
     try {
         const member = await Member.findById(req.user.id);
         if (!member) return res.status(404).json({ message: "User not found." });
-        await Player.deleteMany({ memberId: req.user.id });
+        await Player.deleteMany({ $or: [{ member: req.user.id }, { memberId: req.user.id }] });
         await member.deleteOne();
         res.status(200).json({ message: "Account has been permanently deleted." });
     } catch (error) {
@@ -257,7 +276,20 @@ const updateMember = async (req, res) => {
         member.role = req.body.role || member.role;
 
         if (req.file) {
-            member.profileImage = `/uploads/profilePics/${req.file.filename}`;
+            let imageUrl = '';
+            if (req.file.path && /^https?:\/\//i.test(req.file.path)) {
+                imageUrl = req.file.path;
+            } else if (req.file.filename) {
+                imageUrl = `/uploads/${req.file.filename}`;
+            } else if (req.file.path) {
+                const p = req.file.path.replace(/\\/g, '/');
+                const idx = p.lastIndexOf('/uploads/');
+                imageUrl = idx !== -1 ? p.substring(idx) : `/uploads/${path.basename(p)}`;
+            }
+            if (!imageUrl) {
+                return res.status(400).json({ message: 'Images only!' });
+            }
+            member.profileImage = imageUrl;
         }
 
         const updatedMember = await member.save();
@@ -280,7 +312,7 @@ const deleteMember = async (req, res) => {
     try {
         const member = await Member.findById(id);
         if (!member) { return res.status(404).json({ message: 'Member not found' }); }
-        await Player.deleteMany({ memberId: id });
+        await Player.deleteMany({ $or: [{ member: id }, { memberId: id }] });
         await member.deleteOne();
         res.status(200).json({ message: "Member has been permanently deleted." });
     } catch (error) {

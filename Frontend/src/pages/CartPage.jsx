@@ -148,7 +148,7 @@ const CartPage = () => {
           <div className="flex-1 h-px bg-slate-200 mx-3"></div>
           <div className="flex items-center gap-2">
             <span className="h-8 w-8 grid place-content-center rounded-full bg-slate-200 text-slate-600 text-sm font-semibold">2</span>
-            <span className="text-sm text-slate-600">Details</span>
+            <span className="text-sm text-slate-600">Shipping</span>
           </div>
           <div className="flex-1 h-px bg-slate-200 mx-3"></div>
           <div className="flex items-center gap-2">

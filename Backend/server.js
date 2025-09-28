@@ -95,6 +95,8 @@ app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/drivers', driverRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/shipping', shippingRoutes);
+app.use('/api/reviews', require('./routes/reviewRoutes'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // --- Health check ---
 app.get('/', (req, res) => {

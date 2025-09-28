@@ -1,4 +1,4 @@
-// src/pages/MemberDashboard.jsx — FINAL MERGED & CLEAN (main2 + Ayuni)
+// src/pages/MemberDashboard.jsx — UPGRADED UI (polished, responsive)
 
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import api from '@/api';
@@ -53,7 +53,15 @@ const MemberDashboard = () => {
   const [sportRegistrations, setSportRegistrations] = useState([]);
   const [editingProfile, setEditingProfile] = useState(null);
 
-  // ================== Fetch Profile (union of both branches) ==================
+  // ==== Resolve image URL (supports absolute URLs, blobs, and server-relative paths) ====
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5002';
+  const resolveImageSrc = (src) => {
+    if (!src) return `${API_BASE}/uploads/default-avatar.png`;
+    if (src.startsWith('blob:') || src.startsWith('http://') || src.startsWith('https://')) return src;
+    return `${API_BASE}${src.startsWith('/') ? src : `/${src}`}`;
+  };
+
+  // ================== Fetch Profile ==================
   const fetchProfileData = async () => {
     if (!user?.token) {
       if (logout) logout();
@@ -75,7 +83,7 @@ const MemberDashboard = () => {
         age: md?.age || '',
         nic: md?.nic || '',
         gender: md?.gender || 'Male',
-        profileImage:  data.memberDetails.profileImage || '/uploads/default-avatar.png',
+        profileImage: data.memberDetails.profileImage || '/uploads/default-avatar.png',
       };
 
       setFormData(initialData);
@@ -125,7 +133,6 @@ const MemberDashboard = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      // Login with updated user (Ayuni) + re-sync local state (main2)
       if (login) login(data);
       setSuccess('Profile updated successfully!');
       setOriginalData({ ...formData, profileImage: data.profileImage });
@@ -207,7 +214,13 @@ const MemberDashboard = () => {
     );
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="relative min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
+      {/* Decorative background accents */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-16 -right-16 h-72 w-72 rounded-full bg-emerald-200/40 blur-3xl" />
+        <div className="absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-orange-200/40 blur-3xl" />
+      </div>
+
       {editingProfile && (
         <PlayerEditModal
           profile={editingProfile}
@@ -220,41 +233,56 @@ const MemberDashboard = () => {
       )}
 
       <div className="container mx-auto max-w-7xl p-4 md:p-8">
-        {/* Main header (main2 style) */}
-        <div className="rounded-2xl p-6 bg-[#0D1B2A] text-white border border-white/10 mb-8">
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">My Profile</h1>
-          <p className="text-white/80 mt-1">Manage your details, membership and sport registrations.</p>
+        {/* Header */}
+        <div className="relative overflow-hidden rounded-2xl mb-8 bg-[#0D1B2A] text-white ring-1 ring-white/10">
+          <div className="absolute inset-0 bg-[radial-gradient(40rem_20rem_at_120%_-10%,rgba(16,185,129,0.25),transparent),radial-gradient(36rem_16rem_at_-10%_120%,rgba(249,115,22,0.25),transparent)]" />
+          <div className="relative p-6 md:p-8 flex items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">My Profile</h1>
+              <p className="text-white/80 mt-1">Manage your details, membership and sport registrations.</p>
+            </div>
+            <div className="hidden sm:flex gap-2">
+              <Link to="/sports"><Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">Register Sport</Button></Link>
+              <Link to="/events"><Button className="bg-emerald-600 hover:bg-emerald-700 text-white">See Events</Button></Link>
+            </div>
+          </div>
         </div>
 
-        {/* Membership Expired Reminder (Ayuni) */}
+        {/* Membership Expired Reminder */}
         {memberDetails?.membershipStatus === 'Expired' && (
-          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-8 shadow-md" role="alert">
-            <p className="font-bold text-lg">Your Membership Has Expired!</p>
-            <p className="mt-1">Please renew your membership to continue enjoying our services without interruption.</p>
-            <Link to="/renew-membership" className="inline-block mt-3 bg-red-600 text-white font-bold py-2 px-4 rounded hover:bg-red-700 transition-colors">
-              Renew Now
-            </Link>
+          <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl mb-8 shadow-sm" role="alert">
+            <p className="font-semibold">Your Membership Has Expired!</p>
+            <p className="mt-1 text-sm">Please renew your membership to continue enjoying our services without interruption.</p>
+            <Link to="/renew-membership" className="inline-block mt-3 bg-red-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-red-700 transition-colors">Renew Now</Link>
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           {/* Left Side */}
-          <div className="lg:col-span-1 space-y-8">
-            <Card className="text-center sticky top-8">
+          <div className="lg:col-span-1 space-y-8 lg:sticky lg:top-24 self-start">
+            <Card className="text-center shadow-md ring-1 ring-slate-200/60">
               <CardContent className="p-6">
-                <div className="relative w-36 h-36 mx-auto mb-4 group">
+                <div className="relative w-36 h-36 mx-auto mb-4">
+                  {/* shimmering ring */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-emerald-300/40 to-orange-300/40 blur-md" />
                   <img
-                    src={profileImage.startsWith('blob:') ? profileImage : `http://localhost:5002${profileImage}`}
+                    src={resolveImageSrc(profileImage)}
                     alt="Profile"
-                    className="w-full h-full rounded-full object-cover border-4 border-white shadow-md"
+                    className="relative w-full h-full rounded-full object-cover border-4 border-white shadow-md"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = `${API_BASE}/uploads/default-avatar.png`;
+                    }}
                   />
                   {isEditing && (
-                    <div
-                      className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 flex items-center justify-center rounded-full cursor-pointer transition-all"
+                    <button
+                      type="button"
+                      className="absolute inset-0 bg-black/0 hover:bg-black/40 rounded-full grid place-content-center transition"
                       onClick={() => fileInputRef.current?.click()}
+                      aria-label="Change profile photo"
                     >
-                      <FontAwesomeIcon icon={faPenToSquare} className="text-white text-3xl opacity-0 group-hover:opacity-100" />
-                    </div>
+                      <FontAwesomeIcon icon={faPenToSquare} className="text-white text-3xl" />
+                    </button>
                   )}
                 </div>
                 <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageChange} className="hidden" disabled={!isEditing} />
@@ -266,7 +294,6 @@ const MemberDashboard = () => {
                   <p className="flex justify-between text-sm"><span className="font-semibold text-gray-600">Role:</span> <span className="capitalize">{user?.role}</span></p>
                 </div>
 
-                {/* Remove Photo Button (Ayuni) */}
                 {isEditing && originalData?.profileImage !== '/uploads/default-avatar.png' && (
                   <Button variant="link" className="text-red-500 mt-2" onClick={handleRemovePhoto} disabled={saving}>
                     <FontAwesomeIcon icon={faTrashAlt} className="mr-2" />
@@ -275,12 +302,26 @@ const MemberDashboard = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Quick Actions */}
+            <Card className="shadow-md ring-1 ring-slate-200/60">
+              <CardHeader>
+                <CardTitle className="text-base">Quick Actions</CardTitle>
+                <CardDescription>Jump to the most common tasks.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 gap-3">
+                <Link to="/sports"><Button variant="outline" className="justify-center">Register Sport</Button></Link>
+                <Link to="/membership-plans"><Button variant="outline" className="justify-center">Membership</Button></Link>
+                <Link to="/events"><Button className="bg-emerald-600 hover:bg-emerald-700 text-white justify-center">Events</Button></Link>
+                <Link to="/shop"><Button className="bg-orange-500 hover:bg-orange-600 text-white justify-center">Shop</Button></Link>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Right Side */}
           <div className="lg:col-span-2 space-y-8">
             {/* Personal Info */}
-            <Card>
+            <Card className="shadow-md ring-1 ring-slate-200/60">
               <CardHeader>
                 <CardTitle>Personal Information</CardTitle>
                 <CardDescription>
@@ -290,12 +331,12 @@ const MemberDashboard = () => {
               <form onSubmit={handleProfileUpdate}>
                 <CardContent className="space-y-6">
                   {error && (
-                    <div className="bg-red-100 text-red-700 p-3 rounded flex items-center">
+                    <div className="bg-red-50 text-red-700 p-3 rounded-md border border-red-200 flex items-center">
                       <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2" /> {error}
                     </div>
                   )}
                   {success && !isEditing && (
-                    <div className="bg-green-100 text-green-700 p-3 rounded flex items-center">
+                    <div className="bg-green-50 text-green-700 p-3 rounded-md border border-green-200 flex items-center">
                       <FontAwesomeIcon icon={faCheckCircle} className="mr-2" /> {success}
                     </div>
                   )}
@@ -336,7 +377,7 @@ const MemberDashboard = () => {
             </Card>
 
             {/* Membership Details */}
-            <Card>
+            <Card className="shadow-md ring-1 ring-slate-200/60">
               <CardHeader>
                 <CardTitle>Membership Details</CardTitle>
                 <CardDescription>Your current membership information.</CardDescription>
@@ -364,7 +405,7 @@ const MemberDashboard = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center p-4 border-2 border-dashed rounded-lg">
+                  <div className="text-center p-6 border-2 border-dashed rounded-xl bg-white">
                     <p className="text-gray-600">You don't have an active membership plan yet.</p>
                     <Link to="/membership-plans"><Button variant="link" className="mt-2">Choose a Plan</Button></Link>
                   </div>
@@ -373,16 +414,19 @@ const MemberDashboard = () => {
             </Card>
 
             {/* My Sport Registrations */}
-            <Card>
+            <Card className="shadow-md ring-1 ring-slate-200/60">
               <CardHeader><CardTitle>My Sport Registrations</CardTitle></CardHeader>
               <CardContent>
                 {sportRegistrations && sportRegistrations.length > 0 ? (
                   <ul className="space-y-3">
                     {sportRegistrations.map((p) => (
                       <li key={p._id} className="bg-white p-3 rounded-lg border border-slate-200 flex justify-between items-center hover:shadow-sm transition">
-                        <div>
-                          <span className="font-semibold">{p.sportName}</span>
-                          <span className="text-gray-500 text-sm ml-2">({p.skillLevel})</span>
+                        <div className="flex items-center gap-3">
+                          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+                          <div>
+                            <div className="font-semibold">{p.sportName}</div>
+                            <div className="text-gray-500 text-xs">Skill: {p.skillLevel || '—'}</div>
+                          </div>
                         </div>
                         <div className="flex gap-2">
                           <Button variant="outline" size="sm" onClick={() => setEditingProfile(p)}>Edit</Button>
@@ -392,30 +436,30 @@ const MemberDashboard = () => {
                     ))}
                   </ul>
                 ) : (
-                  <div className="text-center p-4 border-2 border-dashed rounded-lg">
+                  <div className="text-center p-6 border-2 border-dashed rounded-xl bg-white">
                     <p className="text-gray-600">No sport registrations found.</p>
                     <Link to="/sports"><Button variant="link" className="mt-2">Register for a Sport</Button></Link>
                   </div>
                 )}
               </CardContent>
             </Card>
-              
-                        {/* ★★★ MyReview component එක ඉවත් කර, සරල Link එකක් පමණක් තැබීම ★★★ */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Club Review</CardTitle>
-                                <CardDescription>Your feedback is valuable to us. Share or update your experience on our official reviews page.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="text-center">
-                                 <Link to="/reviews">
-                                    <Button style={{ backgroundColor: '#FF6700' }}>Go to Reviews Page</Button>
-                                 </Link>
-                            </CardContent>
-                        </Card>
+
+            {/* Club Review CTA */}
+            <Card className="shadow-md ring-1 ring-slate-200/60">
+              <CardHeader>
+                <CardTitle>Club Review</CardTitle>
+                <CardDescription>Your feedback is valuable to us. Share or update your experience on our official reviews page.</CardDescription>
+              </CardHeader>
+              <CardContent className="text-center">
+                <Link to="/reviews">
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">Go to Reviews Page</Button>
+                </Link>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
-        {/* Inline list of my submitted events (main2 add-on) */}
+        {/* Inline list of my submitted events */}
         <div className="mt-10">
           <MyEventsInline />
         </div>
@@ -424,4 +468,4 @@ const MemberDashboard = () => {
   );
 };
 
-export default MemberDashboard;//original
+export default MemberDashboard;

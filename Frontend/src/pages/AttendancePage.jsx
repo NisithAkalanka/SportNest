@@ -51,7 +51,7 @@ const AttendancePage = () => {
             const dayOfWeek = new Date(selectedDate + 'T00:00:00Z').getUTCDay();
             if (dayOfWeek === 0) return;
             const existingRecord = attendanceRecords.find(record => 
-                record.memberId._id === selectedCoach && record.date === selectedDate
+                record.memberId?._id === selectedCoach && record.date === selectedDate
             );
             if (existingRecord) {
                 setSelectedStatus(existingRecord.status);
@@ -156,7 +156,8 @@ const AttendancePage = () => {
                 <h2 className="text-xl font-semibold mb-4">{isEditing ? 'Update Attendance Record' : 'Mark New Attendance'}</h2>
                 <form onSubmit={handleMarkOrUpdate} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                     <div className="flex flex-col"><label className="mb-1 font-medium">Coach</label><Select onValueChange={setSelectedCoach} value={selectedCoach}><SelectTrigger><SelectValue placeholder="Select Coach" /></SelectTrigger><SelectContent className="z-50 bg-white border shadow-lg">{coaches.map((coach) => (<SelectItem key={coach._id} value={coach._id}>{coach.firstName} {coach.lastName}</SelectItem>))}</SelectContent></Select></div>
-                    <div className="flex flex-col"><label className="mb-1 font-medium">Date</label><Input type="date" value={selectedDate} onChange={handleDateChange} max={getTodayString()} /></div>
+                    <div className="flex flex-col"><label className="mb-1 font-medium">Date</label>
+                    <Input type="date" value={selectedDate} onChange={handleDateChange} max={getTodayString()} /></div>
                     <div className="flex flex-col"><label className="mb-1 font-medium">Status</label>
                         <Select onValueChange={setSelectedStatus} value={selectedStatus}>
                             <SelectTrigger><SelectValue placeholder={isEditing ? "Update status..." : "Select Status"} /></SelectTrigger>

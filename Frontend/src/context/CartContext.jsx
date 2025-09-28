@@ -42,28 +42,25 @@ export const CartProvider = ({ children }) => {
 
   useEffect(() => { fetchCart(); }, []);
 
-  const addToCartAndUpdate = async (itemId, quantity) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      alert('Please log in to add items to cart');
-      return;
+  // addToCartAndUpdate
+const addToCartAndUpdate = async (itemId, quantity = 1) => {//////
+  const token = localStorage.getItem('token');
+  if (!token) { alert('Please log in to add items to cart'); return; }
+  try {
+    const api = createAuthenticatedApi();
+    await api.post('/cart/add', { itemId, productId: itemId, quantity: Number(quantity) });
+    await fetchCart();
+  } catch (error) {
+    console.error('Failed to add to cart:', error);
+    if (error.response?.status === 401) {
+      alert('Session expired. Please log in again.');
+      localStorage.removeItem('token');
+      setCart({ items: [] });
+    } else {
+      alert('Failed to add item to cart. Please try again.');
     }
-
-    try {
-      const api = createAuthenticatedApi();
-      await api.post('/cart/add', { itemId, quantity });
-      await fetchCart();
-    } catch (error) {
-      console.error('Failed to add to cart:', error);
-      if (error.response?.status === 401) {
-        alert('Session expired. Please log in again.');
-        localStorage.removeItem('token');
-        setCart({ items: [] });
-      } else {
-        alert('Failed to add item to cart. Please try again.');
-      }
-    }
-  };
+  }
+};
 
   const removeFromCartAndUpdate = async (cartItemId) => {
     const token = localStorage.getItem('token');
@@ -84,13 +81,14 @@ export const CartProvider = ({ children }) => {
     }
   };
   
-  // ★★★ අලුතින් එකතු කළ Quantity Update Function එක ★★★
-  const updateCartItemQuantityAndUpdate = async (cartItemId, newQuantity) => {
-    // Backend එකට quantity update කරන්න කියනවා
-    await publicApi.put(`/cart/${cartItemId}`, { quantity: newQuantity });
-    // Update උනාට පස්සේ cart එක නැවත load කරනවා (UI consistency)
-    await fetchCart();
-  };
+ // updateCartItemQuantityAndUpdate
+const updateCartItemQuantityAndUpdate = async (cartItemId, newQuantity) => {//////
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  const api = createAuthenticatedApi();
+  await api.put(`/cart/${cartItemId}`, { quantity: Number(newQuantity) });
+  await fetchCart();
+};
 
   // Cart එකේ තියෙන items list එක
   const cartItems = cart ? cart.items : [];
@@ -115,5 +113,5 @@ export const CartProvider = ({ children }) => {
 };
 
 export const useCart = () => {
-  return useContext(CartContext);
+  return useContext(CartContext);//wenas kala
 };

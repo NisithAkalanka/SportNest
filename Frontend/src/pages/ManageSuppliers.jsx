@@ -55,7 +55,8 @@ const ManageSuppliers = () => {
   const validateField = (name, value, allSuppliers) => {
     let errorMsg = '';
     const hasSpecialChars = (s) => /[^a-zA-Z\s]/.test(s);
-    const isValidPhone = (s) => /^\d{10}$/.test(s.replace(/[\s()-+]/g, ''));
+    const onlyDigits = (s) => s.replace(/\D/g, '');
+    const isValidPhone = (s) => /^\d{10}$/.test(onlyDigits(s));
     const hasAddressSpecialChars = (s) => /[@$%&*!]/.test(s);
 
     switch (name) {
@@ -72,7 +73,10 @@ const ManageSuppliers = () => {
         break;
       case 'email':
         if (!value.trim()) errorMsg = 'Email is required.';
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) errorMsg = 'Please enter a valid email format.';
+        // ✅ Lowercase-only email validation (matches login/register pages)
+        else if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(value.trim())) {
+          errorMsg = 'Please enter a valid email (lowercase letters only).';
+        }
         else if (allSuppliers.some(s => s.email.toLowerCase() === value.trim().toLowerCase() && s._id !== formData._id)) {
           errorMsg = 'This email is already registered.';
         }
@@ -92,7 +96,11 @@ const ManageSuppliers = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    if (name === 'phone') {
+      // allow only digits and cap at 10
+      value = value.replace(/\D/g, '').slice(0, 10);
+    }
     setFormData(prevData => ({ ...prevData, [name]: value }));
     validateField(name, value, suppliers);
   };
@@ -254,7 +262,25 @@ const ManageSuppliers = () => {
                   </div>
                   <div>
                     <Label htmlFor="phone" className="text-gray-700">Phone</Label>
-                    <Input id="phone" name="phone" value={formData.phone} onChange={handleInputChange} required placeholder="07XXXXXXXX" className={`${errors.phone ? 'border-red-500' : ''} focus-visible:ring-emerald-500`} />
+                    <Input
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pasted = (e.clipboardData || window.clipboardData).getData('text') || '';
+                        const digits = pasted.replace(/\D/g, '').slice(0, 10);
+                        setFormData(prev => ({ ...prev, phone: digits }));
+                        validateField('phone', digits, suppliers);
+                      }}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={10}
+                      required
+                      placeholder="07XXXXXXXX"
+                      className={`${errors.phone ? 'border-red-500' : ''} focus-visible:ring-emerald-500`}
+                    />
                     {errors.phone && <p className="text-red-600 text-xs mt-1">{errors.phone}</p>}
                   </div>
                   <div>

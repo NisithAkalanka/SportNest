@@ -1,169 +1,159 @@
 const Cart = require('../models/Cart');
 const Item = require('../models/Item');
 
-// @route   POST api/cart/add
-// @desc    Add an item to the cart and decrease inventory
-// @access  Public (දැනට, ඕනෑම කෙනෙකුට add කරන්න පුළුවන්)
+// Helper: resolve current user id (requires auth middleware upstream)
+function getUserId(req) {
+  return req.user?._id || req.user?.id || null;
+}
+
+// @route   POST /api/cart/add
+// @desc    Add an item to the current user's cart and decrease inventory
+// @access  Private (requires logged-in user)
 const addToCart = async (req, res) => {
-  const { itemId, quantity } = req.body; // Frontend එකෙන් එවන දත්ත
+  const userId = getUserId(req);
+  if (!userId) return res.status(401).json({ msg: 'Please log in to add items to your cart.' });
 
-  // --- 1. Item එකේ Stock එක Check කිරීම ---
+  const { itemId, quantity } = req.body;
+  const qty = Math.max(1, Number(quantity) || 1);
+
   try {
+    // 1) Validate & fetch inventory item
     const itemToAdd = await Item.findById(itemId);
-
-    if (!itemToAdd) {
-      return res.status(404).json({ msg: 'Item not found' });
-    }
-    
-    if (itemToAdd.quantity < quantity) {
+    if (!itemToAdd) return res.status(404).json({ msg: 'Item not found' });
+    if (itemToAdd.quantity < qty) {
       return res.status(400).json({ msg: 'Sorry, not enough items in stock' });
     }
 
-    // --- 2. Inventory එකේ Quantity එක අඩු කිරීම ---
-    itemToAdd.quantity -= quantity;
-    await itemToAdd.save();
+    // 2) Find or create user's cart
+    let cart = await Cart.findOne({ userId });
+    if (!cart) cart = new Cart({ userId, items: [] });
 
-    // --- 3. Cart එකට Item එක එකතු කිරීම ---
-    // දැනට, අපි හිතමු හැමෝටම තියෙන්නේ එකම cart එකක් කියලා.
-    // අපි මුලින්ම බලනවා cart එකක් තියෙනවද කියලා, නැත්නම් අලුතින් හදනවා.
-    let cart = await Cart.findOne(); 
-    if (!cart) {
-      cart = new Cart({ items: [] });
-    }
-    
-    // Cart එකේ දැනටමත් මේ item එක තියෙනවද කියලා බලනවා
-    const itemIndex = cart.items.findIndex(p => p.item.toString() === itemId);
-
-    if (itemIndex > -1) {
-      // තියෙනවා නම්, quantity එක විතරක් වැඩි කරනවා
-      cart.items[itemIndex].quantity += quantity;
+    // 3) Upsert line item
+    const idx = cart.items.findIndex((p) => p.item.toString() === String(itemId));
+    if (idx > -1) {
+      cart.items[idx].quantity += qty;
     } else {
-      // නැත්නම්, අලුතින් item එක push කරනවා
-      cart.items.push({ item: itemId, quantity: quantity });
+      cart.items.push({ item: itemId, quantity: qty });
     }
-    
+
+    // 4) Decrease inventory and save
+    itemToAdd.quantity -= qty;
+    await itemToAdd.save();
     await cart.save();
-    
-    res.status(200).json(cart);
 
+    return res.status(200).json(cart);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    console.error('addToCart error:', err.message);
+    return res.status(500).send('Server Error');
   }
 };
+
 // @route   GET /api/cart
-// @desc    Get all items in the cart
-// @access  Public
+// @desc    Get current user's cart
+// @access  Private
 const getCartItems = async (req, res) => {
-  try {
-    // අපි හිතනවා තියෙන්නේ එකම cart එකයි කියලා
-    const cart = await Cart.findOne().populate('items.item', 'name price');
-    
-    if (!cart) {
-      return res.json({ items: [] }); // Cart එකක් නැත්නම්, හිස් list එකක් යවනවා
-    }
+  const userId = getUserId(req);
+  if (!userId) return res.status(401).json({ msg: 'Please log in to view your cart.' });
 
-    res.json(cart);
+  try {
+    const cart = await Cart.findOne({ userId }).populate('items.item', 'name price imageUrl');
+    if (!cart) return res.json({ items: [] });
+    return res.json(cart);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    console.error('getCartItems error:', err.message);
+    return res.status(500).send('Server Error');
   }
 };
 
+// @route   DELETE /api/cart/:id
+// @desc    Remove one cart line item and restore inventory
+// @access  Private
 const removeCartItem = async (req, res) => {
-  try {
-    const cart = await Cart.findOne();
-    if (!cart) {
-      return res.status(404).json({ msg: 'Cart not found' });
-    }
+  const userId = getUserId(req);
+  if (!userId) return res.status(401).json({ msg: 'Please log in to modify your cart.' });
 
-    // Cart එකෙන් අයින් කරන item එක මොකක්ද, quantity එක කීයද කියලා හොයාගන්නවා
-    const itemToRemove = cart.items.find(i => i._id.toString() === req.params.id);
-    if (!itemToRemove) {
-      return res.status(404).json({ msg: 'Item not found in cart' });
-    }
-    
-    // Inventory එකේ අදාළ Item එක හොයාගන්නවා
-    const inventoryItem = await Item.findById(itemToRemove.item);
+  try {
+    const cart = await Cart.findOne({ userId });
+    if (!cart) return res.status(404).json({ msg: 'Cart not found' });
+
+    const line = cart.items.find((i) => i._id.toString() === req.params.id);
+    if (!line) return res.status(404).json({ msg: 'Item not found in cart' });
+
+    // Restore inventory
+    const inventoryItem = await Item.findById(line.item);
     if (inventoryItem) {
-      inventoryItem.quantity += itemToRemove.quantity;
+      inventoryItem.quantity += line.quantity;
       await inventoryItem.save();
     }
-    
-    // Cart එකෙන් item එක remove කරනවා
-    cart.items = cart.items.filter(i => i._id.toString() !== req.params.id);
-    await cart.save();
-    
-    // Update වෙච්ච අලුත් cart එකම populate කරලා, response එකේ යවනවා
-    const updatedCart = await Cart.findOne().populate('items.item', 'name price imageUrl');
-    res.json(updatedCart);
 
+    // Remove line and save cart
+    cart.items = cart.items.filter((i) => i._id.toString() !== req.params.id);
+    await cart.save();
+
+    const updated = await Cart.findOne({ userId }).populate('items.item', 'name price imageUrl');
+    return res.json(updated || { items: [] });
   } catch (err) {
-    console.error("Remove from cart error:", err.message);
-    res.status(500).send('Server Error');
+    console.error('removeCartItem error:', err.message);
+    return res.status(500).send('Server Error');
   }
 };
 
-// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-// ★★★ මෙන්න අලුතින් එකතු කළ Quantity Update Function එක ★★★
-// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+// @route   PUT /api/cart/:id
+// @desc    Update line quantity, adjusting inventory accordingly
+// @access  Private
 const updateCartItemQuantity = async (req, res) => {
-    const { id } = req.params; // මේ cartItem එකේ _id එක
-    const { quantity } = req.body; // frontend එකෙන් එවන අලුත් quantity එක
+  const userId = getUserId(req);
+  if (!userId) return res.status(401).json({ msg: 'Please log in to modify your cart.' });
 
-    if (isNaN(quantity) || Number(quantity) < 1) {
-        return res.status(400).json({ msg: 'Invalid quantity provided.' });
+  const { id } = req.params; // cart line _id
+  const { quantity } = req.body; // new quantity
+  const newQty = Number(quantity);
+  if (isNaN(newQty) || newQty < 1) {
+    return res.status(400).json({ msg: 'Invalid quantity provided.' });
+  }
+
+  try {
+    const cart = await Cart.findOne({ userId });
+    if (!cart) return res.status(404).json({ msg: 'Cart not found' });
+
+    const line = cart.items.find((i) => i._id.toString() === id);
+    if (!line) return res.status(404).json({ msg: 'Item not found in cart' });
+
+    const inventoryItem = await Item.findById(line.item);
+    if (!inventoryItem) {
+      // If original item disappeared, drop the line from cart
+      cart.items = cart.items.filter((i) => i._id.toString() !== id);
+      await cart.save();
+      return res.status(404).json({ msg: 'Original item not found. It has been removed from your cart.' });
     }
 
-    try {
-        const cart = await Cart.findOne();
-        if (!cart) {
-            return res.status(404).json({ msg: 'Cart not found' });
-        }
+    const diff = newQty - line.quantity; // positive = need more stock, negative = return stock
 
-        const cartItem = cart.items.find(i => i._id.toString() === id);
-        if (!cartItem) {
-            return res.status(404).json({ msg: 'Item not found in cart' });
-        }
-        
-        const inventoryItem = await Item.findById(cartItem.item);
-        if (!inventoryItem) {
-            // Inventory එකේ item එක නැත්නම්, ඒක cart එකෙන් අයින් කරලා දානවා
-            cart.items = cart.items.filter(i => i._id.toString() !== id);
-            await cart.save();
-            return res.status(404).json({ msg: 'Original item not found. It has been removed from your cart.' });
-        }
-
-        // quantity එකේ වෙනස ගණනය කරනවා
-        const quantityDifference = Number(quantity) - cartItem.quantity;
-        
-        // Stock එක check කරනවා
-        if (inventoryItem.quantity < quantityDifference) {
-            return res.status(400).json({ msg: `Not enough stock. Only ${inventoryItem.quantity} more item(s) available.` });
-        }
-        
-        // Inventory එකේ quantity එක update කරනවා
-        inventoryItem.quantity -= quantityDifference;
-        await inventoryItem.save();
-
-        // Cart එකේ quantity එක update කරනවා
-        cartItem.quantity = Number(quantity);
-        await cart.save();
-        
-        // අලුත් cart එකම populate කරලා, response එකේ යවනවා
-        const updatedCart = await Cart.findOne().populate('items.item', 'name price imageUrl');
-        return res.json(updatedCart);
-
-    } catch (err) {
-        console.error("Update cart quantity error:", err.message);
-        res.status(500).send('Server Error');
+    if (diff > 0) {
+      if (inventoryItem.quantity < diff) {
+        return res.status(400).json({ msg: `Not enough stock. Only ${inventoryItem.quantity} more item(s) available.` });
+      }
+      inventoryItem.quantity -= diff;
+      await inventoryItem.save();
+    } else if (diff < 0) {
+      inventoryItem.quantity += Math.abs(diff);
+      await inventoryItem.save();
     }
+
+    line.quantity = newQty;
+    await cart.save();
+
+    const updated = await Cart.findOne({ userId }).populate('items.item', 'name price imageUrl');
+    return res.json(updated);
+  } catch (err) {
+    console.error('updateCartItemQuantity error:', err.message);
+    return res.status(500).send('Server Error');
+  }
 };
-
 
 module.exports = {
   addToCart,
   getCartItems,
   removeCartItem,
-  updateCartItemQuantity // ★★★ අලුත් function එක export කරනවා ★★★
+  updateCartItemQuantity,
 };

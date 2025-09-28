@@ -1,4 +1,5 @@
 const Review = require("../models/ReviewModel");
+const mongoose = require('mongoose');
 
 // --- For Members ---
 exports.getMyReview = async (req, res) => {
@@ -60,29 +61,56 @@ exports.deleteMyReview = async (req, res) => {
 // --- For Public & Admins ---
 exports.getFeaturedReviews = async (req, res) => {
   try {
-    const reviews = await Review.find({ isFeatured: true })
-      .populate("memberId", "firstName lastName")
-      .sort({ updatedAt: -1 })
-      .limit(3);
-    res.status(200).json(reviews);
-  } catch (error) {
-    res.status(500).json({
-      message: "Error fetching featured reviews.",
-      error: error.message,
+    // Support both flags: isFeatured / featured
+    const filter = { $or: [{ isFeatured: true }, { featured: true }] };
+
+    // Build query and conditionally populate based on schema
+    let q = Review.find(filter).sort({ updatedAt: -1, createdAt: -1 }).limit(6);
+
+    if (Review.schema.path('memberId')) {
+      q = q.populate({ path: 'memberId', select: 'firstName lastName role profileImage clubId' });
+    } else if (Review.schema.path('member')) {
+      q = q.populate({ path: 'member', select: 'firstName lastName role profileImage clubId' });
+    }
+
+    const docs = await q.lean();
+
+    // Map into a simple shape expected by the Home page widget
+    const items = docs.map((r) => {
+      const person = r.memberId || r.member || {};
+      const name = (person.firstName || person.lastName)
+        ? `${person.firstName || ''} ${person.lastName || ''}`.trim()
+        : (r.title || 'Member');
+      const role = person.role || r.category || 'Member';
+      const avatar = person.profileImage || '/uploads/default-avatar.png';
+      const message = r.message || r.comment || r.text || '';
+      const rating = r.rating ?? r.stars ?? 5;
+      return { id: r._id, name, role, avatar, message, rating };
     });
+
+    return res.status(200).json(items);
+  } catch (error) {
+    console.error('getFeaturedReviews error:', error);
+    return res.status(500).json({ message: 'Error fetching featured reviews.' });
   }
 };
 
 exports.getAllReviewsForAdmin = async (req, res) => {
   try {
-    const reviews = await Review.find({})
-      .populate("memberId", "firstName lastName email")
-      .sort({ createdAt: -1 });
+    let q = Review.find({}).sort({ createdAt: -1 });
+
+    if (Review.schema.path('memberId')) {
+      q = q.populate('memberId', 'firstName lastName email');
+    } else if (Review.schema.path('member')) {
+      q = q.populate('member', 'firstName lastName email');
+    }
+
+    const reviews = await q;
     res.status(200).json(reviews);
   } catch (error) {
     res
       .status(500)
-      .json({ message: "Error fetching all reviews.", error: error.message });
+      .json({ message: 'Error fetching all reviews.', error: error.message });
   }
 };
 

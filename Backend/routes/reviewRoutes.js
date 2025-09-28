@@ -10,6 +10,7 @@ const protect = require("../middleware/authMiddleware");
 const protectAdmin = require("../middleware/adminMiddleware"); 
 
 
+const { getFeaturedReviews } = require('../controllers/reviewController');
 // --- Public Routes ---
 router.get("/featured", reviewController.getFeaturedReviews);
 
