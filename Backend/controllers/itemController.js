@@ -106,7 +106,7 @@ const deleteItem = async (req, res) => {
 };
 
 
-// --- පහත functions වල කිසිම වෙනසක් කර නොමැත ---
+
 
 const getItems = async (req, res) => {
   try {
@@ -120,8 +120,13 @@ const getItems = async (req, res) => {
 
 const getShopItems = async (req, res) => {
   try {
+<<<<<<< Updated upstream
     // imageUrl එකත් shop එකට යවනවා
     const items = await Item.find({ quantity: { $gt: 0 } }).select('name category price imageUrl');
+=======
+    // imageUrl eka shope kata ywnawa
+    const items = await Item.find({ quantity: { $gt: 0 } }).select('name category price imageUrl description');
+>>>>>>> Stashed changes
     res.json(items);
   } catch (err) {
     console.error(err.message);

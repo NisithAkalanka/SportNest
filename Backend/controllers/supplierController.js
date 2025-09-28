@@ -4,7 +4,7 @@ const { Parser } = require('json2csv'); // ★★★ CSV හදන්න අව�
 
 // POST /api/suppliers  (Admin only)
 const addSupplier = async (req, res) => {
-  const { name, contactPerson, email, phone, address } = req.body;
+  const { name, contactPerson, email, phone, address } = req.body;//add new suplier
 
   try {
     const existingSupplier = await Supplier.findOne({ email });
@@ -22,12 +22,12 @@ const addSupplier = async (req, res) => {
 
 // GET /api/suppliers (Admin only)
 const getSuppliers = async (req, res) => {
-  try { // ★ try-catch block එකක් එකතු කිරීම වඩාත් සුරක්ෂිතයි ★
+  try { // ★ try-catch block එකක් එකතු කිරීම වඩාත් සුරක්ෂිතයි ★.   //add una supliers lage visthara aragannawa admin
     const suppliers = await Supplier.aggregate([
       { $match: {} },
       {
         $lookup: {
-          from: 'preorders',      // make sure collection name is correct
+          from: 'preorders',      
           localField: '_id',
           foreignField: 'supplier',
           as: 'preorders'
@@ -84,9 +84,7 @@ const getAllSuppliers = async (_req, res) => {
   }
 };
 
-// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-// ★★★ මෙන්න අලුතින් එකතු කළ CSV Report හදන Function එක ★★★
-// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+//csv report hadana part eka
 
 const generateSupplierCsvReport = async (req, res) => {
     try {

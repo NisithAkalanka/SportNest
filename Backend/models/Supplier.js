@@ -6,7 +6,7 @@ const SupplierSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   phone: { type: String, required: true },
   address: { type: String },
-}, { timestamps: true }); // createdAt සහ updatedAt එකතු කිරීම හොඳ පුරුද්දක්
+}, { timestamps: true }); // create and  update times
 
-// ★★★ OverwriteModelError එක වළක්වන, වඩාත් ආරක්ෂිත export ක්‍රමය ★★★
+// ★★★ OverwriteModelError eka walakwnawa
 module.exports = mongoose.models.Supplier || mongoose.model('Supplier', SupplierSchema);

@@ -38,20 +38,38 @@ export const CartProvider = ({ children }) => {
     await fetchCart();
   };
   
+<<<<<<< Updated upstream
   // Cart එකේ තියෙන items list එක
+=======
+ // updateCartItemQuantityAndUpdate
+const updateCartItemQuantityAndUpdate = async (cartItemId, newQuantity) => {//////
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  const api = createAuthenticatedApi();
+  await api.put(`/cart/${cartItemId}`, { quantity: Number(newQuantity) });
+  await fetchCart();
+};
+
+  // Cart eke thiyena items list එක
+>>>>>>> Stashed changes
   const cartItems = cart ? cart.items : [];
-  // මුළු item ගණන
+  // mulu item ganan 
   const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   return (
     <CartContext.Provider 
         value={{ 
-            cartItems: cartItems, // CartPage එකේදී පාවිච්චි කරන්න 'cartItems' නමින් items ටික දෙනවා
+            cartItems: cartItems, // CartPage ekedi 'cartItems' namin items tika denawa
             cartItemCount, 
             isLoading,
             fetchCart,
             addToCartAndUpdate,
+<<<<<<< Updated upstream
             removeFromCartAndUpdate // අලුත් function එකත් export කරනවා
+=======
+            removeFromCartAndUpdate, // ain karanawa
+            updateCartItemQuantityAndUpdate // Quantity update function eka export karanawa
+>>>>>>> Stashed changes
         }}
     >
       {children}

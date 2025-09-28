@@ -1,15 +1,15 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 
-// Admin ට වෙන්වූ, 'AdminAuthContext' නමින් අලුත් context එකක් නිර්මාණය කරනවා
+
 export const AdminAuthContext = createContext();
 
-// AdminAuthProvider නමින් component එක හදනවා
+// AdminAuthProvider 
 export const AdminAuthProvider = ({ children }) => {
     
-    // 'admin' කියන state එකෙන් තමයි login වෙලා ඉන්න admin ගේ විස්තර තියාගන්නේ
+    // 'admin' kiyana state eken thamai login wela inna admin ge visthara
     const [admin, setAdmin] = useState(null);
 
-    // App එක load වෙනකොට localStorage එකෙන් 'adminInfo' තියෙනවද බලනවා
+    // App eka load wenakota localStorage eken 'adminInfo' 
     useEffect(() => {
         try {
             const adminInfo = localStorage.getItem('adminInfo');
@@ -22,9 +22,9 @@ export const AdminAuthProvider = ({ children }) => {
         }
     }, []);
 
-    // Admin Login function එක
+    // Admin Login function 
     const loginAdmin = (adminData) => {
-        // 'adminInfo' key එක යටතේ localStorage එකේ save කරනවා
+        // 'adminInfo' key eka yatathe localStorage eke save karanawa
         localStorage.setItem('adminInfo', JSON.stringify(adminData));
         setAdmin(adminData);
     };
@@ -36,14 +36,14 @@ export const AdminAuthProvider = ({ children }) => {
     };
 
     return (
-        // Provider එක හරහා, admin, loginAdmin, logoutAdmin දේවල් child components වලට දෙනවා
+        // Provider eka haraha, admin, loginAdmin, logoutAdmin dewal child components
         <AdminAuthContext.Provider value={{ admin, loginAdmin, logoutAdmin }}>
             {children}
         </AdminAuthContext.Provider>
     );
 };
 
-// 'useAdminAuth' කියන custom hook එක
+// 'useAdminAuth' kiyana custom hook 
 export const useAdminAuth = () => {
     return useContext(AdminAuthContext);
 };

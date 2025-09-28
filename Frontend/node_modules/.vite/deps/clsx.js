@@ -7,4 +7,3 @@ export {
   clsx,
   clsx_default as default
 };
-//# sourceMappingURL=clsx.js.map

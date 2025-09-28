@@ -1,31 +1,31 @@
 const express = require('express');
 const router = express.Router();
 
-// ★★★ CSV report function එකත් මෙතනට import කරගන්නවා ★★★
+// ★★★ CSV report function eka import 
 const {
     addSupplier,
     getSuppliers,
     updateSupplier,
     deleteSupplier,
     getAllSuppliers,
-    generateSupplierCsvReport // <-- අලුතින් එකතු කළ කොටස
+    generateSupplierCsvReport // 
 } = require('../controllers/supplierController');
 
-// Admin ට පමණක් අවසර දීමට, 'adminMiddleware' එක import කරගන්නවා
+// Admin ta pamanak  'adminMiddleware' eka import 
 const protectAdmin = require('../middleware/adminMiddleware');
 
 
-// --- Admin ට පමණක් අදාළ වන Supplier Routes (ආරක්ෂිතයි) ---
+// --- Admin ta pamanak Supplier Routes  ---
 router.post('/', protectAdmin, addSupplier);
 router.get('/', protectAdmin, getSuppliers);
 router.put('/:id', protectAdmin, updateSupplier);
 router.delete('/:id', protectAdmin, deleteSupplier);
 
-// ★★★ CSV Report එක සඳහා අලුත් Route එක (මේකත් Admin ට විතරයි) ★★★
+// ★★★ CSV Report eka sadaha Route ) ★★★
 router.get('/report/csv', protectAdmin, generateSupplierCsvReport);
 
 
-// --- Public (ඕනෑම කෙනෙකුට පෙනෙන) Route එක ---
+// --- Public hemotama penawa eka Route 
 router.get('/all', getAllSuppliers);
 
 module.exports = router;

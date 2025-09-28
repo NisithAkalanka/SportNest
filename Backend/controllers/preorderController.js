@@ -4,7 +4,7 @@ const Supplier = require('../models/Supplier');
 const nodemailer = require('nodemailer');
 const { Parser } = require('json2csv');
 
-// Nodemailer transporter එකේ වෙනසක් නැහැ
+// Nodemailer transporter 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT || 587),
@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
   tls: { rejectUnauthorized: false }
 });
 
-// createPreorder function එකේ වෙනසක් නැහැ
+// createPreorder function 
 const createPreorder = async (req, res) => {
   try {
     const { itemId, quantity } = req.body;
@@ -29,7 +29,7 @@ const createPreorder = async (req, res) => {
     });
     try {
       const mailOptions = {
-        from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM_EMAIL}>`,
+        from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM_EMAIL}>`,     //Email eka yawana ayage wisthara
         to: item.supplier.email,
         subject: `New Pre-order Request: ${item.name}`,
         html: `<h3>New Pre-order Request</h3><p>Hello ${item.supplier.name},</p><p>A new pre-order has been placed for the following item:</p><ul><li><strong>Item:</strong> ${item.name}</li><li><strong>Quantity Requested:</strong> ${quantity}</li></ul><p>Please acknowledge this request at your earliest convenience.</p><p>Thank you.</p>`
@@ -37,7 +37,7 @@ const createPreorder = async (req, res) => {
       await transporter.sendMail(mailOptions);
       console.log(`Pre-order email sent successfully to ${item.supplier.email}`);
     } catch (emailError) {
-      console.error(`Failed to send pre-order email to ${item.supplier.email}:`, emailError);
+      console.error(`Failed to send pre-order email to ${item.supplier.email}:`, emailError);//email eka ywanawa
     }
     const result = await Preorder.findById(preorder._id).populate('item supplier');
     return res.status(201).json({ msg: 'Pre-order created successfully!', preorder: result });
@@ -47,8 +47,8 @@ const createPreorder = async (req, res) => {
   }
 };
 
-// listPreorders function එකේ වෙනසක් නැහැ
-const listPreorders = async (req, res) => {
+// listPreorders function 
+const listPreorders = async (req, res) => {          //preoder karanna ona list eka
   try {
     const list = await Preorder.find().sort({ createdAt: -1 }).limit(200).populate('item supplier');
     return res.json({ preorders: list });
@@ -58,8 +58,8 @@ const listPreorders = async (req, res) => {
   }
 };
 
-// updateStatus function එකේ වෙනසක් නැහැ
-const updateStatus = async (req, res) => {
+// updateStatus function 
+const updateStatus = async (req, res) => {            //preoder send wena  status eka(requested,ordered,recieved)
   const { id } = req.params;
   const { status, expiryDate } = req.body;
   if (!['requested', 'ordered', 'received'].includes(status)) {
@@ -96,7 +96,7 @@ const updateStatus = async (req, res) => {
   }
 };
 
-// මාසික වාර්තාව සකස් කර download කිරීමට ලබා දෙන Function එකේ වෙනසක් නැහැ
+//genarate report
 const generateMonthlyReport = async (req, res) => {
   try {
     const now = new Date();
@@ -126,9 +126,7 @@ const generateMonthlyReport = async (req, res) => {
   }
 };
 
-// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-// ★★★ මෙන්න අලුතින් එකතු කළ Edit Function එක ★★★
-// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+//edite function
 
 const updatePreorderQuantity = async (req, res) => {
     const { id } = req.params;
@@ -154,9 +152,7 @@ const updatePreorderQuantity = async (req, res) => {
     }
 };
 
-// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-// ★★★ මෙන්න අලුතින් එකතු කළ Delete Function එක ★★★
-// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+//delete funtion
 
 const deletePreorder = async (req, res) => {
     const { id } = req.params;
