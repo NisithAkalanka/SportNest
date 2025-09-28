@@ -288,7 +288,7 @@ const MemberDashboard = () => {
                             )}</CardContent>
                         </Card>
                         
-                        {/* ★★★ MyReview component එක ඉවත් කර, සරල Link එකක් පමණක් තැබීම ★★★ */}
+                        {/* MyReview page ekata yana link eka */}
                         <Card>
                             <CardHeader>
                                 <CardTitle>Club Review</CardTitle>

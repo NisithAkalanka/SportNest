@@ -7,7 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 
 const AttendancePage = () => {
+     // ★★★★★★★★★★★★★★ CALENDAR VALIDATION (PART 1) ★★★★★★★★★★★★★★
+    // Helper function to get today's date in 'YYYY-MM-DD' format.
+    // This is used to set the MAXIMUM selectable date in the calendar, preventing future date selection.
     const getTodayString = () => new Date().toISOString().slice(0, 10);
+     // ★★★★★★★★★★★★★★
     
     const [selectedDate, setSelectedDate] = useState(getTodayString);
     const [coaches, setCoaches] = useState([]);
@@ -38,6 +42,7 @@ const AttendancePage = () => {
         fetchData();
     }, []);
 
+     // Ensure date defaults to today if it's somehow different 
     useEffect(() => {
         const todayStr = getTodayString();
         if (selectedDate !== todayStr) {
@@ -45,7 +50,7 @@ const AttendancePage = () => {
         }
     }, []);
 
-
+      // Effect to check for existing records and set editing state
     useEffect(() => {
         if (selectedCoach && selectedDate) {
             const dayOfWeek = new Date(selectedDate + 'T00:00:00Z').getUTCDay();
@@ -65,6 +70,7 @@ const AttendancePage = () => {
         }
     }, [selectedCoach, selectedDate, attendanceRecords]);
     
+     // Memoized calculation for grouping attendance records
     const groupedAttendance = useMemo(() => {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -125,16 +131,30 @@ const AttendancePage = () => {
         setSelectedDate(record.date);
     };
 
+
+    // ★★★★★★★★★★★★★★ CALENDAR VALIDATION (PART 2) ★★★★★★★★★★★★★★
+    // This function handles the validation logic when the date is changed.
     const handleDateChange = (e) => {
+        // Get the newly selected date from the event ('YYYY-MM-DD' format).
         const newDate = e.target.value;
+
+        // Determine the day of the week for the selected date.
+        // getUTCDay() returns 0 for Sunday, 1 for Monday, and so on.
         const dayOfWeek = new Date(newDate + 'T00:00:00Z').getUTCDay();
 
+         // VALIDATION LOGIC: Check if the selected day is a Sunday.
         if (dayOfWeek === 0) { 
+            // If it's a Sunday, show an alert message to the user.
             alert("Sundays are holidays and cannot be selected.");
+            // Importantly, we DO NOT update the state, so the invalid date is not selected.
         } else {
+            // If it's any other day, update the 'selectedDate' state with the new date.
             setSelectedDate(newDate);
         }
     };
+     // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+
+
 
     const getStatusBadge = (status) => {
         switch (status) { case 'Work Full-Day': return 'bg-green-100 text-green-800'; case 'Work Half-Day': return 'bg-yellow-100 text-yellow-800'; case 'Absent': return 'bg-red-100 text-red-800'; case 'Duty-Leave': return 'bg-blue-100 text-blue-800'; case 'Leave': return 'bg-purple-100 text-purple-800'; default: return 'bg-gray-100 text-gray-800';}
@@ -156,7 +176,20 @@ const AttendancePage = () => {
                 <h2 className="text-xl font-semibold mb-4">{isEditing ? 'Update Attendance Record' : 'Mark New Attendance'}</h2>
                 <form onSubmit={handleMarkOrUpdate} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                     <div className="flex flex-col"><label className="mb-1 font-medium">Coach</label><Select onValueChange={setSelectedCoach} value={selectedCoach}><SelectTrigger><SelectValue placeholder="Select Coach" /></SelectTrigger><SelectContent className="z-50 bg-white border shadow-lg">{coaches.map((coach) => (<SelectItem key={coach._id} value={coach._id}>{coach.firstName} {coach.lastName}</SelectItem>))}</SelectContent></Select></div>
-                    <div className="flex flex-col"><label className="mb-1 font-medium">Date</label><Input type="date" value={selectedDate} onChange={handleDateChange} max={getTodayString()} /></div>
+
+
+                    {/* ★★★★★★★★★★★★★★ CALENDAR COMPONENT PART ★★★★★★★★★★★★★★ */}
+                    <div className="flex flex-col"><label className="mb-1 font-medium">Date</label>
+                        {/* 
+                          This Input component is rendered as a date picker because of 'type="date"'.
+                          - `value={selectedDate}`: Binds the calendar's display to our state.
+                          - `onChange={handleDateChange}`: Triggers our validation function when a new date is picked.
+                          - `max={getTodayString()}`: This HTML attribute PREVENTS users from selecting any date in the future.
+                        */}
+
+                    <Input type="date" value={selectedDate} onChange={handleDateChange} max={getTodayString()} /></div>
+                     {/* ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★ */}
+
                     <div className="flex flex-col"><label className="mb-1 font-medium">Status</label>
                         <Select onValueChange={setSelectedStatus} value={selectedStatus}>
                             <SelectTrigger><SelectValue placeholder={isEditing ? "Update status..." : "Select Status"} /></SelectTrigger>
@@ -169,6 +202,7 @@ const AttendancePage = () => {
                             </SelectContent>
                         </Select>
                     </div>
+
                     <div className='flex gap-2 md:col-start-5'>
                         <Button
                             type="submit"
