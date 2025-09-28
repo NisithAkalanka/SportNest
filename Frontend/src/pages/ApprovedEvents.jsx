@@ -28,11 +28,12 @@ export default function ApprovedEvents() {
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onKeyDown = (e) => e.key === "Enter" && load();
 
-  // Client-side sort
+  // Client-side sort (unchanged)
   const sortedItems = [...items].sort((a, b) => {
     if (sortBy === "name-asc") return (a.name || "").localeCompare(b.name || "");
     const ad = a.date ? new Date(a.date).getTime() : Infinity;
@@ -47,23 +48,38 @@ export default function ApprovedEvents() {
         className="relative h-48 md:h-56 lg:h-64 flex items-center"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(13,27,42,.72),rgba(13,27,42,.72)), url('/events-hero.jpg')",
+            "linear-gradient(rgba(6,78,59,.75),rgba(22,101,52,.65)), url('/events-hero.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
+        role="img"
+        aria-label="SportNest events hero"
       >
+        {/* subtle brand accent */}
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-orange-500 to-emerald-500" />
         <div className="container mx-auto px-4">
-          <h1 className="text-white text-2xl md:text-3xl font-bold">Events</h1>
-          <p className="text-white/80 mt-1">Discover upcoming events at SportNest.</p>
+          <h1 className="text-white text-2xl md:text-3xl font-extrabold tracking-tight">
+            Events
+          </h1>
+          <p className="text-white/80 mt-1">
+            Discover upcoming events at SportNest.
+          </p>
         </div>
       </div>
 
       {/* Controls */}
       <div className="container mx-auto px-4">
-        <div className="relative z-10 -mt-10 flex flex-col md:flex-row md:items-center gap-3">
+        <div className="relative z-10 -mt-10 grid gap-3 md:grid-cols-[1fr_auto_auto_auto]">
           {/* Search */}
-          <div className="flex-1 bg-white rounded-2xl shadow-lg ring-1 ring-gray-200 p-2 pl-3 focus-within:ring-2 focus-within:ring-emerald-500 flex items-center">
+          <label
+            htmlFor="event-search"
+            className="sr-only"
+          >
+            Search events
+          </label>
+          <div className="flex items-center bg-white rounded-2xl shadow-lg ring-1 ring-gray-200 p-2 pl-3 focus-within:ring-2 focus-within:ring-emerald-500">
             <input
+              id="event-search"
               className="flex-1 bg-transparent outline-none placeholder:text-gray-400"
               placeholder="Search events by name or venue…"
               value={q}
@@ -73,7 +89,10 @@ export default function ApprovedEvents() {
             {q && (
               <button
                 type="button"
-                onClick={() => { setQ(""); load(); }}
+                onClick={() => {
+                  setQ("");
+                  load();
+                }}
                 className="px-2 text-slate-500 hover:text-slate-700"
                 aria-label="Clear search"
                 title="Clear"
@@ -86,17 +105,26 @@ export default function ApprovedEvents() {
           {/* Filter */}
           <button
             onClick={load}
-            className="inline-flex items-center gap-2 h-12 px-5 rounded-2xl border-2 border-emerald-600 bg-white text-emerald-700 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition hover:bg-emerald-600 hover:text-white"
+            className="inline-flex items-center justify-center gap-2 h-12 px-5 rounded-2xl border-2 border-emerald-600 bg-white text-emerald-700 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition hover:bg-emerald-600 hover:text-white"
             title="Apply current filters"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M3 6h18M6 12h12M10 18h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M3 6h18M6 12h12M10 18h4"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
             </svg>
             Filter
           </button>
 
           {/* Sort */}
+          <label className="sr-only" htmlFor="event-sort">
+            Sort events
+          </label>
           <select
+            id="event-sort"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className="h-12 rounded-2xl border-2 border-slate-200 bg-white px-3 text-sm text-slate-700 hover:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -108,7 +136,7 @@ export default function ApprovedEvents() {
           </select>
 
           {/* Create */}
-          <Link to="/events/submit" title="Create a new event">
+          <Link to="/events/submit" title="Create a new event" className="contents">
             <button className="h-12 px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition">
               + Create Event
             </button>
@@ -118,11 +146,13 @@ export default function ApprovedEvents() {
         {/* Messages */}
         <div className="mt-6">
           {msg && (
-            <div className="text-sm mb-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl px-3 py-2">{msg}</div>
+            <div className="text-sm mb-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl px-3 py-2">
+              {msg}
+            </div>
           )}
           {loading && (
             <div className="inline-flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               Loading…
             </div>
           )}
@@ -153,8 +183,8 @@ export default function ApprovedEvents() {
 
 /* ---------- Event Card ---------- */
 function EventRow({ ev, reload }) {
-  const date = ev.date ? new Date(ev.date).toLocaleDateString() : "—";
   const d = ev.date ? new Date(ev.date) : null;
+  const date = d ? d.toLocaleDateString() : "—";
   const month = d ? d.toLocaleString("en-US", { month: "short" }) : "";
   const day = d ? d.getDate() : "";
   const time = `${ev.startTime || "--"} – ${ev.endTime || "--"}`;
@@ -163,23 +193,40 @@ function EventRow({ ev, reload }) {
   const pct = cap > 0 ? Math.min(100, Math.round((reg / cap) * 100)) : 0;
   const left = cap > 0 ? Math.max(0, cap - reg) : 0;
 
+  const fee = ev.registrationFee ?? 200;
+  const isFree = Number(fee) === 0;
+
   return (
     <div
-      className="rounded-2xl border shadow-sm hover:shadow-lg transition-transform hover:-translate-y-1"
-      style={{ background: "linear-gradient(135deg, #E6F0FF 0%, #F8FBFF 100%)" }}
+      className="rounded-2xl border shadow-sm hover:shadow-lg transition-transform hover:-translate-y-1 bg-white ring-1 ring-slate-200/70"
     >
+      {/* header strip */}
+      <div className="h-1.5 w-full rounded-t-2xl bg-gradient-to-r from-orange-500 to-emerald-500" aria-hidden="true" />
       <div className="p-5 md:p-6 grid md:grid-cols-3 gap-6">
         {/* Left side info */}
         <div className="md:col-span-2 min-w-0">
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-lg font-semibold leading-tight truncate">{ev.name}</h3>
-            {d && (
-              <span className="shrink-0 grid place-content-center text-xs font-semibold text-white bg-emerald-600 rounded-md px-2 py-1">
-                {month} {day}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {isFree ? (
+                <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-md px-2 py-0.5">
+                  Free
+                </span>
+              ) : (
+                <span className="text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200 rounded-md px-2 py-0.5">
+                  Rs. {fee}
+                </span>
+              )}
+              {d && (
+                <span className="shrink-0 grid place-content-center text-xs font-semibold text-white bg-emerald-600 rounded-md px-2 py-1">
+                  {month} {day}
+                </span>
+              )}
+            </div>
           </div>
-          {ev.description && <p className="text-gray-600 mt-1 line-clamp-2">{ev.description}</p>}
+          {ev.description && (
+            <p className="text-gray-600 mt-1 line-clamp-2">{ev.description}</p>
+          )}
 
           <div className="mt-3 flex flex-wrap gap-2 text-sm text-gray-800">
             <InfoPill label="Venue" value={ev.venue || "—"} />
@@ -187,14 +234,13 @@ function EventRow({ ev, reload }) {
             <InfoPill label="Time" value={time} />
             <InfoPill label="Capacity" value={cap} />
             <InfoPill label="Registered" value={reg} />
-            <InfoPill label="Fee" value={ev.registrationFee ? `Rs. ${ev.registrationFee}` : "Rs. 200"} />
           </div>
 
           <div className="mt-4">
             {cap > 0 && (
               <>
                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500" style={{ width: `${pct}%` }}></div>
+                  <div className="h-full bg-emerald-500" style={{ width: `${pct}%` }} />
                 </div>
                 <div className="mt-1 text-xs text-slate-600">
                   {reg} / {cap} registered · {left} left
@@ -205,6 +251,7 @@ function EventRow({ ev, reload }) {
               <Link
                 className="inline-flex items-center text-sm rounded-xl border border-emerald-600 text-emerald-700 px-3 py-1.5 hover:bg-emerald-50"
                 to={`/events/${ev._id}`}
+                aria-label={`View details for ${ev.name}`}
               >
                 View details
               </Link>
@@ -240,7 +287,7 @@ function RegisterInline({ ev, onDone }) {
   const [msg, setMsg] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // ✅ validation helpers
+  // ✅ validation helpers (unchanged)
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePhone = (phone) => /^\d{10}$/.test(phone);
 
@@ -253,7 +300,7 @@ function RegisterInline({ ev, onDone }) {
 
     try {
       setSaving(true);
-      // Go to payment page with event + registration data
+      // Go to payment page with event + registration data (unchanged)
       navigate("/events/payment", {
         state: {
           eventData: ev,
@@ -272,30 +319,38 @@ function RegisterInline({ ev, onDone }) {
   return (
     <div className="rounded-2xl border border-slate-200 p-4 bg-white w-full sm:w-[260px] shadow-sm">
       <div className="text-sm font-medium mb-2">
-        Quick register {ev.registrationFee ? `(Rs. ${ev.registrationFee})` : "(Rs. 200)"}
+        Quick register{" "}
+        {ev.registrationFee ? `(Rs. ${ev.registrationFee})` : "(Rs. 200)"}
       </div>
       <input
         className="w-full mb-2 rounded-xl border px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
         placeholder="Name"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        aria-label="Your name"
       />
       <input
+        type="email"
         className="w-full mb-2 rounded-xl border px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        aria-label="Your email"
       />
       <input
         className="w-full mb-3 rounded-xl border px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-        placeholder="Phone"
+        placeholder="Phone (10 digits)"
         value={phone}
-        onChange={(e) => setPhone(e.target.value)}
+        onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+        inputMode="numeric"
+        maxLength={10}
+        aria-label="Your phone number"
       />
       <button
         onClick={click}
         disabled={saving}
         className="w-full rounded-2xl px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-60 shadow hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition flex items-center justify-center"
+        aria-live="polite"
       >
         <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
         {saving ? "Processing…" : "Register"}
@@ -310,21 +365,21 @@ function EventSkeleton() {
   return (
     <div className="rounded-2xl border bg-white shadow-sm p-5 md:p-6 animate-pulse">
       <div className="flex justify-between items-start">
-        <div className="h-5 w-1/2 bg-slate-200 rounded"></div>
-        <div className="h-5 w-14 bg-slate-200 rounded"></div>
+        <div className="h-5 w-1/2 bg-slate-200 rounded" />
+        <div className="h-5 w-14 bg-slate-200 rounded" />
       </div>
-      <div className="mt-3 h-4 w-2/3 bg-slate-200 rounded"></div>
+      <div className="mt-3 h-4 w-2/3 bg-slate-200 rounded" />
       <div className="mt-4 flex gap-2">
-        <div className="h-6 w-24 bg-slate-200 rounded-full"></div>
-        <div className="h-6 w-20 bg-slate-200 rounded-full"></div>
-        <div className="h-6 w-20 bg-slate-200 rounded-full"></div>
+        <div className="h-6 w-24 bg-slate-200 rounded-full" />
+        <div className="h-6 w-20 bg-slate-200 rounded-full" />
+        <div className="h-6 w-20 bg-slate-200 rounded-full" />
       </div>
-      <div className="mt-4 h-2 bg-slate-200 rounded"></div>
+      <div className="mt-4 h-2 bg-slate-200 rounded" />
       <div className="mt-6 grid md:grid-cols-3 gap-6">
-        <div className="md:col-span-2"></div>
+        <div className="md:col-span-2" />
         <div className="rounded-2xl border border-slate-200 p-4">
-          <div className="h-4 w-28 bg-slate-200 rounded mb-3"></div>
-          <div className="h-10 w-full bg-slate-200 rounded"></div>
+          <div className="h-4 w-28 bg-slate-200 rounded mb-3" />
+          <div className="h-10 w-full bg-slate-200 rounded" />
         </div>
       </div>
     </div>

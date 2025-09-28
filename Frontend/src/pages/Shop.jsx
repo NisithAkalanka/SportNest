@@ -171,7 +171,7 @@ const Shop = () => {
             {filteredItems.map(item => (
               <Card key={item._id} className="bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col group relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-slate-200/80">
                 <div className="w-full h-52 bg-gray-200 overflow-hidden relative">
-                  <Link to={`/product/${item._id}`} className="block w-full h-full">
+                  <Link to={`/product/${item._id}`} className="block w-full h-full" onClick={(e) => e.preventDefault()}>
                     <img
                       src={item.imageUrl || 'https://via.placeholder.com/400x300.png?text=SportNest'}
                       alt={item.name}
