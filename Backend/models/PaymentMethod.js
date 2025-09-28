@@ -1,3 +1,4 @@
+// Backend/models/PaymentMethod.js
 const mongoose = require('mongoose');
 
 const PaymentMethodSchema = new mongoose.Schema({

@@ -1,9 +1,9 @@
 import React from 'react';
-import { FaBullseye, FaUsers, FaChartLine, FaArrowLeft } from 'react-icons/fa'; // 1. FaArrowLeft import කරගන්න
-import { useNavigate } from 'react-router-dom'; // 2. useNavigate import කරගන්න
+import { FaBullseye, FaUsers, FaChartLine, FaArrowLeft } from 'react-icons/fa'; // import icons
+import { useNavigate } from 'react-router-dom'; // import useNavigate from react-router-dom
 
 const AboutPage = () => {
-    const navigate = useNavigate(); // 3. useNavigate initialize කරගන්න
+    const navigate = useNavigate(); // initialize useNavigate
 
     return (
         <div className="bg-white">
@@ -18,7 +18,7 @@ const AboutPage = () => {
             <div className="container mx-auto px-4 py-16">
                 <div className="max-w-4xl mx-auto">
                 
-                    {/* ★★★ 4. Back Button එක මෙතැන එකතු කර ඇත ★★★ */}
+                    {/* Add back button*/}
                     <div className="mb-8">
                         <button
                             onClick={() => navigate(-1)}

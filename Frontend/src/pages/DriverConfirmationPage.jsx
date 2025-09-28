@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaCheckCircle, FaTruck, FaUser, FaMapMarkerAlt, FaCalendarAlt, FaClock } from 'react-icons/fa';
 import axios from 'axios';
-
+// Driver Confirmation Page Component
 const DriverConfirmationPage = () => {
   const { token } = useParams();
   const navigate = useNavigate();

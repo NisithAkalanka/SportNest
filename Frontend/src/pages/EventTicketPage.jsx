@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload, faCheckCircle, faTicketAlt } from "@fortawesome/free-solid-svg-icons";
 import jsPDF from "jspdf";
-
+// Event Ticket Page Component
 const EventTicketPage = () => {
   const location = useLocation();
   const navigate = useNavigate();

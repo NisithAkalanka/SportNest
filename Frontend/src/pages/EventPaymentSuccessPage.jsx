@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faDownload, faEnvelope, faCalendar, faMapMarkerAlt, faClock } from '@fortawesome/free-solid-svg-icons';
-
+// Event Payment Success Page Component
 const EventPaymentSuccessPage = () => {
   const navigate = useNavigate();
   const location = useLocation();

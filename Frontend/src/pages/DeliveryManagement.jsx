@@ -28,7 +28,7 @@ const toDatetimeLocal = (date) => {
   
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
-
+// Suggest a delivery date based on current time
 const getSuggestedDeliveryDate = () => {
   const now = new Date();
   const currentHour = now.getHours();
@@ -488,7 +488,7 @@ const DeliveryManagement = () => {
 
   const handleDownloadPDF = () => {
     try {
-      // Check if deliveries data exists
+      // Check if deliveries data exists or is empty
       if (!deliveries || !Array.isArray(deliveries)) {
         setToast({ type: 'error', msg: 'No delivery data available for PDF generation' });
         return;

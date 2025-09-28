@@ -13,7 +13,7 @@ const ForgotPasswordPage = () => {
         setMessage('');
 
         try {
-            // ★★★ Backend එකේ ඇති නිවැරදි ලිපිනයට දත්ත යැවීම ★★★
+            // send an email ★★★
             const { data } = await axios.post('/api/members/forgot-password', { email });
             setMessage({ type: 'success', text: data.message });
         } catch (error) {

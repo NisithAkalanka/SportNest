@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCreditCard, faEdit, faTrashAlt, faCheck, faTimes, faPlus, faSave } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
-
+// Event Payment Page Component
 const EventPaymentPage = () => {
   const navigate = useNavigate();
   const location = useLocation();

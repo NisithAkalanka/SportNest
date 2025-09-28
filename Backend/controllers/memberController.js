@@ -43,7 +43,7 @@ const getMembershipPlans = async (req, res) => {
 };
 
 // =================================================================================
-// 1. Register a new member
+// Register a new member
 const registerMember = async (req, res) => {
     const { firstName, lastName, age, nic, gender, role, email, contactNumber, password, confirmPassword } = req.body;
 
@@ -116,7 +116,7 @@ const loginMember = async (req, res) => {
     }
 };
 
-// 3. Get logged-in user's full profile
+// Get logged-in user's full profile
 const getMyUserProfile = async (req, res) => {
     try {
         const userId = req.user?._id || req.user?.id;

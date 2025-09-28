@@ -1,3 +1,4 @@
+// Backend/models/EventPayment.js
 const mongoose = require('mongoose');
 
 const EventPaymentSchema = new mongoose.Schema({
@@ -64,7 +65,7 @@ const EventPaymentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for better query performance
+// Index for query performance
 EventPaymentSchema.index({ eventId: 1, status: 1 });
 EventPaymentSchema.index({ 'registrationData.email': 1 });
 EventPaymentSchema.index({ participantId: 1 });

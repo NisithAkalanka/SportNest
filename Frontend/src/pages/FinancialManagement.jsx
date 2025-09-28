@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChartPie, faChartBar, faArrowUp, faArrowDown, faWallet, faDollarSign, faReceipt, faRedo } from '@fortawesome/free-solid-svg-icons';
 import api from '@/api';
-
+// Financial Management Page Component
 const FinancialManagement = () => {
   const [financialData, setFinancialData] = useState({
     totalIncome: 0,

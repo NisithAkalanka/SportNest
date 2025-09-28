@@ -237,7 +237,7 @@ const DriverManagement = () => {
     }
     
     setIsSubmitting(true);
-    
+    // Clear previous toast
     try {
       // Prepare data for backend
       const driverData = {

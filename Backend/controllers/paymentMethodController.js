@@ -1,3 +1,4 @@
+// Backend/controllers/paymentMethodController.js
 const PaymentMethod = require('../models/PaymentMethod');
 
 // @route   GET /api/payments/methods

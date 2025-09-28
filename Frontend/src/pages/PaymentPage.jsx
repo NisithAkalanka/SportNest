@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashAlt, faPlus, faLock, faCreditCard } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
-
+// Payment Page Component
 const PaymentPage = () => {
   const navigate = useNavigate();
   const location = useLocation();

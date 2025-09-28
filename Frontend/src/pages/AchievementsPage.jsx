@@ -1,8 +1,8 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom'; // 1. useNavigate import කරගන්න
-import { FaArrowLeft } from 'react-icons/fa';   // 2. Icon එකක් import කරගන්න
+import { useNavigate } from 'react-router-dom'; // import useNavigate from react-router-dom
+import { FaArrowLeft } from 'react-icons/fa';   //  import FaArrowLeft icon
 
-// ★ ඔබගේ کلب එකේ සැබෑ ජයග්‍රහණ වල දත්ත මෙහි ඇතුළත් කළ හැක
+// Achievements data - replace with real data as needed
 const achievementsData = [
     {
         title: "National Champions 2024 - Cricket",
@@ -25,13 +25,13 @@ const achievementsData = [
 ];
 
 const AchievementsPage = () => {
-    const navigate = useNavigate(); // 3. useNavigate initialize කරගන්න
+    const navigate = useNavigate(); //  initialize useNavigate
 
     return (
         <div className="bg-gray-100 min-h-screen">
             <div className="container mx-auto px-4 py-16">
 
-                {/* ★★★ 4. Back Button එක මෙතැන එකතු කර ඇත ★★★ */}
+                {/* Add back button */}
                 <div className="mb-8">
                     <button
                         onClick={() => navigate(-1)}

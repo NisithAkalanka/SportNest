@@ -1,3 +1,4 @@
+// Backend/controllers/eventPaymentController.js
 const EventPayment = require('../models/EventPayment');
 const Event = require('../models/Event');
 const PaymentMethod = require('../models/PaymentMethod');

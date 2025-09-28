@@ -1,12 +1,12 @@
-// File: Frontend/src/pages/UserManagementPage.jsx (NEW PROFESSIONAL DESIGN)
+
 
 import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { AdminAuthContext } from '@/context/AdminAuthContext'; // ඔබගේ context path එකට අනුව සකසන්න
+import { AdminAuthContext } from '@/context/AdminAuthContext'; // Context for admin authentication
 import { FaUsers, FaUserCheck, FaUserTimes, FaIdCard, FaFutbol, FaChild } from 'react-icons/fa'; // Icons
 
-// ★★★ Reusable Sub-Statistic Component for clean UI ★★★
+//  Reusable Sub-Statistic Component for clean UI 
 const DetailRow = ({ icon, label, value, to }) => (
   <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
     <div className="flex items-center text-gray-600">

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/context/MemberAuthContext';
 import PlayerRegistrationModal from '@/components/PlayerRegistrationModal';
 
-// ★★★ Sports data (merged: main2 local assets + Ayuni improvements) ★★★
+// Sports data (merged: main2 local assets + Ayuni improvements) 
 const sportsData = [
   {
     name: 'Tennis',
@@ -14,7 +14,7 @@ const sportsData = [
     fallbackImageUrl:
       'https://images.unsplash.com/photo-1594756543549-1111624b5d84?q=80&w=1780&auto=format&fit=crop',
     icon: (
-      // උදාහරණයක් ලෙස icon එකක්
+      // As an example, using FontAwesome icon class
       <i className="fa-solid fa-table-tennis-paddle-ball text-4xl text-white"></i>
     ),
   },
