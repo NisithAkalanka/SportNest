@@ -5,9 +5,30 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../context/MemberAuthContext";
 
+// ✅ All plans = GREEN
+const colorMap = {
+  "Student Membership": {
+    border: "border-green-500",
+    btn: "bg-green-500 hover:bg-green-600",
+    check: "text-green-500",
+  },
+  "Ordinary Membership": {
+    border: "border-green-500",
+    btn: "bg-green-500 hover:bg-green-600",
+    check: "text-green-500",
+  },
+  "Life Time Membership": {
+    border: "border-green-500",
+    btn: "bg-green-500 hover:bg-green-600",
+    check: "text-green-500",
+  },
+};
+
 // 🟠 Single Plan Card Component
-const PlanCard = ({ plan, onSelect }) => (
-  <div className="bg-white rounded-2xl shadow-lg p-8 border-t-4 border-orange-500 flex flex-col hover:shadow-xl transition duration-300">
+const PlanCard = ({ plan, onSelect, colors }) => (
+  <div
+    className={`bg-white rounded-2xl shadow-lg p-8 border-t-4 ${colors.border} flex flex-col hover:shadow-xl transition duration-300`}
+  >
     <h2 className="text-2xl font-bold text-gray-800">{plan.name}</h2>
     <p className="text-4xl font-extrabold text-gray-900 my-4">
       LKR {plan.price.toLocaleString()}
@@ -18,17 +39,12 @@ const PlanCard = ({ plan, onSelect }) => (
       {plan.features.map((feature, index) => (
         <li key={index} className="flex items-center">
           <svg
-            className="w-5 h-5 text-green-500 mr-2"
+            className={`w-5 h-5 ${colors.check} mr-2`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M5 13l4 4L19 7"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
           </svg>
           {feature}
         </li>
@@ -37,7 +53,7 @@ const PlanCard = ({ plan, onSelect }) => (
 
     <button
       onClick={() => onSelect(plan)}
-      className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition duration-300"
+      className={`w-full ${colors.btn} text-white font-bold py-3 px-6 rounded-lg transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2`}
     >
       Select Plan
     </button>
@@ -104,9 +120,21 @@ const MembershipPlansPage = () => {
 
         {/* Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {plans.map((plan) => (
-            <PlanCard key={plan.name} plan={plan} onSelect={handleSelectPlan} />
-          ))}
+          {plans.map((plan) => {
+            const colors = colorMap[plan.name] || {
+              border: "border-green-500",
+              btn: "bg-green-500 hover:bg-green-600",
+              check: "text-green-500",
+            };
+            return (
+              <PlanCard
+                key={plan.name}
+                plan={plan}
+                onSelect={handleSelectPlan}
+                colors={colors}
+              />
+            );
+          })}
         </div>
       </div>
     </div>
