@@ -12,7 +12,7 @@ exports.getAllCoaches = async (req, res) => {
     }
 };
 
-// ★★★★★★★★★★★★ අවසානම සහ 100%ක්ම නිවැරදි, සරලම ක්‍රමවේදය ★★★★★★★★★★★★
+
 exports.markAttendance = async (req, res) => {
     try {
         const { memberId, date, status } = req.body;
@@ -24,19 +24,19 @@ exports.markAttendance = async (req, res) => {
         const endOfDayUTC = new Date(startOfDayUTC);
         endOfDayUTC.setUTCDate(startOfDayUTC.getUTCDate() + 1);
 
-        // 1. පළමුව, අදාළ coach ට, අදාළ දිනයේ record එකක් ඇත්දැයි සරලවම සොයන්න.
+        // 1. palamuwa, adala coach ta, adala date eke record ekk thiyenawadai saralawa seweema.
         const existingAttendance = await Attendance.findOne({
             memberId: memberId,
             date: { $gte: startOfDayUTC, $lt: endOfDayUTC }
         });
 
-        // 2. Record එකක් ඇත්නම් -> UPDATE කරන්න.
+        // 2. Record ekk tynwnm -> UPDATE krnna
         if (existingAttendance) {
             existingAttendance.status = status;
             await existingAttendance.save();
             return res.status(200).json({ message: 'Attendance updated successfully', data: existingAttendance });
         } 
-        // 3. Record එකක් නැත්නම් -> අලුතින් CREATE කරන්න.
+        // 3. Record ekk damima -> aluthin CREATE krnn
         else {
             const newAttendance = new Attendance({
                 memberId,

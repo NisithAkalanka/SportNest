@@ -33,16 +33,16 @@ exports.generateSalaryReport = async (req, res) => {
                 record => record.memberId.toString() === coach._id.toString()
             );
 
-            // වැටුප් සහිත දින ගණනය කිරීම
+            // watup sahitha dina gananya kirima
             const fullDays = coachAttendance.filter(r => r.status === 'Work Full-Day').length;
             const halfDays = coachAttendance.filter(r => r.status === 'Work Half-Day').length;
             const dutyLeaves = coachAttendance.filter(r => r.status === 'Duty-Leave').length;
             
-            // ★★★ 1. වැටුප් රහිත 'Leave' දින ගණනය කිරීම ★★★
+            // 1.watup rahitha 'Leave' dina gananya kirima
             const unpaidLeaves = coachAttendance.filter(r => r.status === 'Leave').length;
             const absences = coachAttendance.filter(r => r.status === 'Absent').length;
 
-            // වැටුප් ගණනය කිරීමේදී Absent සහ Leave නොසලකා හැරේ
+            // watup gananya kirimeda Absent and Leave nosalakai
             const netSalary = (coach.baseSalary / 30) * (fullDays + (halfDays * 0.5) + dutyLeaves);
 
             return {
@@ -52,7 +52,7 @@ exports.generateSalaryReport = async (req, res) => {
                 fullDays,
                 halfDays,
                 dutyLeaves,
-                // ★★★ 2. Frontend එකට unpaidLeaves ගණන යැවීම ★★★
+                //  2. Frontend ekt unpaidLeaves gnana yaweema
                 unpaidLeaves, 
                 absences,
                 netSalary: netSalary.toFixed(2)
