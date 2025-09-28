@@ -26,7 +26,7 @@ const TrainingsPage = () => {
   const userRole = (userInfo?.role || "").toLowerCase();
   const canRegister = userRole === "player";
 
-  // --- fetch all trainings (all coaches)
+  // all coaches training sessions
   const fetchSessions = useCallback(async () => {
     try {
       setError("");

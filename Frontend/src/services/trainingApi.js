@@ -39,7 +39,7 @@ const deleteSession = async (id) => {
   await axios.delete(`${API_URL}/${id}`, config());
 };
 
-// --- Public APIs (Players/Members) ---
+//  Public APIs (Players/Members) ---
 const getAllSessions = async () => {
   const { data } = await axios.get(API_URL);
   return data;
@@ -62,8 +62,8 @@ const trainingApi = {
   getMySessions,
   updateSession,
   deleteSession,
-  registerSession,     // ✅ new
-  unregisterSession,   // ✅ new
+  registerSession,     
+  unregisterSession,   
 };
 
 export default trainingApi;
