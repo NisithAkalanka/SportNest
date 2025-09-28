@@ -40,6 +40,7 @@ const DriverManagement = () => {
 
   // Validation errors
   const [validationErrors, setValidationErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Status options
   const statusOptions = [
@@ -99,14 +100,15 @@ const DriverManagement = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Start of today
     
-    if (selectedDate < today) {
-      return 'Hire date cannot be in the past';
+    // Only validate for new drivers, not updates
+    if (!selectedDriver && selectedDate < today) {
+      return 'Hire date cannot be in the past for new drivers';
     }
     return '';
   };
 
   const validateSalary = (salary) => {
-    if (!salary || salary.trim() === '') {
+    if (!salary || salary === '' || (typeof salary === 'string' && salary.trim() === '')) {
       return 'Salary is required';
     }
     const salaryNum = parseFloat(salary);
@@ -159,18 +161,50 @@ const DriverManagement = () => {
     }
   };
 
+  // Test API connection
+  const testApiConnection = async () => {
+    try {
+      console.log('Testing API connection...');
+      const response = await driverApi.testConnection();
+      console.log('API test response:', response);
+      setToast({ type: 'success', msg: 'API connection successful!' });
+    } catch (error) {
+      console.error('API connection test failed:', error);
+      setToast({ type: 'error', msg: 'API connection failed. Check console for details.' });
+    } finally {
+      setTimeout(() => setToast(null), 3000);
+    }
+  };
+
+  // Test database model
+  const testModel = async () => {
+    try {
+      console.log('Testing database model...');
+      const response = await driverApi.testModel();
+      console.log('Model test response:', response);
+      setToast({ type: 'success', msg: `Database model test successful! Found ${response.totalDrivers} drivers.` });
+    } catch (error) {
+      console.error('Model test failed:', error);
+      setToast({ type: 'error', msg: 'Database model test failed. Check console for details.' });
+    } finally {
+      setTimeout(() => setToast(null), 3000);
+    }
+  };
+
   // Load drivers
   const loadDrivers = async () => {
     setLoading(true);
     try {
+      console.log('Loading drivers with params:', { search: searchTerm, status: statusFilter });
       const response = await driverApi.getDrivers({
         search: searchTerm,
         status: statusFilter
       });
+      console.log('Drivers response:', response);
       setDrivers(response.drivers || []);
     } catch (error) {
       console.error('Error loading drivers:', error);
-      alert('Failed to load drivers');
+      setToast({ type: 'error', msg: 'Failed to load drivers. Check console for details.' });
     } finally {
       setLoading(false);
     }
@@ -190,6 +224,11 @@ const DriverManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      return;
+    }
+    
     // Validate form before submission
     if (!validateForm()) {
       setToast({ type: 'error', msg: 'Please fix all validation errors before submitting' });
@@ -197,29 +236,61 @@ const DriverManagement = () => {
       return;
     }
     
+    setIsSubmitting(true);
+    
     try {
+      // Prepare data for backend
+      const driverData = {
+        ...formData,
+        salary: parseFloat(formData.salary) || 0,
+        hireDate: formData.hireDate ? new Date(formData.hireDate).toISOString() : null
+      };
+      
       if (selectedDriver) {
         // Update existing driver
-        await driverApi.updateDriver(selectedDriver._id, formData);
+        console.log('Updating driver with data:', driverData);
+        const response = await driverApi.updateDriver(selectedDriver._id, driverData);
+        console.log('Update response:', response);
         setToast({ type: 'success', msg: 'Driver updated successfully' });
         setIsEditModalOpen(false);
       } else {
         // Create new driver
-        await driverApi.createDriver(formData);
+        console.log('Creating driver with data:', driverData);
+        const response = await driverApi.createDriver(driverData);
+        console.log('Create response:', response);
         setToast({ type: 'success', msg: 'Driver added successfully' });
       }
       resetForm();
       loadDrivers();
     } catch (error) {
       console.error('Error saving driver:', error);
-      setToast({ type: 'error', msg: error.response?.data?.message || 'Failed to save driver' });
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
+      let errorMessage = 'Failed to save driver';
+      if (error.response?.status === 400) {
+        errorMessage = error.response?.data?.message || 'Invalid data provided';
+      } else if (error.response?.status === 404) {
+        errorMessage = 'Driver not found';
+      } else if (error.response?.status === 409) {
+        errorMessage = 'Driver with this email or license number already exists';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Server error. Please try again later';
+      }
+      
+      setToast({ type: 'error', msg: errorMessage });
     } finally {
+      setIsSubmitting(false);
       setTimeout(() => setToast(null), 5000);
     }
   };
 
   // Handle edit
   const handleEdit = (driver) => {
+    console.log('Editing driver:', driver);
     setSelectedDriver(driver);
     setFormData({
       fullName: driver.fullName || '',
@@ -231,6 +302,8 @@ const DriverManagement = () => {
       salary: driver.salary || '',
       status: driver.status || 'Active'
     });
+    // Clear any existing validation errors
+    setValidationErrors({});
     setIsEditModalOpen(true);
   };
 
@@ -267,6 +340,7 @@ const DriverManagement = () => {
     setValidationErrors({});
     setSelectedDriver(null);
     setIsEditModalOpen(false);
+    setIsAddModalOpen(false);
   };
 
   // Handle PDF export
@@ -480,10 +554,18 @@ const DriverManagement = () => {
           <h1 className="text-3xl font-bold text-gray-900">Driver Management</h1>
           <p className="text-gray-600">Manage your company drivers</p>
         </div>
-        <Button onClick={handleExportPDF} className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
-          <Download className="h-4 w-4" />
-          Download PDF
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={testApiConnection} className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
+            Test API
+          </Button>
+          <Button onClick={testModel} className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2">
+            Test DB
+          </Button>
+          <Button onClick={handleExportPDF} className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Download PDF
+          </Button>
+        </div>
       </div>
 
       {/* Driver Information Form */}
@@ -573,13 +655,13 @@ const DriverManagement = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Hire Date</label>
               <div className="relative">
-                <Input
-                  type="date"
-                  value={formData.hireDate}
-                  onChange={(e) => handleInputChange('hireDate', e.target.value)}
-                  className={`pr-10 ${validationErrors.hireDate ? 'border-red-500' : ''}`}
-                  min={new Date().toISOString().split('T')[0]}
-                />
+                  <Input
+                    type="date"
+                    value={formData.hireDate}
+                    onChange={(e) => handleInputChange('hireDate', e.target.value)}
+                    className={`pr-10 ${validationErrors.hireDate ? 'border-red-500' : ''}`}
+                    min={selectedDriver ? undefined : new Date().toISOString().split('T')[0]}
+                  />
                 <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               </div>
               {validationErrors.hireDate && (
@@ -620,8 +702,12 @@ const DriverManagement = () => {
 
           {/* Add Driver Button */}
           <div className="flex justify-end">
-            <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
-              Add Driver
+            <Button 
+              type="submit" 
+              className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Saving...' : 'Add Driver'}
             </Button>
           </div>
         </form>
@@ -898,7 +984,7 @@ const DriverManagement = () => {
                     value={formData.hireDate}
                     onChange={(e) => handleInputChange('hireDate', e.target.value)}
                     className={`pr-10 ${validationErrors.hireDate ? 'border-red-500' : ''}`}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={selectedDriver ? undefined : new Date().toISOString().split('T')[0]}
                   />
                   <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 </div>
@@ -950,8 +1036,12 @@ const DriverManagement = () => {
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
-                Update Driver
+              <Button 
+                type="submit" 
+                className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Updating...' : 'Update Driver'}
               </Button>
             </div>
           </form>

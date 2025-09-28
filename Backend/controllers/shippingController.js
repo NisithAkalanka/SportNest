@@ -80,7 +80,7 @@ const processShipping = async (req, res) => {
           <h3>Order Details:</h3>
           <ul>
             ${order.items.map(item => `
-              <li>${item.item.name} - Quantity: ${item.quantity} - Rs. ${item.price}</li>
+              <li>${item.item?.name || 'Unknown Item'} - Quantity: ${item.quantity} - Rs. ${item.price}</li>
             `).join('')}
           </ul>
           <p><strong>Total: Rs. ${totalAmount}</strong></p>
@@ -89,6 +89,7 @@ const processShipping = async (req, res) => {
       });
     } catch (emailError) {
       console.error('Failed to send confirmation email:', emailError);
+      // Don't fail the order if email fails
     }
 
     res.json({ 

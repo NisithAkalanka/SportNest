@@ -140,10 +140,23 @@ const PaymentPage = () => {
       return;
     }
 
+    // Validate expiry date
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+    const expiryYear = parseInt(paymentForm.expiryYear);
+    const expiryMonth = parseInt(paymentForm.expiryMonth);
+
+    if (expiryYear < currentYear || (expiryYear === currentYear && expiryMonth < currentMonth)) {
+      alert('Card has expired. Please enter a valid expiry date.');
+      return;
+    }
+
     const newPaymentMethod = {
       id: Date.now().toString(),
-      cardName: paymentForm.cardName,
-      cardNumber: paymentForm.cardNumber.replace(/\d(?=\d{4})/g, "*"),
+      cardName: paymentForm.cardName.trim(),
+      cardNumber: paymentForm.cardNumber, // Keep original for processing
+      displayNumber: paymentForm.cardNumber.replace(/\d(?=\d{4})/g, "*"), // For display
       expiryMonth: paymentForm.expiryMonth,
       expiryYear: paymentForm.expiryYear,
       cvc: paymentForm.cvc,
@@ -255,6 +268,11 @@ const PaymentPage = () => {
       return;
     }
 
+    if (!savedBillingData) {
+      alert('Billing information is missing. Please go back and complete the shipping form.');
+      return;
+    }
+
     setLoading(true);
     try {
       // Get token from localStorage
@@ -265,6 +283,18 @@ const PaymentPage = () => {
         return;
       }
 
+      // Get the selected payment method
+      const selectedPayment = paymentMethods.find(p => p.id === selectedPaymentMethod);
+      if (!selectedPayment) {
+        alert('Selected payment method not found');
+        return;
+      }
+
+      console.log('Processing payment with data:', {
+        billingData: savedBillingData,
+        paymentMethod: selectedPayment
+      });
+
       const api = axios.create({ 
         baseURL: 'http://localhost:5002/api',
         headers: {
@@ -273,10 +303,30 @@ const PaymentPage = () => {
         }
       });
       
-      const response = await api.post('/shipping/process', {
-        ...savedBillingData,
-        paymentMethod: paymentMethods.find(p => p.id === selectedPaymentMethod)
-      });
+      // Prepare the request data
+      const requestData = {
+        firstName: savedBillingData.firstName,
+        lastName: savedBillingData.lastName,
+        email: savedBillingData.email,
+        phone: savedBillingData.phone,
+        address: savedBillingData.address,
+        city: savedBillingData.city,
+        province: savedBillingData.province,
+        postalCode: savedBillingData.postalCode,
+        country: savedBillingData.country,
+        paymentMethod: {
+          cardName: selectedPayment.cardName,
+          cardNumber: selectedPayment.cardNumber,
+          expiryMonth: selectedPayment.expiryMonth,
+          expiryYear: selectedPayment.expiryYear
+        }
+      };
+
+      console.log('Sending request to backend:', requestData);
+      
+      const response = await api.post('/shipping/process', requestData);
+      
+      console.log('Payment response:', response.data);
       
       alert('Payment processed successfully!');
       fetchCart();
@@ -284,12 +334,22 @@ const PaymentPage = () => {
       
     } catch (error) {
       console.error('Payment processing failed:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
       if (error.response?.status === 401) {
         alert('Session expired. Please log in again.');
         localStorage.removeItem('token');
         navigate('/member-login');
+      } else if (error.response?.status === 400) {
+        alert(`Invalid data: ${error.response?.data?.msg || 'Please check your information.'}`);
+      } else if (error.response?.status === 500) {
+        alert('Server error. Please try again later or contact support.');
       } else {
-        alert(`Payment failed: ${error.response?.data?.msg || 'Please try again.'}`);
+        alert(`Payment failed: ${error.response?.data?.msg || error.message || 'Please try again.'}`);
       }
     } finally {
       setLoading(false);
@@ -391,7 +451,7 @@ const PaymentPage = () => {
                               <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Default</span>
                             )}
                           </div>
-                          <p className="text-gray-600 text-sm">**** **** **** {payment.cardNumber.slice(-4)}</p>
+                          <p className="text-gray-600 text-sm">{payment.displayNumber || `**** **** **** ${payment.cardNumber.slice(-4)}`}</p>
                           <p className="text-gray-500 text-xs">Expires: {payment.expiryMonth}/{payment.expiryYear}</p>
                         </div>
                         <div className="flex space-x-2">
@@ -615,10 +675,10 @@ const PaymentPage = () => {
                   <Button 
                     onClick={handleProcessPayment}
                     className="w-full h-14 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" 
-                    disabled={loading || !selectedPaymentMethod}
+                    disabled={loading || !selectedPaymentMethod || !savedBillingData}
                   >
                     {loading ? (
-                      <div className="flex items-center">
+                      <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                         Processing Payment...
                       </div>
@@ -629,6 +689,11 @@ const PaymentPage = () => {
                   {!selectedPaymentMethod && (
                     <p className="text-sm text-red-500 mt-2 text-center">
                       Please select a payment method
+                    </p>
+                  )}
+                  {!savedBillingData && (
+                    <p className="text-sm text-red-500 mt-2 text-center">
+                      Billing information is missing
                     </p>
                   )}
                 </div>

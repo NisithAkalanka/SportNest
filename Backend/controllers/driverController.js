@@ -19,6 +19,32 @@ const generateDriverId = async () => {
 };
 
 // =================================================================================
+// 0. TEST database connection and model
+const testDriverModel = async (req, res) => {
+    try {
+        console.log('Testing driver model...');
+        const driverCount = await Driver.countDocuments();
+        console.log('Total drivers in database:', driverCount);
+        
+        // Try to find one driver
+        const sampleDriver = await Driver.findOne();
+        console.log('Sample driver found:', sampleDriver ? 'Yes' : 'No');
+        
+        res.json({
+            message: 'Driver model test successful',
+            totalDrivers: driverCount,
+            sampleDriver: sampleDriver ? 'Found' : 'None'
+        });
+    } catch (error) {
+        console.error('Driver model test failed:', error);
+        res.status(500).json({
+            message: 'Driver model test failed',
+            error: error.message
+        });
+    }
+};
+
+// =================================================================================
 // 1. CREATE a new driver
 const createDriver = async (req, res) => {
     const { 
@@ -34,6 +60,36 @@ const createDriver = async (req, res) => {
     }
 
     try {
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ 
+                message: 'Please provide a valid email address' 
+            });
+        }
+
+        // Validate phone number (should be 10 digits)
+        if (!/^\d{10}$/.test(phone)) {
+            return res.status(400).json({ 
+                message: 'Phone number must be exactly 10 digits' 
+            });
+        }
+
+        // Validate full name (only letters and spaces)
+        if (!/^[a-zA-Z\s]+$/.test(fullName)) {
+            return res.status(400).json({ 
+                message: 'Full name can only contain letters and spaces' 
+            });
+        }
+
+        // Validate salary is a positive number
+        const salaryNum = parseFloat(salary);
+        if (isNaN(salaryNum) || salaryNum < 0) {
+            return res.status(400).json({ 
+                message: 'Salary must be a positive number' 
+            });
+        }
+
         // Check if driver already exists
         const existingDriver = await Driver.findOne({ 
             $or: [{ email }, { licenseNumber }] 
@@ -46,13 +102,13 @@ const createDriver = async (req, res) => {
         }
 
         const driverData = {
-            fullName,
-            licenseNumber,
-            phone,
-            email,
-            address,
+            fullName: fullName.trim(),
+            licenseNumber: licenseNumber.trim(),
+            phone: phone.trim(),
+            email: email.trim().toLowerCase(),
+            address: address.trim(),
             hireDate: hireDate ? new Date(hireDate) : new Date(),
-            salary: parseFloat(salary),
+            salary: salaryNum,
             status: status || 'Active',
             emergencyContact,
             notes
@@ -63,8 +119,12 @@ const createDriver = async (req, res) => {
             driverData.profileImage = `/uploads/drivers/${req.file.filename}`;
         }
 
+        console.log('Creating driver with data:', driverData);
+
         const newDriver = new Driver(driverData);
         const savedDriver = await newDriver.save();
+
+        console.log('Driver created successfully:', savedDriver);
 
         res.status(201).json({
             message: 'Driver created successfully',
@@ -72,12 +132,25 @@ const createDriver = async (req, res) => {
         });
     } catch (error) {
         console.error("Driver Creation Error:", error);
+        
+        if (error.name === 'ValidationError') {
+            const validationErrors = Object.values(error.errors).map(err => err.message);
+            return res.status(400).json({ 
+                message: 'Validation error',
+                errors: validationErrors
+            });
+        }
+        
         if (error.code === 11000) {
             return res.status(400).json({ 
                 message: 'Driver with this email or license number already exists' 
             });
         }
-        res.status(500).json({ message: 'Server error during driver creation.' });
+        
+        res.status(500).json({ 
+            message: 'Server error during driver creation.',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 };
 
@@ -161,9 +234,38 @@ const updateDriver = async (req, res) => {
     const updateData = req.body;
 
     try {
-        const driver = await Driver.findById(id);
-        if (!driver) {
+        // Validate required fields
+        if (!id) {
+            return res.status(400).json({ message: 'Driver ID is required' });
+        }
+
+        // Check if driver exists
+        const existingDriver = await Driver.findById(id);
+        if (!existingDriver) {
             return res.status(404).json({ message: 'Driver not found' });
+        }
+
+        // Validate required fields for update
+        const { fullName, licenseNumber, phone, email, address, salary } = updateData;
+        if (!fullName || !licenseNumber || !phone || !email || !address || !salary) {
+            return res.status(400).json({ 
+                message: 'Please provide all required fields: fullName, licenseNumber, phone, email, address, salary' 
+            });
+        }
+
+        // Check for duplicate email or license number (excluding current driver)
+        const duplicateDriver = await Driver.findOne({
+            _id: { $ne: id },
+            $or: [
+                { email: email },
+                { licenseNumber: licenseNumber }
+            ]
+        });
+
+        if (duplicateDriver) {
+            return res.status(400).json({ 
+                message: 'Driver with this email or license number already exists' 
+            });
         }
 
         // Handle profile image update
@@ -181,11 +283,52 @@ const updateDriver = async (req, res) => {
             updateData.salary = parseFloat(updateData.salary);
         }
 
+        // Validate salary is a positive number
+        if (updateData.salary && (isNaN(updateData.salary) || updateData.salary < 0)) {
+            return res.status(400).json({ 
+                message: 'Salary must be a positive number' 
+            });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (updateData.email && !emailRegex.test(updateData.email)) {
+            return res.status(400).json({ 
+                message: 'Please provide a valid email address' 
+            });
+        }
+
+        // Validate phone number (should be 10 digits)
+        if (updateData.phone && (!/^\d{10}$/.test(updateData.phone))) {
+            return res.status(400).json({ 
+                message: 'Phone number must be exactly 10 digits' 
+            });
+        }
+
+        // Validate full name (only letters and spaces)
+        if (updateData.fullName && !/^[a-zA-Z\s]+$/.test(updateData.fullName)) {
+            return res.status(400).json({ 
+                message: 'Full name can only contain letters and spaces' 
+            });
+        }
+
+        console.log('Updating driver with data:', updateData);
+        console.log('Driver ID to update:', id);
+
         const updatedDriver = await Driver.findByIdAndUpdate(
             id, 
             updateData, 
             { new: true, runValidators: true }
         );
+
+        console.log('Update result:', updatedDriver);
+
+        if (!updatedDriver) {
+            console.log('Driver not found after update - this should not happen');
+            return res.status(404).json({ message: 'Driver not found after update' });
+        }
+
+        console.log('Driver updated successfully:', updatedDriver);
 
         res.status(200).json({
             message: 'Driver updated successfully',
@@ -193,12 +336,25 @@ const updateDriver = async (req, res) => {
         });
     } catch (error) {
         console.error("Update Driver Error:", error);
+        
+        if (error.name === 'ValidationError') {
+            const validationErrors = Object.values(error.errors).map(err => err.message);
+            return res.status(400).json({ 
+                message: 'Validation error',
+                errors: validationErrors
+            });
+        }
+        
         if (error.code === 11000) {
             return res.status(400).json({ 
                 message: 'Driver with this email or license number already exists' 
             });
         }
-        res.status(500).json({ message: 'Server error while updating driver.' });
+        
+        res.status(500).json({ 
+            message: 'Server error while updating driver.',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 };
 
@@ -378,6 +534,7 @@ const bulkDeleteDrivers = async (req, res) => {
 };
 
 module.exports = {
+    testDriverModel,
     createDriver,
     getAllDrivers,
     getDriverById,

@@ -2,6 +2,27 @@ import api from '../api';
 
 // Driver API service for backend communication
 export const driverApi = {
+  // Test API connection
+  testConnection: async () => {
+    try {
+      const response = await api.get('/drivers/test');
+      return response.data;
+    } catch (error) {
+      console.error('API: Test connection error:', error);
+      throw error;
+    }
+  },
+
+  // Test database model
+  testModel: async () => {
+    try {
+      const response = await api.get('/drivers/test-model');
+      return response.data;
+    } catch (error) {
+      console.error('API: Test model error:', error);
+      throw error;
+    }
+  },
   // Get all drivers with search, filter, and pagination
   getDrivers: async (params = {}) => {
     const queryParams = new URLSearchParams();
@@ -25,52 +46,93 @@ export const driverApi = {
 
   // Create new driver
   createDriver: async (driverData) => {
-    const formData = new FormData();
+    console.log('API: Creating driver with data:', driverData);
     
-    // Append all driver fields
-    Object.keys(driverData).forEach(key => {
-      if (driverData[key] !== null && driverData[key] !== undefined) {
-        if (key === 'emergencyContact' && typeof driverData[key] === 'object') {
-          formData.append('emergencyContact', JSON.stringify(driverData[key]));
-        } else if (key === 'profileImage' && driverData[key] instanceof File) {
-          formData.append('profileImage', driverData[key]);
-        } else {
-          formData.append(key, driverData[key]);
-        }
-      }
-    });
+    try {
+      // Check if there's a profile image file
+      const hasFile = driverData.profileImage && driverData.profileImage instanceof File;
+      
+      if (hasFile) {
+        // Use FormData if there's a file
+        const formData = new FormData();
+        
+        Object.keys(driverData).forEach(key => {
+          if (driverData[key] !== null && driverData[key] !== undefined) {
+            if (key === 'emergencyContact' && typeof driverData[key] === 'object') {
+              formData.append('emergencyContact', JSON.stringify(driverData[key]));
+            } else if (key === 'profileImage' && driverData[key] instanceof File) {
+              formData.append('profileImage', driverData[key]);
+            } else {
+              formData.append(key, driverData[key]);
+            }
+          }
+        });
 
-    const response = await api.post('/drivers', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
+        const response = await api.post('/drivers', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        return response.data;
+      } else {
+        // Use JSON if no file
+        const response = await api.post('/drivers', driverData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        return response.data;
+      }
+    } catch (error) {
+      console.error('API: Create driver error:', error);
+      throw error;
+    }
   },
 
   // Update driver
   updateDriver: async (id, driverData) => {
-    const formData = new FormData();
+    console.log('API: Updating driver with ID:', id);
+    console.log('API: Driver data:', driverData);
     
-    // Append all driver fields
-    Object.keys(driverData).forEach(key => {
-      if (driverData[key] !== null && driverData[key] !== undefined) {
-        if (key === 'emergencyContact' && typeof driverData[key] === 'object') {
-          formData.append('emergencyContact', JSON.stringify(driverData[key]));
-        } else if (key === 'profileImage' && driverData[key] instanceof File) {
-          formData.append('profileImage', driverData[key]);
-        } else {
-          formData.append(key, driverData[key]);
-        }
-      }
-    });
+    try {
+      // Check if there's a profile image file
+      const hasFile = driverData.profileImage && driverData.profileImage instanceof File;
+      
+      if (hasFile) {
+        // Use FormData if there's a file
+        const formData = new FormData();
+        
+        Object.keys(driverData).forEach(key => {
+          if (driverData[key] !== null && driverData[key] !== undefined) {
+            if (key === 'emergencyContact' && typeof driverData[key] === 'object') {
+              formData.append('emergencyContact', JSON.stringify(driverData[key]));
+            } else if (key === 'profileImage' && driverData[key] instanceof File) {
+              formData.append('profileImage', driverData[key]);
+            } else {
+              formData.append(key, driverData[key]);
+            }
+          }
+        });
 
-    const response = await api.put(`/drivers/${id}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
+        const response = await api.put(`/drivers/${id}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        return response.data;
+      } else {
+        // Use JSON if no file
+        const response = await api.put(`/drivers/${id}`, driverData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        return response.data;
+      }
+    } catch (error) {
+      console.error('API: Update driver error:', error);
+      throw error;
+    }
   },
 
   // Delete driver

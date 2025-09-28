@@ -3,6 +3,7 @@ const router = express.Router();
 const protect = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 const {
+    testDriverModel,
     createDriver,
     getAllDrivers,
     getDriverById,
@@ -24,7 +25,20 @@ const {
 // --- PROTECTED ROUTES ---
 
 // Create a new driver
-router.post('/', protect, upload.single('profileImage'), createDriver);
+router.post('/', protect, upload.single('profileImage'), (req, res, next) => {
+  console.log('Route: Create driver request received');
+  console.log('Route: Request body:', req.body);
+  console.log('Route: File uploaded:', req.file ? 'Yes' : 'No');
+  next();
+}, createDriver);
+
+// Test endpoint
+router.get('/test', (req, res) => {
+  res.json({ message: 'Driver routes are working!', timestamp: new Date().toISOString() });
+});
+
+// Test database connection and model
+router.get('/test-model', testDriverModel);
 
 // Get all drivers with search, filter, and pagination
 router.get('/', protect, getAllDrivers);
@@ -39,7 +53,13 @@ router.get('/export/pdf', protect, exportDriversToPDF);
 router.get('/:id', protect, getDriverById);
 
 // Update driver
-router.put('/:id', protect, upload.single('profileImage'), updateDriver);
+router.put('/:id', protect, upload.single('profileImage'), (req, res, next) => {
+  console.log('Route: Update driver request received');
+  console.log('Route: Driver ID:', req.params.id);
+  console.log('Route: Request body:', req.body);
+  console.log('Route: File uploaded:', req.file ? 'Yes' : 'No');
+  next();
+}, updateDriver);
 
 // Delete driver
 router.delete('/:id', protect, deleteDriver);

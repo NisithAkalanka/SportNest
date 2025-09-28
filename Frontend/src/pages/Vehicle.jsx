@@ -33,6 +33,8 @@ const Vehicles = () => {
   const [showModal, setShowModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   useEffect(() => {
     fetchVehicles();
@@ -51,23 +53,23 @@ const Vehicles = () => {
 
   // Validation functions
   const validateVehicleType = (type) => {
-    const lettersOnlyRegex = /^[a-zA-Z\s]+$/;
+    const validTypes = ['Truck', 'Van', 'Bike', 'Mini Truck'];
     if (!type || type.trim() === '') {
       return 'Vehicle type is required';
     }
-    if (!lettersOnlyRegex.test(type)) {
-      return 'Vehicle type can only contain letters and spaces';
+    if (!validTypes.includes(type)) {
+      return 'Please select a valid vehicle type';
     }
     return '';
   };
 
   const validateLicensePlate = (plate) => {
-    const alphanumericRegex = /^[a-zA-Z0-9]+$/;
+    const alphanumericWithHyphenRegex = /^[a-zA-Z0-9-]+$/;
     if (!plate || plate.trim() === '') {
       return 'License plate is required';
     }
-    if (!alphanumericRegex.test(plate)) {
-      return 'License plate can only contain letters and numbers';
+    if (!alphanumericWithHyphenRegex.test(plate)) {
+      return 'License plate can only contain letters, numbers and hyphens';
     }
     return '';
   };
@@ -94,14 +96,9 @@ const Vehicles = () => {
       }));
     }
     
-    // ✅ Only allow English letters and spaces for vehicleType
-    if (name === "vehicleType") {
-      if (/^[a-zA-Z\s]*$/.test(value) || value === "") {
-        setFormData({ ...formData, [name]: value });
-      }
-    } else if (name === "licensePlate") {
-      // ✅ Only allow letters and numbers for licensePlate
-      if (/^[a-zA-Z0-9]*$/.test(value) || value === "") {
+    if (name === "licensePlate") {
+      // ✅ Only allow letters, numbers and hyphens for licensePlate
+      if (/^[a-zA-Z0-9-]*$/.test(value) || value === "") {
         setFormData({ ...formData, [name]: value });
       }
     } else {
@@ -112,25 +109,56 @@ const Vehicles = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      return;
+    }
+    
     // Validate form before submission
     if (!validateForm()) {
       showToastMessage("Please fix all validation errors before submitting ❌");
       return;
     }
     
+    setIsSubmitting(true);
+    
     try {
+      console.log("Submitting vehicle data:", formData);
+      
       if (editingId) {
-        await axios.put(`http://localhost:5002/api/vehicles/${editingId}`, formData);
+        const response = await axios.put(`http://localhost:5002/api/vehicles/${editingId}`, formData);
+        console.log("Update response:", response.data);
         showToastMessage("Vehicle updated successfully ✅");
       } else {
-        await axios.post("http://localhost:5002/api/vehicles", formData);
+        const response = await axios.post("http://localhost:5002/api/vehicles", formData);
+        console.log("Create response:", response.data);
         showToastMessage("Vehicle added successfully 🚗");
       }
       await fetchVehicles();
       resetForm();
     } catch (error) {
       console.error("Error saving vehicle:", error);
-      showToastMessage("Error saving vehicle ❌");
+      let errorMessage = "Error saving vehicle ❌";
+      
+      if (error.response) {
+        // Server responded with error status
+        if (error.response.status === 400) {
+          errorMessage = "Invalid data provided ❌";
+        } else if (error.response.status === 409) {
+          errorMessage = "License plate already exists ❌";
+        } else if (error.response.status === 500) {
+          errorMessage = "Server error. Please try again ❌";
+        } else {
+          errorMessage = error.response.data?.message || "Error saving vehicle ❌";
+        }
+      } else if (error.request) {
+        // Network error
+        errorMessage = "Network error. Please check your connection ❌";
+      }
+      
+      showToastMessage(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -177,53 +205,104 @@ const Vehicles = () => {
     }
   };
 
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-    const companyName = "SportNest";
-    const companyAddress = "N0.7,Padukka,Colombo";
-    const generatedAt = new Date().toLocaleString();
+  const downloadPDF = async () => {
+    if (isGeneratingPDF) return;
+    
+    setIsGeneratingPDF(true);
+    
+    try {
+      // Check if vehicles data exists
+      if (!vehicles || vehicles.length === 0) {
+        showToastMessage("No vehicles data to export ❌");
+        return;
+      }
 
-    doc.setFontSize(16);
-    doc.text(companyName, 14, 15);
-    doc.setFontSize(11);
-    doc.text(companyAddress, 14, 22);
+      const doc = new jsPDF();
+      const companyName = "SportNest";
+      const companyAddress = "No.7, Padukka, Colombo";
+      const generatedAt = new Date().toLocaleString();
 
-    doc.setFontSize(14);
-    doc.text("Vehicle Report", 14, 34);
-    doc.setFontSize(9);
-    doc.text(`Generated: ${generatedAt}`, 14, 40);
+      // Header
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text(companyName, 14, 15);
+      
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.text(companyAddress, 14, 22);
 
-    const head = [["Type", "Plate", "Fuel", "Capacity", "Status"]];
-    const body = (Array.isArray(vehicles) ? vehicles : []).map((v) => [
-      v.vehicleType || "-",
-      v.licensePlate || "-",
-      v.fuelType || "-",
-      v.capacityValue ? `${v.capacityValue} ${v.capacityUnit || ""}`.trim() : "-",
-      v.status || "-",
-    ]);
+      // Title
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Vehicle Management Report", 14, 34);
+      
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Generated: ${generatedAt}`, 14, 40);
+      doc.text(`Total Vehicles: ${vehicles.length}`, 14, 46);
 
-    autoTable(doc, {
-      startY: 48,
-      head,
-      body,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [41, 128, 185] },
-      margin: { left: 14, right: 14 },
-    });
+      // Table data
+      const head = [["Vehicle Type", "License Plate", "Fuel Type", "Capacity", "Status"]];
+      const body = vehicles.map((v) => [
+        v.vehicleType || "-",
+        v.licensePlate || "-",
+        v.fuelType || "-",
+        v.capacityValue ? `${v.capacityValue} ${v.capacityUnit || ""}`.trim() : "-",
+        v.status || "-",
+      ]);
 
-    const pageCount = doc.getNumberOfPages();
-    doc.setFontSize(8);
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      doc.text(`Page ${i} / ${pageCount}`, pageWidth - 14, pageHeight - 8, {
-        align: "right",
+      // Generate table
+      autoTable(doc, {
+        startY: 52,
+        head,
+        body,
+        styles: { 
+          fontSize: 9,
+          cellPadding: 3
+        },
+        headStyles: { 
+          fillColor: [41, 128, 185],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245]
+        },
+        margin: { left: 14, right: 14 },
+        tableWidth: 'auto',
+        columnStyles: {
+          0: { cellWidth: 30 },
+          1: { cellWidth: 35 },
+          2: { cellWidth: 25 },
+          3: { cellWidth: 30 },
+          4: { cellWidth: 25 }
+        }
       });
-    }
 
-    doc.save(`ceylon_eco_foods_vehicles_${Date.now()}.pdf`);
-    showToastMessage("✅ PDF exported");
+      // Add page numbers
+      const pageCount = doc.getNumberOfPages();
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        doc.text(`Page ${i} of ${pageCount}`, pageWidth - 14, pageHeight - 8, {
+          align: "right",
+        });
+      }
+
+      // Save the PDF
+      const fileName = `sportnest_vehicles_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+      showToastMessage("✅ Vehicle report exported successfully");
+      
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      showToastMessage("Error generating PDF report ❌");
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -265,11 +344,16 @@ const Vehicles = () => {
           <p className="text-gray-600 mt-1">Manage your fleet vehicles and maintenance schedules</p>
         </div>
         <button 
-          className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          className={`mt-4 sm:mt-0 inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
+            isGeneratingPDF 
+              ? 'bg-gray-400 cursor-not-allowed' 
+              : 'bg-green-600 hover:bg-green-700'
+          } text-white`}
           onClick={downloadPDF}
+          disabled={isGeneratingPDF}
         >
           <FaDownload className="mr-2" />
-          Download PDF
+          {isGeneratingPDF ? "Generating PDF..." : "Download PDF"}
         </button>
       </div>
 
@@ -277,22 +361,21 @@ const Vehicles = () => {
       <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-6 gap-4">
           <div>
-            <input
-              type="text"
+            <select
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 validationErrors.vehicleType ? 'border-red-500' : 'border-gray-300'
               }`}
               name="vehicleType"
-              placeholder="Vehicle Type (letters only)"
               value={formData.vehicleType}
               onChange={handleChange}
-              onKeyPress={(e) => {
-                if (!/^[a-zA-Z\s]$/.test(e.key)) {
-                  e.preventDefault();
-                }
-              }}
               required
-            />
+            >
+              <option value="">Vehicle Type</option>
+              <option value="Truck">Truck</option>
+              <option value="Van">Van</option>
+              <option value="Bike">Bike</option>
+              <option value="Mini Truck">Mini Truck</option>
+            </select>
             {validationErrors.vehicleType && (
               <p className="text-red-500 text-sm mt-1">{validationErrors.vehicleType}</p>
             )}
@@ -304,11 +387,11 @@ const Vehicles = () => {
                 validationErrors.licensePlate ? 'border-red-500' : 'border-gray-300'
               }`}
               name="licensePlate"
-              placeholder="License Plate (letters & numbers only)"
+              placeholder="License Plate (letters, numbers & hyphens only)"
               value={formData.licensePlate}
               onChange={handleChange}
               onKeyPress={(e) => {
-                if (!/^[a-zA-Z0-9]$/.test(e.key)) {
+                if (!/^[a-zA-Z0-9-]$/.test(e.key)) {
                   e.preventDefault();
                 }
               }}
@@ -373,9 +456,14 @@ const Vehicles = () => {
           <div className="md:col-span-6 flex justify-end">
             <button 
               type="submit" 
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              disabled={isSubmitting}
+              className={`px-6 py-2 rounded-md transition-colors ${
+                isSubmitting 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-blue-600 hover:bg-blue-700'
+              } text-white`}
             >
-              {editingId ? "Update Vehicle" : "Add Vehicle"}
+              {isSubmitting ? "Saving..." : (editingId ? "Update Vehicle" : "Add Vehicle")}
             </button>
           </div>
         </form>

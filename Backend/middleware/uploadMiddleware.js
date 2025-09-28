@@ -43,14 +43,23 @@ if (useCloudinary) {
   });
 } else {
   // Local disk fallback (matches previous implementation)
-  const uploadDir = path.join(__dirname, '../uploads/profilePics');
+  const uploadDir = path.join(__dirname, '../uploads');
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
 
   storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, uploadDir);
+      // Determine subdirectory based on route
+      let subDir = 'profilePics'; // default
+      if (req.route && req.route.path.includes('/drivers')) {
+        subDir = 'drivers';
+      }
+      const fullPath = path.join(uploadDir, subDir);
+      if (!fs.existsSync(fullPath)) {
+        fs.mkdirSync(fullPath, { recursive: true });
+      }
+      cb(null, fullPath);
     },
     filename: function (req, file, cb) {
       cb(null, Date.now() + '-' + file.originalname);
