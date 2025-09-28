@@ -5,16 +5,16 @@ const { protect } = require('../middleware/authMiddleware');//////
 
 const { addToCart, getCartItems, removeCartItem, updateCartItemQuantity } = require('../controllers/cartController');
 
-// Cart එකට item එකක් එකතු කරන Route එක
+// Cart ekata  item ekak ekathu kirima Route eka
 router.post('/add', authMiddleware, addToCart);
 
-// Cart එකේ තියෙන items ටික ලබාගන්නා Route එක
+// Cart eke thiyena items tika eka ganna Route 
 router.get('/', authMiddleware, getCartItems);
 
-// Cart එකෙන් item එකක් ඉවත් කරන Route එක
+// Cart eken item eken iwath karana Route 
 router.delete('/:id', authMiddleware, removeCartItem);
 
-// ★★★ Quantity එක update කිරීමට අලුත් PUT Route එක
+// ★★★ Quantity eka update kirimata  PUT Route 
 
 router.put('/:id', authMiddleware, updateCartItemQuantity);
 

@@ -27,7 +27,7 @@ const CartPage = () => {
     fetchCart,
     removeFromCartAndUpdate,
     updateCartItemQuantityAndUpdate
-  } = useCart();
+  } = useCart();//custom hook accessing cart context. eken data gannawa
 
   const [isUpdating, setIsUpdating] = useState(null); // holds cartItemId being updated
 

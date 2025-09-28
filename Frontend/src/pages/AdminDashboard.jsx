@@ -12,7 +12,7 @@ import { faClipboardList, faDollarSign, faExclamationTriangle, faRedo, faBoxOpen
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState(null);  //use useState({});hook
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [toast, setToast] = useState(null);
@@ -24,7 +24,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
 
-  const fetchStats = async () => {
+  const fetchStats = async () => { //back end ekata API call arinawa
     setIsLoading(true);
     setError('');
     try {
@@ -39,7 +39,7 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    fetchStats();
+    fetchStats();//call the function once on component mount eka parak load wennkota eka parak call karanawa
   }, []);
 
   // --- Inventory pie data (safe fallbacks) ---

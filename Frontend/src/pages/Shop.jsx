@@ -43,7 +43,7 @@ const Shop = () => {
       items = items.filter(item => item.category === selectedCategory);
     }
 
-    if (searchTerm.trim() !== '') {
+    if (searchTerm.trim() !== '') { //search bar
       const lowerSearch = searchTerm.toLowerCase();
       items = items.filter(item => item.name.toLowerCase().includes(lowerSearch));
     }
@@ -79,7 +79,7 @@ const Shop = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       <div className="container mx-auto p-4 md:p-8">
 
-        {/* ===== HERO (Professional, optional background photo with overlay) ===== */}
+        {/* HERO (Professional, optional background photo with overlay)  */}
         <section
           className={`relative overflow-hidden rounded-3xl border border-slate-200/70 ${HERO_BG_URL ? 'bg-center bg-cover' : 'bg-gradient-to-r from-slate-900 to-slate-800'}`}
           style={heroBgStyle}
@@ -102,9 +102,7 @@ const Shop = () => {
                 <a href="#products" className="rounded-2xl px-5 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow">
                   Shop Now
                 </a>
-                <button className="rounded-2xl px-5 py-2.5 text-sm font-semibold border border-white/30 bg-white/10 hover:bg-white/20 text-white backdrop-blur">
-                  View Deals
-                </button>
+               
               </div>
             </div>
 
@@ -143,7 +141,7 @@ const Shop = () => {
           ))}
         </section>
 
-        {/* ===== Search & Category Filter ===== */}
+        {/* ===== Search & Category Filter ===== */}/*search bar and category filter*/
         <section className="mt-10 flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-8">
           <input
             type="text"

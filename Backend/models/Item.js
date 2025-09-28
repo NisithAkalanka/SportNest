@@ -5,13 +5,11 @@ const ItemSchema = new mongoose.Schema({
   category: { type: String, required: true },
   quantity: { type: Number, required: true, default: 0 },
 
-  // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-  // ★★★ මෙන්න නිවැරදි කරන ලද reorderPoint Field එක ★★★
-  // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+  
   reorderPoint: {
     type: Number,
-    required: true, // ★ අනිවාර්ය කිරීම (data consistency එකට) ★
-    default: 10     // ★ Default අගයක් දීමෙන්, null/undefined වීම වළක්වනවා ★
+    required: true, // (
+    default: 10     // ★ Default agayak laba dimen, null/undefined wima walakwanawa ★
   },
 
   supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' },

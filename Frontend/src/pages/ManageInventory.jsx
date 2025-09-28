@@ -52,7 +52,7 @@ const ManageInventory = () => {
     setErrors({});
   };
 
-  const fetchData = async () => {
+  const fetchData = async () => {//data backend eken gena eka
     setIsLoading(true);
     try {
       const [itemsRes, suppliersRes] = await Promise.all([api.get('/items'), api.get('/suppliers')]);
@@ -209,7 +209,7 @@ const ManageInventory = () => {
       alert('Failed to delete item.');
     }
   };
-
+//pdf report download
   const handleDownloadPdfReport = async () => {
     setIsReportGenerating(true);
     alert("Generating your PDF report. This may take a moment...");
@@ -231,7 +231,7 @@ const ManageInventory = () => {
       setIsReportGenerating(false);
     }
   };
-
+//uda thiyeana status tika
   // Derived stats
   const totalItemsCount = items.reduce((s, it) => s + (Number(it.quantity) || 0), 0);
   const lowStockCount = items.filter(it => Number(it.quantity) < (Number(it.reorderPoint) || 0)).length;

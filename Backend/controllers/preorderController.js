@@ -2,9 +2,9 @@ const Preorder = require('../models/Preorder');
 const Item = require('../models/Item');
 const Supplier = require('../models/Supplier');
 const nodemailer = require('nodemailer');
-const { Parser } = require('json2csv');
+const { Parser } = require('json2csv');//JSON data, CSV report eka hadanna
 
-// Nodemailer transporter එකේ වෙනසක් නැහැ
+// Nodemailer transporter       //Nodemailer eken SMTP server ekata connect wela emails yawanna.
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT || 587),
@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
   tls: { rejectUnauthorized: false }
 });
 
-// createPreorder function එකේ වෙනසක් නැහැ
+// createPreorder function       //aluthin preorder ekak hadanna eka
 const createPreorder = async (req, res) => {
   try {
     const { itemId, quantity } = req.body;
@@ -28,7 +28,7 @@ const createPreorder = async (req, res) => {
       item: item._id, supplier: item.supplier._id, quantity, status: 'requested'
     });
     try {
-      const mailOptions = {
+      const mailOptions = {          // email ekak yawanna
         from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM_EMAIL}>`,
         to: item.supplier.email,
         subject: `New Pre-order Request: ${item.name}`,
@@ -47,7 +47,7 @@ const createPreorder = async (req, res) => {
   }
 };
 
-// listPreorders function එකේ වෙනසක් නැහැ
+// listPreorders function    //preorder list ekak ganna eka
 const listPreorders = async (req, res) => {
   try {
     const list = await Preorder.find().sort({ createdAt: -1 }).limit(200).populate('item supplier');
@@ -58,7 +58,7 @@ const listPreorders = async (req, res) => {
   }
 };
 
-// updateStatus function එකේ වෙනසක් නැහැ
+// updateStatus function    //preorder status eka update karanna eka(requested, ordered, received)
 const updateStatus = async (req, res) => {
   const { id } = req.params;
   const { status, expiryDate } = req.body;
@@ -96,7 +96,7 @@ const updateStatus = async (req, res) => {
   }
 };
 
-// මාසික වාර්තාව සකස් කර download කිරීමට ලබා දෙන Function එකේ වෙනසක් නැහැ
+// monthly report function   //masik report ekak hadanna eka
 const generateMonthlyReport = async (req, res) => {
   try {
     const now = new Date();
@@ -126,9 +126,6 @@ const generateMonthlyReport = async (req, res) => {
   }
 };
 
-// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-// ★★★ මෙන්න අලුතින් එකතු කළ Edit Function එක ★★★
-// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
 
 const updatePreorderQuantity = async (req, res) => {
     const { id } = req.params;
@@ -154,9 +151,6 @@ const updatePreorderQuantity = async (req, res) => {
     }
 };
 
-// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-// ★★★ මෙන්න අලුතින් එකතු කළ Delete Function එක ★★★
-// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
 
 const deletePreorder = async (req, res) => {
     const { id } = req.params;
@@ -177,7 +171,7 @@ const deletePreorder = async (req, res) => {
 };
 
 
-// ★★★ module.exports එකට අලුත් functions දෙකේම නම් එකතු කිරීම ★★★
+// ★★★ module.exports 
 module.exports = { 
   createPreorder, 
   listPreorders, 

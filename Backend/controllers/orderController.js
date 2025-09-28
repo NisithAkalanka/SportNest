@@ -6,21 +6,21 @@ const Delivery = require('../models/Delivery');
 // @route   POST /api/orders/checkout
 // @desc    Create an order from the cart
 // @access  Public
-const checkout = async (req, res) => {
+const checkout = async (req, res) => { //cart eke thiyena items order ekakata convert karanna eka
   try {
-    // දැනට තියෙන එකම cart එක හොයාගන්නවා
+    // denata userId eka resolve karanna ona (auth middleware ekak thiyenawanam upstream eken)
     const cart = await Cart.findOne().populate('items.item');
 
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ msg: 'Cart is empty' });
     }
 
-    // මුළු මුදල ගණනය කිරීම
+    // calculate total amount
     const totalAmount = cart.items.reduce((sum, cartItem) => {
       return sum + cartItem.item.price * cartItem.quantity;
     }, 0);
 
-    // අලුත් Order එකක් නිර්මාණය කිරීම
+    // create new order
     const order = new Order({
       userId: cart.userId,
       items: cart.items.map(cartItem => ({
@@ -33,7 +33,7 @@ const checkout = async (req, res) => {
 
     await order.save();
 
-    // Automatically create delivery entry for the new order
+    // Automatically create delivery entry for the new order.   //order ekak hadapu passe delivery ekak automatic create karanna
     try {
       const delivery = new Delivery({
         orderId: order.orderId,
@@ -51,7 +51,7 @@ const checkout = async (req, res) => {
       // Don't fail the order creation if delivery creation fails
     }
 
-    // Order එක සෑදූ පසු, Cart එක හිස් කිරීම
+    // Order created, now clear the cart //cart eka clear karanna eka
     cart.items = [];
     await cart.save();
 

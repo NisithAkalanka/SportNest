@@ -1,4 +1,4 @@
-// Backend/middleware/adminMiddleware.js (අවසාන සහ නිවැරදි කරන ලද කේතය)
+// Backend/middleware/adminMiddleware.js 
 
 const jwt = require('jsonwebtoken');
 

@@ -5,6 +5,9 @@ const Item = require('../models/Item');
 const Supplier = require('../models/Supplier');
 const Preorder = require('../models/Preorder');
 
+
+//eka request karapu user kenekta dashboard eke thiyena stats tika denawa
+
 const getStats = async (req, res) => {
   try {
     // ---- Core totals in parallel (safe fallbacks) ----
@@ -16,7 +19,7 @@ const getStats = async (req, res) => {
       totalSuppliers,
       preorderCount
     ] = await Promise.all([
-      Order.aggregate([{ $group: { _id: null, total: { $sum: '$totalAmount' } } }]),
+      Order.aggregate([{ $group: { _id: null, total: { $sum: '$totalAmount' } } }]),      //parallelly run karanawa lode wenna yana welawa adui
       Order.aggregate([{ $unwind: '$items' }, { $group: { _id: null, total: { $sum: '$items.quantity' } } }]),
       Item.aggregate([{ $group: { _id: null, total: { $sum: '$quantity' } } }]),
       Order.countDocuments(),

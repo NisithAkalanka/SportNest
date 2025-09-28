@@ -22,7 +22,7 @@ const ManageSuppliers = () => {
   const [isReportDownloading, setIsReportDownloading] = useState(false);
 
   // UI toolbar state
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState('');//search bar eka
   const [sortBy, setSortBy] = useState('name-asc'); // name-asc | email-asc
 
   const resetForm = () => {
@@ -52,7 +52,7 @@ const ManageSuppliers = () => {
     return () => { window.removeEventListener('storage', onStorage); window.removeEventListener('focus', onFocus); };
   }, []);
 
-  const validateField = (name, value, allSuppliers) => {
+  const validateField = (name, value, allSuppliers) => {//form validation
     let errorMsg = '';
     const hasSpecialChars = (s) => /[^a-zA-Z\s]/.test(s);
     const onlyDigits = (s) => s.replace(/\D/g, '');
@@ -169,6 +169,8 @@ const ManageSuppliers = () => {
     }
   };
 
+//csv report download
+
   const handleDownloadCsvReport = async () => {
     setIsReportDownloading(true);
     alert("Generating supplier CSV report. The download will start automatically.");
@@ -263,7 +265,7 @@ const ManageSuppliers = () => {
                   <div>
                     <Label htmlFor="phone" className="text-gray-700">Phone</Label>
                     <Input
-                      id="phone"
+                      id="phone"//validation eka
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// ★★★ සියලුම Icons නිවැරදිව import කර ඇත ★★★
+// icons import 
 import { faSync, faFileDownload as faFileCsv, faPencilAlt, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import {
   Dialog,
@@ -40,7 +40,7 @@ const Preorders = () => {
   const [expiryDate, setExpiryDate] = useState('');
   const [needsExpiry, setNeedsExpiry] = useState(false);
 
-  // Edit Modal සඳහා states
+  // Edit Modal  states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState({ id: null, quantity: '', itemName: '' });
   
@@ -81,7 +81,7 @@ const Preorders = () => {
   useEffect(() => { load(); }, []);
 
   const updateStatus = async (id, status) => {
-    // 'ordered' සඳහා පමණක් confirm box එකක්
+    // 'ordered' sadaha pamanak confirm box ekak
     if (!window.confirm(`Are you sure you want to mark this order as "${status}"?`)) return;
     try {
       await api.put(`/preorders/${id}/status`, { status });
@@ -121,7 +121,7 @@ const Preorders = () => {
       showToast(err.response?.data?.msg || 'Status update failed.', 'error');
     }
   };
-  
+  //csv report download
   const handleDownloadReport = async () => {
     setReportDownloading(true);
     showToast('Generating your monthly report...', 'info');

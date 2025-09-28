@@ -6,9 +6,12 @@ function getUserId(req) {
   return req.user?._id || req.user?.id || null;
 }
 
-// @route   POST /api/cart/add
-// @desc    Add an item to the current user's cart and decrease inventory
-// @access  Private (requires logged-in user)
+
+
+// cart and decrease inventory
+
+
+//cart ekata item ekak add karanna
 const addToCart = async (req, res) => {
   const userId = getUserId(req);
   if (!userId) return res.status(401).json({ msg: 'Please log in to add items to your cart.' });
@@ -48,9 +51,7 @@ const addToCart = async (req, res) => {
   }
 };
 
-// @route   GET /api/cart
-// @desc    Get current user's cart
-// @access  Private
+//logon wena user kenekta cart eke thiyena items ganna eka
 const getCartItems = async (req, res) => {
   const userId = getUserId(req);
   if (!userId) return res.status(401).json({ msg: 'Please log in to view your cart.' });
@@ -65,9 +66,9 @@ const getCartItems = async (req, res) => {
   }
 };
 
-// @route   DELETE /api/cart/:id
-// @desc    Remove one cart line item and restore inventory
-// @access  Private
+
+// Remove one cart line item and restore inventory
+
 const removeCartItem = async (req, res) => {
   const userId = getUserId(req);
   if (!userId) return res.status(401).json({ msg: 'Please log in to modify your cart.' });

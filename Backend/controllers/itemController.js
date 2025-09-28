@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 
-// @route   POST api/items
+// @route   POST api/items.  //inventory ekata item ekak add karanna
 const addItem = async (req, res) => {
   // Destructure all text fields from the body
   const { name, category, quantity, reorderPoint, supplier, grn, price, batchNumber, expiryDate, description } = req.body;
@@ -36,7 +36,7 @@ const addItem = async (req, res) => {
 };
 
 
-// @route   PUT api/items/:id
+// @route   PUT api/items/:id. //update item eka
 const updateItem = async (req, res) => {
   const { name, category, quantity, reorderPoint, supplier, grn, price, batchNumber, expiryDate, description } = req.body;
   
@@ -84,7 +84,7 @@ const updateItem = async (req, res) => {
 };
 
 
-// @route   DELETE api/items/:id
+// @route   DELETE api/items/:id. //item eka delete karanna
 const deleteItem = async (req, res) => {
   try {
     let item = await Item.findById(req.params.id);
@@ -107,7 +107,7 @@ const deleteItem = async (req, res) => {
 };
 
 
-// --- පහත functions වල කිසිම වෙනසක් කර නොමැත ---
+//inventory eke thiyena items saha supplier details laba denawa
 
 const getItems = async (req, res) => {
   try {
@@ -121,7 +121,7 @@ const getItems = async (req, res) => {
 
 const getShopItems = async (req, res) => {
   try {
-    // imageUrl එකත් shop එකට යවනවා
+    // imageUrl ekak shopping eke display karanna ona nisa, imageUrl thiyena items tika gannawa
     const items = await Item.find({ quantity: { $gt: 0 } }).select('name category price imageUrl description');
     res.json(items);
   } catch (err) {
@@ -129,7 +129,7 @@ const getShopItems = async (req, res) => {
     res.status(500).send('Server Error');
   }
 };
-
+//inventory report eka pdf format ekata hadana function eka
 const generateInventoryPdfReport = async (req, res) => {
     try {
         const itemsFromDB = await Item.find().populate('supplier', 'name').lean();

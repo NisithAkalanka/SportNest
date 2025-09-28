@@ -1,10 +1,10 @@
 const Supplier = require('../models/Supplier');
 const Preorder = require('../models/Preorder');
-const { Parser } = require('json2csv'); // ★★★ CSV හදන්න අවශ්‍ය library එක import කිරීම ★★★
+const { Parser } = require('json2csv'); // ★★★ CSV eka hadanna  library eka import kirima
 
 // POST /api/suppliers  (Admin only)
 const addSupplier = async (req, res) => {
-  const { name, contactPerson, email, phone, address } = req.body;
+  const { name, contactPerson, email, phone, address } = req.body; //aluthin supplier add karanna ona data
 
   try {
     const existingSupplier = await Supplier.findOne({ email });
@@ -20,9 +20,9 @@ const addSupplier = async (req, res) => {
   }
 };
 
-// GET /api/suppliers (Admin only)
+// GET /api/suppliers (Admin only)            //paddathiye inna okkama suppliers ganna eka
 const getSuppliers = async (req, res) => {
-  try { // ★ try-catch block එකක් එකතු කිරීම වඩාත් සුරක්ෂිතයි ★
+  try { // ★ try-catch block 
     const suppliers = await Supplier.aggregate([
       { $match: {} },
       {
@@ -84,9 +84,7 @@ const getAllSuppliers = async (_req, res) => {
   }
 };
 
-// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-// ★★★ මෙන්න අලුතින් එකතු කළ CSV Report හදන Function එක ★★★
-// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+//csv report eka hadana function eka
 
 const generateSupplierCsvReport = async (req, res) => {
     try {
@@ -121,7 +119,7 @@ const generateSupplierCsvReport = async (req, res) => {
 };
 
 
-// ★★★ module.exports එකට අලුත් function එකේ නම එකතු කිරීම ★★★
+// ★★★ module.exports 
 module.exports = {
   addSupplier,
   getSuppliers,
