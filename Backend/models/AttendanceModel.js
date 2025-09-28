@@ -12,7 +12,7 @@ const attendanceSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        // ★★★ 1. Enum ලැයිස්තුවට 'Leave' එකතු කිරීම ★★★
+        //  1. Enum list ekt 'Leave' add kirima
         enum: ['Work Full-Day', 'Work Half-Day', 'Absent', 'Duty-Leave', 'Leave'],
         required: true,
     },
@@ -20,7 +20,7 @@ const attendanceSchema = new mongoose.Schema({
     timestamps: true
 }); 
 
-// මෙම Index එක Data Integrity සඳහා ඉතා වැදගත් නිසා, එය සක්‍රීයව තැබීම නිර්දේශ කරමි.
+// mema Index ek Data Integrity sdha important nisa, eya active wa thabima
 attendanceSchema.index({ memberId: 1, date: 1 }, { unique: true });
 
 const Attendance = mongoose.model('Attendance', attendanceSchema);

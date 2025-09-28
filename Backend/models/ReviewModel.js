@@ -6,7 +6,7 @@ const reviewSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Member",
       required: true,
-      unique: true, // එක් සාමාජිකයෙකුට එක් review එකක් පමණයි.
+      unique: true, // eka member kenekta eka review ekak witharai karanna denne.
     },
     rating: {
       type: Number,
