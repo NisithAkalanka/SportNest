@@ -141,7 +141,7 @@ const Shop = () => {
           ))}
         </section>
 
-        {/* ===== Search & Category Filter ===== */}/*search bar and category filter*/
+        {/* ===== Search & Category Filter ===== */}
         <section className="mt-10 flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-8">
           <input
             type="text"
