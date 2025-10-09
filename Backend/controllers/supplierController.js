@@ -1,10 +1,22 @@
 const Supplier = require('../models/Supplier');
 const Preorder = require('../models/Preorder');
-const { Parser } = require('json2csv'); // ★★★ CSV හදන්න අවශ්‍ය library එක import කිරීම ★★★
+const { Parser } = require('json2csv');
 
-// POST /api/suppliers  (Admin only)
+// @route   POST /api/suppliers
+// @desc    Add a new supplier
+// @access  Admin
 const addSupplier = async (req, res) => {
-  const { name, contactPerson, email, phone, address } = req.body;
+  // Destructure all fields from the body, including new bank details
+  const { 
+    name, 
+    contactPerson, 
+    email, 
+    phone, 
+    address, 
+    bankName, 
+    accountNumber, 
+    accountName 
+  } = req.body;
 
   try {
     const existingSupplier = await Supplier.findOne({ email });
@@ -12,28 +24,55 @@ const addSupplier = async (req, res) => {
       return res.status(400).json({ msg: 'Supplier with this email already exists' });
     }
 
-    const supplier = await Supplier.create({ name, contactPerson, email, phone, address });
+    // Create a new supplier with all the received data
+    const supplier = await Supplier.create({ 
+      name, 
+      contactPerson, 
+      email, 
+      phone, 
+      address, 
+      bankName, 
+      accountNumber, 
+      accountName 
+    });
+    
     return res.status(201).json(supplier);
+
   } catch (err) {
     console.error('Add Supplier Error:', err.message);
     return res.status(500).send('Server Error');
   }
 };
 
-// GET /api/suppliers (Admin only)
+// @route   GET /api/suppliers
+// @desc    Get all suppliers with their pre-orders
+// @access  Admin
 const getSuppliers = async (req, res) => {
-  try { // ★ try-catch block එකක් එකතු කිරීම වඩාත් සුරක්ෂිතයි ★
+  try {
     const suppliers = await Supplier.aggregate([
       { $match: {} },
       {
         $lookup: {
-          from: 'preorders',      // make sure collection name is correct
+          from: 'preorders',      // Make sure your collection name is 'preorders'
           localField: '_id',
           foreignField: 'supplier',
           as: 'preorders'
         }
       },
-      { $project: { name:1, email:1, phone:1, contactPerson:1, address:1, preorders: { $slice: ['$preorders', 20] } } },
+      // Now including bank details in the projection
+      { 
+        $project: { 
+          name: 1, 
+          email: 1, 
+          phone: 1, 
+          contactPerson: 1, 
+          address: 1,
+          bankName: 1, 
+          accountNumber: 1, 
+          accountName: 1,
+          preorders: { $slice: ['$preorders', 20] } // Limit preorders for performance
+        } 
+      },
       { $sort: { name: 1 } }
     ]);
     return res.json(suppliers);
@@ -43,39 +82,59 @@ const getSuppliers = async (req, res) => {
   }
 };
 
-// PUT /api/suppliers/:id (Admin only)
+// @route   PUT /api/suppliers/:id
+// @desc    Update an existing supplier
+// @access  Admin
 const updateSupplier = async (req, res) => {
   try {
+    // req.body can now contain the new bank detail fields. 
+    // $set will update whichever fields are present in req.body.
     const supplier = await Supplier.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
-      { new: true }
+      { new: true, runValidators: true } // 'new: true' returns the updated document
     );
-    if (!supplier) return res.status(404).json({ msg: 'Supplier not found' });
+    
+    if (!supplier) {
+        return res.status(404).json({ msg: 'Supplier not found' });
+    }
+    
     return res.json(supplier);
+
   } catch (err) {
     console.error('Update Supplier Error:', err.message);
     return res.status(500).send('Server Error');
   }
 };
 
-// DELETE /api/suppliers/:id (Admin only)
+// @route   DELETE /api/suppliers/:id
+// @desc    Delete a supplier
+// @access  Admin
 const deleteSupplier = async (req, res) => {
   try {
-    const existing = await Supplier.findById(req.params.id);
-    if (!existing) return res.status(404).json({ msg: 'Supplier not found' });
+    const supplier = await Supplier.findById(req.params.id);
+    if (!supplier) {
+      return res.status(404).json({ msg: 'Supplier not found' });
+    }
+    
+    // You might want to add a check here: if the supplier is linked to any items or pre-orders, maybe prevent deletion.
+    // For now, we proceed with deletion.
 
     await Supplier.findByIdAndDelete(req.params.id);
     return res.json({ msg: 'Supplier removed successfully' });
+
   } catch (err) {
     console.error('Delete Supplier Error:', err.message);
     return res.status(500).send('Server Error');
   }
 };
 
-// GET /api/suppliers/all (Public)
+// @route   GET /api/suppliers/all
+// @desc    Get all suppliers (Public or for internal use)
+// @access  Public/Private
 const getAllSuppliers = async (_req, res) => {
   try {
+    // Also including bank details here in case they are needed for dropdowns etc.
     const suppliers = await Supplier.find().sort({ name: 1 });
     return res.json(suppliers);
   } catch (err) {
@@ -84,10 +143,9 @@ const getAllSuppliers = async (_req, res) => {
   }
 };
 
-// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-// ★★★ මෙන්න අලුතින් එකතු කළ CSV Report හදන Function එක ★★★
-// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-
+// @route   GET /api/suppliers/report/csv
+// @desc    Generate a CSV report of all suppliers
+// @access  Admin
 const generateSupplierCsvReport = async (req, res) => {
     try {
         const suppliers = await Supplier.find().sort({ name: 1 });
@@ -96,12 +154,16 @@ const generateSupplierCsvReport = async (req, res) => {
             return res.status(404).json({ msg: 'No suppliers found to generate a report.' });
         }
 
+        // Add the new bank fields to the CSV report
         const fields = [
             { label: 'Supplier Name', value: 'name' },
             { label: 'Contact Person', value: 'contactPerson' },
             { label: 'Email Address', value: 'email' },
             { label: 'Phone Number', value: 'phone' },
-            { label: 'Address', value: 'address' }
+            { label: 'Address', value: 'address' },
+            { label: 'Bank Name', value: 'bankName' },
+            { label: 'Account Holder Name', value: 'accountName' },
+            { label: 'Account Number', value: 'accountNumber' },
         ];
 
         const json2csvParser = new Parser({ fields });
@@ -121,7 +183,6 @@ const generateSupplierCsvReport = async (req, res) => {
 };
 
 
-// ★★★ module.exports එකට අලුත් function එකේ නම එකතු කිරීම ★★★
 module.exports = {
   addSupplier,
   getSuppliers,
