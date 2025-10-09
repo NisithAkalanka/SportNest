@@ -162,8 +162,10 @@ export default function ModerateEvents() {
                   <Th>Date &amp; Time</Th>
                   <Th className="text-right">Cap.</Th>
                   <Th className="text-right">Reg.</Th>
+                  <Th className="text-right">Fee (Rs.)</Th>
                   <Th>Status</Th>
                   <Th className="text-right pr-3">Actions</Th>
+                 
                 </tr>
               </thead>
               <tbody>
@@ -184,6 +186,7 @@ export default function ModerateEvents() {
                       <Td>{dt}</Td>
                       <Td className="text-right">{ev.capacity ?? "-"}</Td>
                       <Td className="text-right">{regs}</Td>
+                      <Td className="text-right">{ev.registrationFee ?? 0}</Td>
                       <Td>
                         <span
                           className={`px-2 py-1 rounded text-xs ${

@@ -16,7 +16,7 @@ const assertCoach = (user) => {
 };
 
 
-// ★★★★★★★ THIS IS THE CORRECTED FUNCTION ★★★★★★★
+
 const createCoachFeedback = async (req, res) => {
   try {
     // 1. Authorize the user (no change)
@@ -26,7 +26,7 @@ const createCoachFeedback = async (req, res) => {
     // We are renaming 'playerId' to 'memberId' for clarity, as the frontend is now sending the Member's ID.
     const { playerId: memberId, rating, comment } = req.body;
 
-    // ★★★ THE FIX IS HERE ★★★
+    
     // 3. Find the Player Profile. Instead of finding by the Player's ID directly,
     //    we now find ONE player profile where the 'member' field matches the memberId we received.
     const player = await Player.findOne({ member: memberId }).populate("member", "firstName lastName email");
@@ -80,7 +80,7 @@ const createCoachFeedback = async (req, res) => {
     res.status(e.statusCode || 500).json({ message: e.message || "Failed to create feedback" });
   }
 };
-// ★★★★★★★ END OF THE CORRECTED FUNCTION ★★★★★★★
+
 
 
 // --- Other functions in this file have no changes ---

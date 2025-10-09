@@ -49,7 +49,7 @@ export const deleteEvent   = (id) =>
 export const getEventsReport = (params) =>
   axios.get(`${API}/api/events/report/summary`, { params, headers: authHeader() });
 
-// NOTE: Use arraybuffer here; we'll turn it into a Blob in the UI
+//  Use arraybuffer here
 export const downloadEventsCSV = (params) =>
   axios.get(`${API}/api/events/report/export/csv`, {
     params,

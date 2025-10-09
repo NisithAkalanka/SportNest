@@ -1,12 +1,14 @@
-// src/pages/SubmitEvent.jsx
+// Frontend/src/pages/SubmitEvent.jsx
+
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { submitEvent } from "@/services/eventsApi";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import toast from 'react-hot-toast'; // react-hot-toast import
 
-/** 🔸 Pre-defined venues with auto facilities + default requested items */
+/**  Pre-defined venues with auto facilities + default requested items */
 const VENUES = [
   {
     id: "court-a",
@@ -28,45 +30,40 @@ const VENUES = [
   },
 ];
 
-export default function SubmitEvent() {
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    venue: "",
-    venueFacilities: [],
-    requestedItems: [{ item: "", qty: 1 }],
-    capacity: 1,
-    date: "",
-    startTime: "",
-    endTime: "",
-  });
+const INITIAL_FORM_STATE = {
+  name: "",
+  description: "",
+  venue: "",
+  venueFacilities: [],
+  requestedItems: [{ item: "", qty: 1 }],
+  capacity: 10, // වඩා හොඳ default අගයක්
+  registrationFee: 0,
+  date: "",
+  startTime: "",
+  endTime: "",
+};
 
+
+export default function SubmitEvent() {
+  const navigate = useNavigate();
+  const [form, setForm] = useState(INITIAL_FORM_STATE);
   const [selectedVenueId, setSelectedVenueId] = useState("");
-  const [facilitiesText, setFacilitiesText] = useState("");
-  const [msg, setMsg] = useState({ type: "", text: "" });
   const [submitting, setSubmitting] = useState(false);
 
   const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
-  const today = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, []);
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const maxDate = useMemo(() => {
     const d = new Date();
-    d.setHours(0, 0, 0, 0);
     d.setMonth(d.getMonth() + 3);
-    return d;
+    return d.toISOString().slice(0, 10);
   }, []);
-  const toISO = (d) => d.toISOString().slice(0, 10);
 
-  // 🔸 Word count for description
   const descWords = form.description.trim().split(/\s+/).filter(Boolean).length;
 
   const addReq = () => {
     if (form.requestedItems.length >= 5) {
-      setMsg({ type: "error", text: "You can add up to 5 items only." });
+      toast.error("You can add up to 5 items only.");
       return;
     }
     setForm((f) => ({
@@ -81,18 +78,15 @@ export default function SubmitEvent() {
       requestedItems: f.requestedItems.filter((_, i) => i !== idx),
     }));
 
-  /** 🔸 Auto-fill facilities & defaults when venue is selected */
   const onVenueSelect = (id) => {
     setSelectedVenueId(id);
     const v = VENUES.find((x) => x.id === id);
     if (!v) {
       setField("venue", "");
-      setFacilitiesText("");
       setField("venueFacilities", []);
       return;
     }
     setField("venue", v.name);
-    setFacilitiesText(v.facilities.join(", "));
     setField("venueFacilities", v.facilities);
 
     const noCustomItems =
@@ -111,9 +105,8 @@ export default function SubmitEvent() {
     if (capNum > 500) return "Capacity cannot exceed 500.";
 
     if (!form.date) return "Please pick a date.";
-    const d = new Date(form.date + "T00:00:00");
-    if (d < today) return "Date cannot be in the past.";
-    if (d > maxDate) return "Date must be within the next 3 months.";
+    if (form.date < today) return "Date cannot be in the past.";
+    if (form.date > maxDate) return "Date must be within the next 3 months.";
 
     if (!form.startTime || !form.endTime) return "Please set start/end time.";
     if (form.startTime >= form.endTime)
@@ -134,58 +127,46 @@ export default function SubmitEvent() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    setMsg({ type: "", text: "" });
-
-    const facilities = facilitiesText
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-
-    const payload = {
-      ...form,
-      venueFacilities: facilities,
-      requestedItems: form.requestedItems.filter(
-        (r) => r.item && r.item.trim().length > 0
-      ),
-      capacity: Number(form.capacity || 1),
-    };
-
+    
     const err = validate();
     if (err) {
-      setMsg({ type: "error", text: err });
+      toast.error(err);
       return;
     }
+    
+    const payload = {
+        ...form,
+        requestedItems: form.requestedItems.filter(
+          (r) => r.item && r.item.trim().length > 0
+        ),
+        capacity: Number(form.capacity || 1),
+    };
 
     try {
       setSubmitting(true);
-      await submitEvent(payload);
-      setMsg({ type: "success", text: "Submitted for approval ✅" });
-      setForm({
-        name: "",
-        description: "",
-        venue: "",
-        venueFacilities: [],
-        requestedItems: [{ item: "", qty: 1 }],
-        capacity: 1,
-        date: "",
-        startTime: "",
-        endTime: "",
+      const loadingPromise = submitEvent(payload);
+
+      await toast.promise(loadingPromise, {
+        loading: 'Submitting event...',
+        success: 'Submitted for approval! ✅',
+        error: (err) => err?.response?.data?.error || "Submit failed. Please try again.",
       });
-      setFacilitiesText("");
+
+      setForm(INITIAL_FORM_STATE);
       setSelectedVenueId("");
+      
+      // සාර්ථක වූ පසු, තත්පර 2කින් my-events page එකට යවමු.
+      setTimeout(() => navigate('/my-events'), 2000);
+
     } catch (err2) {
-      setMsg({
-        type: "error",
-        text: err2?.response?.data?.error || "Submit failed. Please try again.",
-      });
+      // toast.promise එකෙන් error එක handle කරන නිසා මෙතන code එකක් අවශ්‍ය නැහැ
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      {/* Top bar with Back button */}
+    <div className="p-4 md:p-6 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <Link to="/events">
           <Button variant="outline" className="h-9 px-3">
@@ -193,29 +174,15 @@ export default function SubmitEvent() {
             Back to Events
           </Button>
         </Link>
-        <div className="w-28" />
       </div>
 
-      <div className="bg-white border rounded-xl p-6">
+      <div className="bg-white border rounded-xl p-6 shadow-sm">
         <h1 className="text-xl font-semibold mb-1">Create Event</h1>
         <p className="text-sm text-gray-500 mb-5">
-          Fill in the details below and submit for admin approval. Events can be scheduled up to 3 months ahead.
+          Fill in the details below and submit for admin approval.
         </p>
 
-        {msg.text && (
-          <div
-            className={`mb-4 text-sm rounded-md p-3 ${
-              msg.type === "success"
-                ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
-                : "bg-rose-50 text-rose-700 ring-1 ring-rose-200"
-            }`}
-          >
-            {msg.text}
-          </div>
-        )}
-
         <form onSubmit={onSubmit} className="grid gap-4">
-          {/* Event name */}
           <div>
             <label className="text-sm font-medium">Event Name</label>
             <input
@@ -227,7 +194,6 @@ export default function SubmitEvent() {
             />
           </div>
 
-          {/* Description */}
           <div>
             <label className="text-sm font-medium">Description</label>
             <textarea
@@ -237,50 +203,39 @@ export default function SubmitEvent() {
               onChange={(e) => setField("description", e.target.value)}
             />
             <div
-              className={`text-xs mt-1 ${
-                descWords > 60 ? "text-rose-600" : "text-gray-500"
+              className={`text-xs mt-1 text-right pr-1 ${
+                descWords > 60 ? "text-rose-600 font-semibold" : "text-gray-500"
               }`}
             >
               {descWords}/60 words
             </div>
           </div>
 
-          {/* Venue (select or type) */}
-          <div className="grid gap-2">
-            <div className="grid sm:grid-cols-2 gap-2">
-              <div>
-                <label className="text-sm font-medium">Choose a Venue</label>
-                <select
-                  className="mt-1 border rounded-md p-2 w-full bg-white"
-                  value={selectedVenueId}
-                  onChange={(e) => onVenueSelect(e.target.value)}
-                >
-                  <option value="">— Select venue —</option>
-                  {VENUES.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Or type custom Venue</label>
-                <input
-                  className="mt-1 border rounded-md p-2 w-full"
-                  placeholder="e.g., Court B / Community Hall"
-                  value={form.venue}
-                  onChange={(e) => {
-                    setSelectedVenueId("");
-                    setField("venue", e.target.value);
-                  }}
-                  required
-                />
-              </div>
+          <div className="grid sm:grid-cols-2 gap-2">
+            <div>
+              <label className="text-sm font-medium">Choose a Venue</label>
+              <select
+                className="mt-1 border rounded-md p-2 w-full bg-white"
+                value={selectedVenueId}
+                onChange={(e) => onVenueSelect(e.target.value)}
+              >
+                <option value="">— Select venue —</option>
+                {VENUES.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Or type custom Venue</label>
+              <input
+                className="mt-1 border rounded-md p-2 w-full"
+                placeholder="e.g., Community Hall"
+                value={form.venue}
+                onChange={(e) => { setSelectedVenueId(""); setField("venue", e.target.value); }}
+                required
+              />
             </div>
           </div>
-
-          {/* Requested items */}
-          <div className="border rounded-lg p-3">
+          
+          <div className="border rounded-lg p-3 bg-gray-50/50">
             <div className="text-sm font-medium mb-2">Items needed from admin</div>
             <div className="grid gap-2">
               {form.requestedItems.map((r, idx) => (
@@ -296,102 +251,79 @@ export default function SubmitEvent() {
                     }}
                   />
                   <input
-                    type="number"
-                    min={1}
-                    max={50}
-                    className="border rounded-md p-2 w-24"
-                    value={r.qty}
+                    type="number" min={1} max={50}
+                    className="border rounded-md p-2 w-24" value={r.qty}
                     onChange={(e) => {
                       let val = Number(e.target.value || 1);
                       if (val > 50) val = 50;
-                      const a = [...form.requestedItems];
-                      a[idx] = { ...a[idx], qty: val };
+                      const a = [...form.requestedItems]; a[idx] = { ...a[idx], qty: val };
                       setField("requestedItems", a);
                     }}
                   />
                   {form.requestedItems.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeReq(idx)}
-                      className="px-2 py-1 text-xs rounded-md ring-1 ring-rose-300 text-rose-600 hover:bg-rose-50"
-                    >
+                    <button type="button" onClick={() => removeReq(idx)}
+                      className="px-2 py-1 text-xs rounded-md ring-1 ring-rose-300 text-rose-600 hover:bg-rose-50">
                       Remove
                     </button>
                   )}
                 </div>
               ))}
             </div>
-            <button
-              type="button"
-              onClick={addReq}
-              className="mt-2 text-sm underline"
-              disabled={form.requestedItems.length >= 5}
-            >
+            <button type="button" onClick={addReq}
+              className="mt-2 text-sm text-emerald-600 hover:underline disabled:text-gray-400"
+              disabled={form.requestedItems.length >= 5}>
               + Add item
             </button>
-            <div className="text-xs mt-1 text-gray-500">
-              {form.requestedItems.length}/5 items (each qty ≤ 50)
-            </div>
           </div>
-
-          {/* Capacity + Date + Times */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-            <div className="sm:col-span-1">
+          
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="col-span-1">
+                <label className="text-sm font-medium">Fee (Rs.)</label>
+                <input
+                  type="number" min={0}
+                  className="mt-1 border rounded-md p-2 w-full" value={form.registrationFee}
+                  onChange={(e) => setField("registrationFee", Number(e.target.value < 0 ? 0 : e.target.value))}
+                  required
+                />
+            </div>
+            <div className="col-span-1">
               <label className="text-sm font-medium">Capacity</label>
               <input
-                type="number"
-                min={1}
-                max={500}
-                className="mt-1 border rounded-md p-2 w-full"
-                value={form.capacity}
+                type="number" min={1} max={500}
+                className="mt-1 border rounded-md p-2 w-full" value={form.capacity}
                 onChange={(e) => {
                   const v = Number(e.target.value || 1);
-                  const clamped = Math.max(1, Math.min(500, v));
-                  setField("capacity", clamped);
-                }}
-                required
+                  const clamped = Math.max(1, Math.min(500, v)); setField("capacity", clamped);
+                }} required
               />
-              <div className="text-xs text-gray-500 mt-1">Allowed: 1–500</div>
             </div>
             <div className="sm:col-span-2">
               <label className="text-sm font-medium">Date</label>
               <input
-                type="date"
-                className="mt-1 border rounded-md p-2 w-full"
-                value={form.date}
-                min={toISO(today)}
-                max={toISO(maxDate)}
-                onChange={(e) => setField("date", e.target.value)}
-                required
+                type="date" className="mt-1 border rounded-md p-2 w-full"
+                value={form.date} min={today} max={maxDate}
+                onChange={(e) => setField("date", e.target.value)} required
               />
             </div>
-            <div className="sm:col-span-1">
-              <label className="text-sm font-medium">Start</label>
+            <div className="sm:col-span-2">
+              <label className="text-sm font-medium">Start Time</label>
               <input
-                type="time"
-                className="mt-1 border rounded-md p-2 w-full"
+                type="time" className="mt-1 border rounded-md p-2 w-full"
                 value={form.startTime}
-                onChange={(e) => setField("startTime", e.target.value)}
-                required
+                onChange={(e) => setField("startTime", e.target.value)} required
               />
             </div>
-            <div className="sm:col-span-1">
-              <label className="text-sm font-medium">End</label>
+            <div className="sm:col-span-2">
+              <label className="text-sm font-medium">End Time</label>
               <input
-                type="time"
-                className="mt-1 border rounded-md p-2 w-full"
+                type="time" className="mt-1 border rounded-md p-2 w-full"
                 value={form.endTime}
-                onChange={(e) => setField("endTime", e.target.value)}
-                required
+                onChange={(e) => setField("endTime", e.target.value)} required
               />
             </div>
           </div>
-
-          <Button
-            disabled={submitting}
-            className="bg-[#FF6700] text-white px-4 py-2 rounded-md hover:opacity-90 disabled:opacity-60"
-            type="submit"
-          >
+          
+          <Button disabled={submitting} className="w-full bg-[#FF6700] text-white py-2.5 rounded-md hover:opacity-90 disabled:opacity-60 transition-opacity">
             {submitting ? "Submitting..." : "Submit for Approval"}
           </Button>
         </form>
