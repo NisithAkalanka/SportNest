@@ -9,7 +9,8 @@ export default function EditEvent(){
   const [form, setForm] = useState({
     name:"", description:"", venue:"",
     venueFacilities:[], requestedItems:[{item:"", qty:1}],
-    capacity:1, date:"", startTime:"", endTime:""
+    capacity:1, date:"", startTime:"", endTime:"",
+    registrationFee: 0
   });
   const [msg, setMsg] = useState("");
 
@@ -28,7 +29,8 @@ export default function EditEvent(){
         capacity: data.capacity || 1,
         date: data.date ? new Date(data.date).toISOString().slice(0,10) : "",
         startTime: data.startTime || "",
-        endTime: data.endTime || ""
+        endTime: data.endTime || "",
+        registrationFee: data.registrationFee ?? 0
       });
     }catch{ setMsg("Failed to load event"); }
   })(); },[id]);
@@ -77,6 +79,18 @@ export default function EditEvent(){
         <input type="number" min={1} className="border p-2 rounded"
                placeholder="Capacity" value={form.capacity}
                onChange={e=>setF("capacity", Number(e.target.value||1))} required/>
+
+
+          <div>
+    <label className="text-sm font-medium text-gray-600">Registration Fee (Rs.)</label>
+    <input type="number" min={0} className="border p-2 rounded w-full mt-1"
+           placeholder="Registration Fee" value={form.registrationFee}
+           onChange={e=>setF("registrationFee", Number(e.target.value < 0 ? 0 : e.target.value))} required/>
+</div>
+
+
+
+
 
         <input type="date" className="border p-2 rounded" value={form.date} onChange={e=>setF("date",e.target.value)} required/>
         <div className="flex gap-2">

@@ -181,9 +181,9 @@ const HomePage = () => {
             <p className="text-gray-600 mt-2">We provide the best platform for your sporting journey.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((feature) => (
+            {features.map((feature, i) => (
               <div
-                key={feature.title}
+                key={`${feature.title}-${i}`}
                 className="bg-gray-800 text-white p-8 rounded-xl shadow-lg text-center transform hover:-translate-y-2 transition-transform duration-300"
               >
                 <div className="bg-gray-700 w-20 h-20 rounded-full mx-auto flex items-center justify-center mb-6">
@@ -213,9 +213,13 @@ const HomePage = () => {
           ) : featuredReviews.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {featuredReviews.map((review) => (
-                  <ReviewCard key={review._id} review={review} />
-                ))}
+                {featuredReviews.map((review, idx) => {
+                  const key =
+                    review?._id ??
+                    review?.id ??
+                    `${review?.memberId?._id ?? review?.memberId ?? 'member'}-${review?.title ?? 'review'}-${idx}`;
+                  return <ReviewCard key={key} review={review} />;
+                })}
               </div>
               <div className="text-center mt-12">
                 <Link to="/reviews">
@@ -237,4 +241,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default HomePage;//mn heduwa

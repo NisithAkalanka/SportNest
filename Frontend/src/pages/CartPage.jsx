@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashAlt, faSpinner, faPlus, faMinus, faTag, faGift, faTruck } from '@fortawesome/free-solid-svg-icons';
+import { faTrashAlt, faSpinner, faPlus, faMinus, faTag, faGift, faTruck, faTags } from '@fortawesome/free-solid-svg-icons';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -158,6 +158,32 @@ const CartPage = () => {
         </div>
       </div>
       <h1 className="text-4xl font-bold text-center mb-10">Your Shopping Cart</h1>
+      {/* ===== AVAILABLE COUPONS SECTION (Updated) ===== */}
+      <section className="mt-8">
+        <div className="bg-gradient-to-r from-emerald-50 via-green-50 to-emerald-50 border-t-4 border-emerald-500 rounded-lg p-6 shadow-md flex flex-col lg:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <FontAwesomeIcon icon={faTags} className="text-4xl text-emerald-600" />
+            <div>
+              <h2 className="text-xl font-bold text-gray-800">Exclusive Deals!</h2>
+              <p className="text-gray-600 text-sm">Use these codes at checkout for amazing discounts.</p>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center lg:justify-end gap-x-6 gap-y-3 items-center mt-4 lg:mt-0">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-lg font-bold bg-white text-emerald-700 border-2 border-dashed border-emerald-300 px-4 py-1 rounded-md">SAVE10</span>
+              <span className="text-sm text-gray-700">(10% Off)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-lg font-bold bg-white text-emerald-700 border-2 border-dashed border-emerald-300 px-4 py-1 rounded-md">SPORT5</span>
+              <span className="text-sm text-gray-700">(5% Off)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-lg font-bold bg-white text-emerald-700 border-2 border-dashed border-emerald-300 px-4 py-1 rounded-md">FREESHIP</span>
+              <span className="text-sm text-gray-700">(Free Shipping)</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {cartItemCount > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

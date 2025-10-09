@@ -2,6 +2,7 @@
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Suspense, lazy } from "react";
+import { Toaster } from 'react-hot-toast';
 
 // Providers (Contexts)
 import { MemberAuthProvider } from "@/context/MemberAuthContext";
@@ -104,6 +105,7 @@ function App() {
       <MemberAuthProvider>
         <CartProvider>
           <Router>
+            <Toaster position="top-right" />
             <Suspense fallback={<AppLoader />}> 
               <Routes>
                 {/* --- Public Shell --- */}
