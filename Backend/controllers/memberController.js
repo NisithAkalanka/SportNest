@@ -541,6 +541,78 @@ const processMembershipPayment = async (req, res) => {
     }
 };
 
+const processRenewalPayment = async (req, res) => {
+    const userId = req.user._id || req.user.id;
+    const { membershipId, currentPlan, newPlan, amount, paymentMethod, memberDetails } = req.body;
+    
+    if (!membershipId || !newPlan || !amount) {
+        return res.status(400).json({ message: 'Membership ID, new plan, and amount are required.' });
+    }
+
+    try {
+        const member = await Member.findById(userId);
+        if (!member) {
+            return res.status(404).json({ message: 'Member not found.' });
+        }
+
+        // Verify membership details match
+        if (member.membershipId !== membershipId) {
+            return res.status(400).json({ message: 'Membership ID does not match.' });
+        }
+
+        // Create payment record
+        const paymentData = {
+            membershipId,
+            currentPlan,
+            newPlan,
+            amount,
+            paymentMethod: paymentMethod ? {
+                cardName: paymentMethod.cardName,
+                cardNumber: paymentMethod.cardNumber,
+                expiryMonth: paymentMethod.expiryMonth,
+                expiryYear: paymentMethod.expiryYear
+            } : null,
+            status: 'completed',
+            transactionId: `REN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            paymentDate: new Date()
+        };
+
+        // Update membership plan and status
+        member.membershipPlan = newPlan;
+        member.membershipStatus = 'Active';
+        member.paymentDate = new Date();
+
+        // Set expiry date based on plan type
+        const isLife = /life/i.test(newPlan);
+        if (isLife) {
+            const now = new Date();
+            now.setFullYear(now.getFullYear() + 100);
+            member.membershipExpiresAt = now;
+        } else {
+            const now = new Date();
+            now.setFullYear(now.getFullYear() + 1);
+            member.membershipExpiresAt = now;
+        }
+
+        await member.save();
+
+        res.status(200).json({
+            message: 'Membership renewal payment processed successfully',
+            paymentId: paymentData.transactionId,
+            membershipId: member.membershipId,
+            currentPlan: currentPlan,
+            newPlan: member.membershipPlan,
+            amount: amount,
+            status: member.membershipStatus,
+            paymentDate: paymentData.paymentDate
+        });
+
+    } catch (error) {
+        console.error('Renewal Payment Error:', error);
+        res.status(500).json({ message: 'Server error during renewal payment processing.' });
+    }
+};
+
 // Final exports
 module.exports = {
     registerMember,
@@ -560,4 +632,5 @@ module.exports = {
     cancelMembership,
     renewMembership,
     processMembershipPayment,
+    processRenewalPayment,
 };

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrashAlt, faPlus, faLock, faCreditCard, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
-
+//neth
 const MembershipPaymentPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -245,9 +245,9 @@ const MembershipPaymentPage = () => {
 
   const getPlanPrice = (planName) => {
     const prices = {
-      'Student Membership': 500,
-      'Ordinary Membership': 1500,
-      'Life Membership': 10000
+      'Student Membership': 20000,
+      'Ordinary Membership': 60000,
+      'Life Membership': 100000
     };
     return prices[planName] || 0;
   };

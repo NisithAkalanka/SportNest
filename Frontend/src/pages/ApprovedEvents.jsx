@@ -287,7 +287,7 @@ function RegisterInline({ ev, onDone }) {
   const [msg, setMsg] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // ✅ validation helpers (unchanged)
+  // validation helpers
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePhone = (phone) => /^\d{10}$/.test(phone);
 
@@ -300,7 +300,7 @@ function RegisterInline({ ev, onDone }) {
 
     try {
       setSaving(true);
-      // Go to payment page with event + registration data (unchanged)
+      // Go to payment page with event and registration data
       navigate("/events/payment", {
         state: {
           eventData: ev,

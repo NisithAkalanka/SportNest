@@ -18,7 +18,8 @@ import {
   faTruck,
   faCar,
   faTruckMoving,
-  faChartLine
+  faChartLine,
+  faUndo
 } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@/components/ui/button';
 import { AdminAuthContext } from '@/context/AdminAuthContext';
@@ -138,6 +139,11 @@ const AdminLayout = () => {
             <li className="mb-2">
               <NavLink to="/admin-dashboard/financial" className={itemClass}>
                 <FontAwesomeIcon icon={faChartLine} className="mr-3 w-5" /> Financial Management
+              </NavLink>
+            </li>
+            <li className="mb-2">
+              <NavLink to="/admin-dashboard/refunds" className={itemClass}>
+                <FontAwesomeIcon icon={faUndo} className="mr-3 w-5" /> Refund Management
               </NavLink>
             </li>
           </ul>

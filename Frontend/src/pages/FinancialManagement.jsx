@@ -19,6 +19,8 @@ const FinancialManagement = () => {
 
   const [members, setMembers] = useState([]);
   const [membershipFees, setMembershipFees] = useState(0);
+  const [eventPayments, setEventPayments] = useState([]);
+  const [preOrderPayments, setPreOrderPayments] = useState([]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -58,6 +60,32 @@ const FinancialManagement = () => {
         console.warn('Events API not available:', err.message);
       }
 
+      // Fetch event payments data for accurate revenue calculation
+      let eventPaymentsData = [];
+      try {
+        const eventPaymentsResponse = await api.get('/events/payments/all');
+        eventPaymentsData = eventPaymentsResponse.data?.payments || [];
+        setEventPayments(eventPaymentsData);
+        console.log('Event Payments Data:', eventPaymentsData);
+        console.log('Event Payments Total Revenue:', eventPaymentsResponse.data?.totalRevenue);
+      } catch (err) {
+        console.warn('Event payments API not available:', err.message);
+        setEventPayments([]);
+      }
+
+      // Fetch pre-order payments data for expense calculation
+      let preOrderPaymentsData = [];
+      try {
+        const preOrderPaymentsResponse = await api.get('/admin/pre-order-payments/financial/all');
+        preOrderPaymentsData = preOrderPaymentsResponse.data?.payments || [];
+        setPreOrderPayments(preOrderPaymentsData);
+        console.log('Pre-Order Payments Data:', preOrderPaymentsData);
+        console.log('Pre-Order Payments Total Amount:', preOrderPaymentsResponse.data?.totalAmount);
+      } catch (err) {
+        console.warn('Pre-order payments API not available:', err.message);
+        setPreOrderPayments([]);
+      }
+
       // Calculate income breakdown
       const productSales = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
       
@@ -66,16 +94,19 @@ const FinancialManagement = () => {
         const planName = member.membershipPlan;
         let fee = 0;
         
-        if (planName === 'Student Membership') fee = 500;
-        else if (planName === 'Ordinary Membership') fee = 1500;
-        else if (planName === 'Life Membership') fee = 10000;
+        if (planName === 'Student Membership') fee = 20000;
+        else if (planName === 'Ordinary Membership') fee = 60000;
+        else if (planName === 'Life Membership') fee = 100000;
         
         return sum + fee;
       }, 0);
       
       setMembershipFees(calculatedMembershipFees);
       
-      const eventRevenue = events.reduce((sum, event) => sum + (event.registrationFee || 0), 0);
+      // Calculate event revenue from actual payments instead of just event fees
+      const eventRevenue = eventPaymentsData.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+      console.log('Calculated Event Revenue:', eventRevenue);
+      console.log('Event Payments for calculation:', eventPaymentsData.map(p => ({ event: p.eventId?.name, amount: p.amount })));
       
       const totalIncome = productSales + calculatedMembershipFees + eventRevenue;
       
@@ -121,16 +152,19 @@ const FinancialManagement = () => {
         setFinancialData(fallbackData);
         setMembers([]); // Set empty members array for fallback
         setMembershipFees(25000); // Set fallback membership fees
+        setEventPayments([]); // Set empty event payments for fallback
+        setPreOrderPayments([]); // Set empty pre-order payments for fallback
         return;
       }
       
-      // Calculate expense breakdown (mock data for now - you can add expense tracking)
+      // Calculate expense breakdown including pre-order payments
       const inventoryExpenses = productSales * 0.4; // 40% of sales for inventory
       const staffSalaries = 25000; // Fixed monthly salary
       const maintenance = 15000; // Fixed maintenance cost
       const marketing = 5000; // Fixed marketing cost
+      const preOrderExpenses = preOrderPaymentsData.reduce((sum, payment) => sum + (payment.amount || 0), 0);
       
-      const totalExpenses = inventoryExpenses + staffSalaries + maintenance + marketing;
+      const totalExpenses = inventoryExpenses + staffSalaries + maintenance + marketing + preOrderExpenses;
       const netProfit = totalIncome - totalExpenses;
 
       // Calculate percentages
@@ -164,6 +198,11 @@ const FinancialManagement = () => {
           percentage: totalExpenses > 0 ? Math.round((staffSalaries / totalExpenses) * 100) : 0 
         },
         { 
+          category: 'Pre-Order Payments', 
+          amount: preOrderExpenses, 
+          percentage: totalExpenses > 0 ? Math.round((preOrderExpenses / totalExpenses) * 100) : 0 
+        },
+        { 
           category: 'Maintenance', 
           amount: maintenance, 
           percentage: totalExpenses > 0 ? Math.round((maintenance / totalExpenses) * 100) : 0 
@@ -193,19 +232,39 @@ const FinancialManagement = () => {
         });
       }
 
-      // Recent transactions
-      const recentIncome = orders.slice(0, 3).map(order => ({
+      // Recent transactions - combine orders and event payments
+      const recentOrders = orders.slice(0, 2).map(order => ({
         category: 'Product Sales',
         description: `Order #${order._id?.slice(-6) || 'N/A'}`,
         amount: order.totalAmount || 0,
         date: new Date(order.createdAt || Date.now()).toLocaleDateString()
       }));
 
+      const recentEventPayments = eventPaymentsData.slice(0, 2).map(payment => ({
+        category: 'Event Revenue',
+        description: payment.eventId?.name || 'Event Registration',
+        amount: payment.amount || 0,
+        date: new Date(payment.paymentDate || Date.now()).toLocaleDateString()
+      }));
+
+      const recentIncome = [...recentOrders, ...recentEventPayments]
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 3);
+
+      // Recent expenses including pre-order payments
+      const recentPreOrderPayments = preOrderPaymentsData.slice(0, 2).map(payment => ({
+        category: 'Pre-Order Payment',
+        description: `Payment to ${payment.supplierId?.name || 'Supplier'}`,
+        amount: payment.amount || 0,
+        date: new Date(payment.paymentDate || Date.now()).toLocaleDateString()
+      }));
+
       const recentExpenses = [
+        ...recentPreOrderPayments,
         { category: 'Inventory', description: 'Sports Equipment', amount: 12000, date: 'Today' },
         { category: 'Staff Salary', description: 'Monthly Payment', amount: 8500, date: 'Yesterday' },
         { category: 'Maintenance', description: 'Equipment Repair', amount: 3200, date: '3 days ago' }
-      ];
+      ].slice(0, 3); // Limit to 3 most recent
 
       setFinancialData({
         totalIncome,
@@ -261,6 +320,8 @@ const FinancialManagement = () => {
       setFinancialData(fallbackData);
       setMembers([]); // Set empty members array for error fallback
       setMembershipFees(25000); // Set fallback membership fees
+      setEventPayments([]); // Set empty event payments for error fallback
+      setPreOrderPayments([]); // Set empty pre-order payments for error fallback
     } finally {
       setIsLoading(false);
     }
@@ -271,7 +332,17 @@ const FinancialManagement = () => {
   }, []);
 
   const handleRefresh = () => {
+    console.log('Refreshing financial data...');
     fetchFinancialData();
+  };
+
+  // Debug function to check payments
+  const debugPayments = () => {
+    console.log('=== Payments Debug ===');
+    console.log('Current eventPayments state:', eventPayments);
+    console.log('Current preOrderPayments state:', preOrderPayments);
+    console.log('Membership fees:', membershipFees);
+    console.log('Financial data:', financialData);
   };
 
   if (isLoading) {
@@ -306,10 +377,15 @@ const FinancialManagement = () => {
           <h1 className="text-4xl font-bold text-gray-800">Financial Management</h1>
           <p className="text-lg text-gray-500 mt-1">Track income, expenses, and financial performance.</p>
         </div>
-        <Button onClick={handleRefresh} disabled={isLoading}>
-          <FontAwesomeIcon icon={faRedo} className={isLoading ? 'animate-spin mr-2' : 'mr-2'}/>
-          {isLoading ? 'Refreshing...' : 'Refresh'}
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleRefresh} disabled={isLoading}>
+            <FontAwesomeIcon icon={faRedo} className={isLoading ? 'animate-spin mr-2' : 'mr-2'}/>
+            {isLoading ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          <Button onClick={debugPayments} variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100">
+            Debug Payments
+          </Button>
+        </div>
       </div>
 
       {/* Financial Summary Cards */}
@@ -421,10 +497,11 @@ const FinancialManagement = () => {
                 <div className="absolute inset-0 rounded-full border-8 border-transparent" 
                      style={{
                        background: `conic-gradient(
-                         #EF4444 0deg 169deg,
-                         #F97316 169deg 274deg,
-                         #8B5CF6 274deg 325deg,
-                         #06B6D4 325deg 360deg
+                         #EF4444 0deg 120deg,
+                         #F97316 120deg 200deg,
+                         #8B5CF6 200deg 260deg,
+                         #06B6D4 260deg 320deg,
+                         #10B981 320deg 360deg
                        )`
                      }}>
                 </div>
@@ -438,7 +515,7 @@ const FinancialManagement = () => {
             </div>
             <div className="space-y-2">
               {financialData.expenseBreakdown.map((item, index) => {
-                const colors = ['#EF4444', '#F97316', '#8B5CF6', '#06B6D4'];
+                const colors = ['#EF4444', '#F97316', '#8B5CF6', '#06B6D4', '#10B981'];
                 return (
                   <div key={index} className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -521,21 +598,21 @@ const FinancialManagement = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">Student</div>
-                <div className="text-lg text-gray-600">Rs. 500/year</div>
+                <div className="text-lg text-gray-600">Rs. 20,000/year</div>
                 <div className="text-sm text-gray-500 mt-1">
                   {members.filter(m => m.membershipPlan === 'Student Membership').length} members
                 </div>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">Ordinary</div>
-                <div className="text-lg text-gray-600">Rs. 1,500/year</div>
+                <div className="text-lg text-gray-600">Rs. 60,000/year</div>
                 <div className="text-sm text-gray-500 mt-1">
                   {members.filter(m => m.membershipPlan === 'Ordinary Membership').length} members
                 </div>
               </div>
               <div className="text-center p-4 bg-yellow-50 rounded-lg">
                 <div className="text-2xl font-bold text-yellow-600">Life</div>
-                <div className="text-lg text-gray-600">Rs. 10,000/lifetime</div>
+                <div className="text-lg text-gray-600">Rs. 100,000/lifetime</div>
                 <div className="text-sm text-gray-500 mt-1">
                   {members.filter(m => m.membershipPlan === 'Life Membership').length} members
                 </div>
@@ -548,15 +625,15 @@ const FinancialManagement = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Student Memberships</span>
-                    <span className="font-semibold">Rs. {members.filter(m => m.membershipPlan === 'Student Membership').length * 500}</span>
+                    <span className="font-semibold">Rs. {members.filter(m => m.membershipPlan === 'Student Membership').length * 20000}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Ordinary Memberships</span>
-                    <span className="font-semibold">Rs. {members.filter(m => m.membershipPlan === 'Ordinary Membership').length * 1500}</span>
+                    <span className="font-semibold">Rs. {members.filter(m => m.membershipPlan === 'Ordinary Membership').length * 60000}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Life Memberships</span>
-                    <span className="font-semibold">Rs. {members.filter(m => m.membershipPlan === 'Life Membership').length * 10000}</span>
+                    <span className="font-semibold">Rs. {members.filter(m => m.membershipPlan === 'Life Membership').length * 100000}</span>
                   </div>
                   <hr className="my-2" />
                   <div className="flex justify-between font-bold text-lg">
@@ -572,9 +649,9 @@ const FinancialManagement = () => {
                   {members.slice(0, 3).map((member, index) => {
                     const planName = member.membershipPlan;
                     let fee = 0;
-                    if (planName === 'Student Membership') fee = 500;
-                    else if (planName === 'Ordinary Membership') fee = 1500;
-                    else if (planName === 'Life Membership') fee = 10000;
+                    if (planName === 'Student Membership') fee = 20000;
+                    else if (planName === 'Ordinary Membership') fee = 60000;
+                    else if (planName === 'Life Membership') fee = 100000;
                     
                     return (
                       <div key={index} className="flex justify-between items-center p-2 bg-white rounded">
@@ -595,6 +672,106 @@ const FinancialManagement = () => {
                     <div className="text-center py-4 text-gray-500">
                       <FontAwesomeIcon icon={faWallet} className="h-8 w-8 text-gray-400 mb-2" />
                       <p>No membership data available</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Event Payments Summary */}
+      <div className="mb-8">
+        <Card className="border-blue-400 shadow-sm hover:shadow-lg transition-shadow">
+          <CardHeader className="text-blue-800 bg-blue-50 p-4 rounded-t-lg border-b border-blue-200">
+            <CardTitle className="flex items-center">
+              <FontAwesomeIcon icon={faDollarSign} className="mr-3" />
+              Event Payments Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-3">Total Event Revenue</h4>
+                <div className="text-3xl font-bold text-blue-600 mb-2">
+                  Rs. {eventPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0).toLocaleString()}
+                </div>
+                <div className="text-sm text-gray-600">
+                  From {eventPayments.length} completed payments
+                </div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-3">Recent Event Payments</h4>
+                <div className="space-y-2">
+                  {eventPayments.slice(0, 3).map((payment, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-white rounded">
+                      <div>
+                        <div className="font-medium text-sm">{payment.eventId?.name || 'Unknown Event'}</div>
+                        <div className="text-xs text-gray-500">{payment.registrationData?.name || 'Unknown Participant'}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-green-600">+Rs. {payment.amount || 0}</div>
+                        <div className="text-xs text-gray-500">
+                          {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : 'Recent'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {eventPayments.length === 0 && (
+                    <div className="text-center py-4 text-gray-500">
+                      <FontAwesomeIcon icon={faDollarSign} className="h-8 w-8 text-gray-400 mb-2" />
+                      <p>No event payments found</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Pre-Order Payments Summary */}
+      <div className="mb-8">
+        <Card className="border-orange-400 shadow-sm hover:shadow-lg transition-shadow">
+          <CardHeader className="text-orange-800 bg-orange-50 p-4 rounded-t-lg border-b border-orange-200">
+            <CardTitle className="flex items-center">
+              <FontAwesomeIcon icon={faReceipt} className="mr-3" />
+              Pre-Order Payments Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-3">Total Pre-Order Expenses</h4>
+                <div className="text-3xl font-bold text-orange-600 mb-2">
+                  Rs. {preOrderPayments.reduce((sum, payment) => sum + (payment.amount || 0), 0).toLocaleString()}
+                </div>
+                <div className="text-sm text-gray-600">
+                  From {preOrderPayments.length} completed payments
+                </div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-3">Recent Pre-Order Payments</h4>
+                <div className="space-y-2">
+                  {preOrderPayments.slice(0, 3).map((payment, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-white rounded">
+                      <div>
+                        <div className="font-medium text-sm">{payment.supplierId?.name || 'Unknown Supplier'}</div>
+                        <div className="text-xs text-gray-500">{payment.paymentMethod || 'Payment'}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-red-600">-Rs. {payment.amount || 0}</div>
+                        <div className="text-xs text-gray-500">
+                          {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : 'Recent'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {preOrderPayments.length === 0 && (
+                    <div className="text-center py-4 text-gray-500">
+                      <FontAwesomeIcon icon={faReceipt} className="h-8 w-8 text-gray-400 mb-2" />
+                      <p>No pre-order payments found</p>
                     </div>
                   )}
                 </div>

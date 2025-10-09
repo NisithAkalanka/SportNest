@@ -50,3 +50,6 @@ PaymentMethodSchema.index({ userId: 1, isDefault: 1 });
 module.exports = mongoose.model('PaymentMethod', PaymentMethodSchema);
 
 
+
+
+

@@ -1,7 +1,9 @@
 // File: Frontend/src/App.jsx — FINAL MERGED & CLEAN
+//suj
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Suspense, lazy } from "react";
+import { Toaster } from 'react-hot-toast';
 
 // Providers (Contexts)
 import { MemberAuthProvider } from "@/context/MemberAuthContext";
@@ -77,6 +79,8 @@ import DeliveryManagement from "@/pages/DeliveryManagement";
 import DriverManagement from "@/pages/DriverManagement";
 import Vehicle from "@/pages/Vehicle";
 import FinancialManagement from "@/pages/FinancialManagement";
+import RefundManagement from "@/pages/RefundManagement";
+import PreOrderPaymentPage from "@/pages/PreOrderPaymentPage";
 
 // Events (lazy)
 const SubmitEvent = lazy(() => import("@/pages/SubmitEvent"));
@@ -103,6 +107,7 @@ function App() {
       <MemberAuthProvider>
         <CartProvider>
           <Router>
+            <Toaster position="top-right" />
             <Suspense fallback={<AppLoader />}> 
               <Routes>
                 {/* --- Public Shell --- */}
@@ -186,6 +191,8 @@ function App() {
                     <Route path="drivers" element={<DriverManagement />} />
                     <Route path="vehicles" element={<Vehicle />} />
                     <Route path="financial" element={<FinancialManagement />} />
+                    <Route path="refunds" element={<RefundManagement />} />
+                    <Route path="pre-order-payment" element={<PreOrderPaymentPage />} />
 
                     {/* Admin: events moderation + edit + report */}
                     <Route path="events/moderate" element={<ModerateEvents />} />

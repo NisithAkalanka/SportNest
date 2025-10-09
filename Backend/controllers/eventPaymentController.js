@@ -64,6 +64,9 @@ const processEventPayment = async (req, res) => {
       transactionId: `EVT_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     };
 
+    // Log the amount being stored for debugging
+    console.log(`Event Payment - Event: ${event.name}, Amount: ${paymentData.amount}, Provided: ${amount}, Event Fee: ${event.registrationFee}`);
+
     // Only add payment and billing info if they exist
     if (paymentInfo) {
       paymentData.paymentInfo = paymentInfo;
@@ -200,6 +203,41 @@ const getEventPayments = async (req, res) => {
   }
 };
 
+// @route   GET /api/events/payments/all
+// @desc    Get all event payments for financial dashboard
+// @access  Private (Admin only)
+const getAllEventPayments = async (req, res) => {
+  try {
+    const { status = 'completed' } = req.query;
+
+    const query = { status };
+    
+    const payments = await EventPayment.find(query)
+      .populate('eventId', 'name date registrationFee')
+      .populate('participantId', 'firstName lastName email')
+      .sort({ paymentDate: -1 });
+
+    // Calculate total revenue
+    const totalRevenue = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+
+    // Log for debugging
+    console.log(`Event Payments Summary - Total Payments: ${payments.length}, Total Revenue: ${totalRevenue}`);
+    payments.forEach(payment => {
+      console.log(`Payment: ${payment.eventId?.name || 'Unknown Event'} - Amount: ${payment.amount}`);
+    });
+
+    res.json({
+      payments,
+      totalRevenue,
+      totalCount: payments.length
+    });
+
+  } catch (error) {
+    console.error('Error fetching all event payments:', error);
+    res.status(500).json({ message: 'Server error fetching all payments' });
+  }
+};
+
 // @route   GET /api/events/payments/:paymentId
 // @desc    Get payment details
 // @access  Private
@@ -288,6 +326,7 @@ const deletePayment = async (req, res) => {
 module.exports = {
   processEventPayment,
   getEventPayments,
+  getAllEventPayments,
   getPaymentDetails,
   processRefund,
   deletePayment
