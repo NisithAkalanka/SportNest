@@ -144,7 +144,7 @@ const getAllSuppliers = async (_req, res) => {
 };
 
 // @route   GET /api/suppliers/report/csv
-// @desc    Generate a CSV report of all suppliers
+// @desc    Generate a CSV report of 
 // @access  Admin
 const generateSupplierCsvReport = async (req, res) => {
     try {
