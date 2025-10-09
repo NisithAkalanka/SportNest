@@ -7,7 +7,8 @@ const {
   updateItem, 
   deleteItem, 
   getShopItems,
-  generateInventoryPdfReport
+  generateInventoryPdfReport,
+  manageStock
 } = require('../controllers/itemController');
 
 const protectAdmin = require('../middleware/adminMiddleware');
@@ -24,6 +25,9 @@ router.get('/', protectAdmin, getItems);
 router.put('/:id', protectAdmin, upload.single('image'), updateItem);
 
 router.delete('/:id', protectAdmin, deleteItem);
+
+// Manual stock management
+router.post('/managestock', protectAdmin, manageStock);
 
 // ★ PDF Report Route ★
 router.get('/report/pdf', protectAdmin, generateInventoryPdfReport);
