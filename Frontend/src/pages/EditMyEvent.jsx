@@ -17,6 +17,7 @@ export default function EditMyEvent() {
     date: "",
     startTime: "",
     endTime: "",
+    registrationFee: 0,
   });
   const [status, setStatus] = useState("pending");
   const [registeredCount, setRegisteredCount] = useState(0);
@@ -70,6 +71,7 @@ export default function EditMyEvent() {
           date: data.date ? new Date(data.date).toISOString().slice(0, 10) : "",
           startTime: data.startTime || "",
           endTime: data.endTime || "",
+          registrationFee: data.registrationFee ?? 0,
         });
         setStatus(data.status);
         setRegisteredCount((data.registrations || []).length);
@@ -324,6 +326,26 @@ export default function EditMyEvent() {
           </p>
           {vErr.capacity && <p className="text-xs text-rose-600 mt-1">{vErr.capacity}</p>}
         </div>
+
+          {/* Registration Fee */}
+          <div>
+    <label className="text-sm font-medium">Registration Fee (Rs.) *</label>
+    <input
+        type="number"
+        min={0}
+        className="border p-2 rounded w-full"
+        value={form.registrationFee}
+        onChange={(e) => setF("registrationFee", Number(e.target.value < 0 ? 0 : e.target.value))}
+    />
+    <p className="text-xs text-gray-500 mt-1">
+        If it's free insert 0.
+    </p>
+</div>
+
+
+
+
+
 
         {/* Date & Times */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
