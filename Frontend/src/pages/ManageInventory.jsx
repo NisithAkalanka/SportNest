@@ -227,6 +227,41 @@ const ManageInventory = () => {
   // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
   // ★★★ Direct Stock Management handlers ★★★
   // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+  // ★★★ Stock form field-level validation ★★★
+  const validateStockField = (name, value, allValues) => {
+    let errorMsg = '';
+    const item = items.find(i => i._id === allValues.itemId);
+    const qtyInStock = item ? Number(item.quantity) : 0;
+
+    switch (name) {
+      case 'itemId':
+        if (!value) errorMsg = 'An item must be selected.';
+        break;
+      case 'quantity': {
+        const qtyNum = Number(value);
+        if (!String(value).trim()) errorMsg = 'Quantity is required.';
+        else if (isNaN(qtyNum) || !Number.isInteger(qtyNum) || qtyNum <= 0) {
+          errorMsg = 'Must be a positive whole number.';
+        } else if (qtyNum > 1000) {
+          errorMsg = 'Cannot exceed 1000 units at once.';
+        } else if (allValues.actionType === 'remove' && qtyNum > qtyInStock) {
+          errorMsg = `Cannot remove ${qtyNum}. Only ${qtyInStock} are in stock.`;
+        }
+        break;
+      }
+      case 'cost': {
+        const costNum = Number(value);
+        if (value && (isNaN(costNum) || costNum < 0)) {
+          errorMsg = 'Cost must be a non-negative number.';
+        }
+        break;
+      }
+      default:
+        break;
+    }
+    setStockErrors(prev => ({ ...prev, [name]: errorMsg }));
+    return errorMsg === '';
+  };
   const resetStockForm = () => {
     setStockFormData({ itemId: '', actionType: 'add', quantity: '', cost: '', reason: 'Expired' });
     setStockErrors({});
@@ -234,31 +269,38 @@ const ManageInventory = () => {
 
   const handleStockFormChange = (e) => {
     const { name, value } = e.target;
-    setStockFormData(prev => ({ ...prev, [name]: value }));
+    const newFormData = { ...stockFormData, [name]: value };
+    setStockFormData(newFormData);
+    validateStockField(name, value, newFormData);
+  };
+
+  // Keep validation in sync for Select/Radio changes too
+  const handleStockSelectChange = (name, value) => {
+    const newFormData = { ...stockFormData, [name]: value };
+    setStockFormData(newFormData);
+    validateStockField(name, value, newFormData);
   };
 
   const handleStockSubmit = async (e) => {
     e.preventDefault();
-    let errors = {};
-    if (!stockFormData.itemId) errors.itemId = "Please select an item.";
-    if (!stockFormData.quantity || Number(stockFormData.quantity) <= 0) errors.quantity = "Quantity must be a positive number.";
-    if (stockFormData.actionType === 'add' && stockFormData.cost && Number(stockFormData.cost) < 0) {
-      errors.cost = "Cost cannot be negative.";
-    }
+    // Re-validate all fields on submit
+    const isItemIdValid = validateStockField('itemId', stockFormData.itemId, stockFormData);
+    const isQuantityValid = validateStockField('quantity', stockFormData.quantity, stockFormData);
+    const isCostValid = validateStockField('cost', stockFormData.cost, stockFormData);
 
-    if (Object.keys(errors).length > 0) {
-      setStockErrors(errors);
+    if (!isItemIdValid || !isQuantityValid || !isCostValid) {
+      alert('Please fix the errors before submitting.');
       return;
     }
 
     setIsStockSubmitting(true);
-    setStockErrors({});
+    setStockErrors({}); // Clear errors before submitting
     try {
       await api.post('/items/managestock', stockFormData);
       alert('Stock has been successfully updated!');
       setIsStockDialogOpen(false);
       resetStockForm();
-      fetchData(); // Refresh the main table
+      fetchData();
     } catch (err) {
       alert(`Error: ${err.response?.data?.msg || 'Could not update stock.'}`);
     } finally {
@@ -429,7 +471,7 @@ const ManageInventory = () => {
                 <div className="grid gap-4">
                   <div>
                     <Label>Select Item</Label>
-                    <Select name="itemId" onValueChange={(v) => setStockFormData(p => ({...p, itemId: v}))} value={stockFormData.itemId}>
+                    <Select name="itemId" onValueChange={(v) => handleStockSelectChange('itemId', v)} value={stockFormData.itemId}>
                       <SelectTrigger className={`${stockErrors.itemId ? 'border-red-500' : ''} focus:ring-emerald-500 focus:ring-1`}>
                         <SelectValue placeholder="Choose an item..." />
                       </SelectTrigger>
@@ -442,28 +484,22 @@ const ManageInventory = () => {
 
                   <div>
                     <Label>Action</Label>
-                    <RadioGroup defaultValue="add" value={stockFormData.actionType} onValueChange={(v) => setStockFormData(p => ({...p, actionType: v}))} className="flex gap-4 pt-2">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="add" id="r-add" />
-                        <Label htmlFor="r-add">Add New Stock</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="remove" id="r-remove" />
-                        <Label htmlFor="r-remove">Remove Stock</Label>
-                      </div>
+                    <RadioGroup defaultValue="add" value={stockFormData.actionType} onValueChange={(v) => handleStockSelectChange('actionType', v)} className="flex gap-4 pt-2">
+                      <div className="flex items-center space-x-2"><RadioGroupItem value="add" id="r-add" /><Label htmlFor="r-add">Add New Stock</Label></div>
+                      <div className="flex items-center space-x-2"><RadioGroupItem value="remove" id="r-remove" /><Label htmlFor="r-remove">Remove Stock</Label></div>
                     </RadioGroup>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="s-quantity">Quantity to Change</Label>
-                      <Input id="s-quantity" name="quantity" type="number" min="1" value={stockFormData.quantity} onChange={handleStockFormChange} className={`${stockErrors.quantity ? 'border-red-500' : ''}`}/>
+                      <Input id="s-quantity" name="quantity" type="number" min="1" value={stockFormData.quantity} onChange={handleStockFormChange} className={`${stockErrors.quantity ? 'border-red-500' : ''} focus-visible:ring-emerald-500`}/>
                       {stockErrors.quantity && <p className="text-red-600 text-xs mt-1">{stockErrors.quantity}</p>}
                     </div>
                     {stockFormData.actionType === 'add' && (
                       <div>
                         <Label htmlFor="s-cost">Total Cost (LKR)</Label>
-                        <Input id="s-cost" name="cost" type="number" min="0" placeholder="Optional for expenses" value={stockFormData.cost} onChange={handleStockFormChange} className={`${stockErrors.cost ? 'border-red-500' : ''}`}/>
+                        <Input id="s-cost" name="cost" type="number" min="0" placeholder="Optional for expenses" value={stockFormData.cost} onChange={handleStockFormChange} className={`${stockErrors.cost ? 'border-red-500' : ''} focus-visible:ring-emerald-500`}/>
                         {stockErrors.cost && <p className="text-red-600 text-xs mt-1">{stockErrors.cost}</p>}
                       </div>
                     )}
@@ -472,7 +508,7 @@ const ManageInventory = () => {
                   {stockFormData.actionType === 'remove' && (
                     <div>
                       <Label>Reason for Removal</Label>
-                      <Select name="reason" onValueChange={(v) => setStockFormData(p => ({...p, reason: v}))} value={stockFormData.reason}>
+                      <Select name="reason" onValueChange={(v) => handleStockSelectChange('reason', v)} value={stockFormData.reason}>
                         <SelectTrigger className="focus:ring-emerald-500 focus:ring-1"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Expired">Expired Stock</SelectItem>
