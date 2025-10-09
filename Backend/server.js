@@ -65,6 +65,7 @@ const eventsReportRoutes = require('./routes/eventsReportRoutes'); // reports on
 const eventPaymentRoutes = require('./routes/eventPaymentRoutes');
 const paymentMethodRoutes = require('./routes/paymentMethodRoutes');
 const refundRoutes = require('./routes/refundRoutes');
+const preOrderPaymentRoutes = require('./routes/preOrderPaymentRoutes');
 
 // --- Mount order matters! ---
 app.use('/api/events/report', eventsReportRoutes);
@@ -72,6 +73,7 @@ app.use('/api/events', eventsRoutes);
 app.use('/api/events', eventPaymentRoutes);
 app.use('/api/payments', paymentMethodRoutes);
 app.use('/api/refunds', refundRoutes);
+app.use('/api/admin/pre-order-payments', preOrderPaymentRoutes);
 
 // Other APIs
 app.use('/api/admin', adminRoutes);

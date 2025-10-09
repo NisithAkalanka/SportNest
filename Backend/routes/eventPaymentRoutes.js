@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   processEventPayment,
   getEventPayments,
+  getAllEventPayments,
   getPaymentDetails,
   processRefund,
   deletePayment
@@ -14,6 +15,7 @@ const adminAuth = require('../middleware/adminMiddleware');
 router.post('/payment', processEventPayment);
 
 // Protected routes
+router.get('/payments/all', auth, adminAuth, getAllEventPayments);
 router.get('/:eventId/payments', auth, adminAuth, getEventPayments);
 router.get('/payments/:paymentId', auth, getPaymentDetails);
 router.put('/payments/:paymentId/refund', auth, adminAuth, processRefund);

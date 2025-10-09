@@ -134,36 +134,34 @@ const AdminDashboard = () => {
     }
   };
 
-  // ★★★ Log Payment handler ★★★
-  const handlePaymentLogSubmit = async (e) => {
-    e.preventDefault();
-    if (!paymentData.preorder || !paymentData.amount || Number(paymentData.amount) <= 0) {
-      setToast({ type: 'error', msg: 'Please enter a valid amount.' });
+  // ★★★ Navigate to Payment Page ★★★
+  const handleLogPaymentClick = () => {
+    if (!paymentData.preorder) {
+      setToast({ type: 'error', msg: 'No pre-order data available.' });
       setTimeout(() => setToast(null), 3000);
       return;
     }
 
-    const payload = {
-      description: `Payment for Pre-order: ${paymentData.preorder?.item?.name ?? 'Item'} (Qty: ${paymentData.preorder?.quantity ?? 'N/A'})`,
-      amount: Number(paymentData.amount),
-      supplierId: paymentData.preorder?.supplier?._id,
-      preorderId: paymentData.preorder?._id,
-      category: 'Supplier Payment'
+    // Prepare supplier data for the payment page
+    const supplierData = {
+      _id: paymentData.preorder?.supplier?._id,
+      name: paymentData.preorder?.supplier?.name,
+      bankName: paymentData.preorder?.supplier?.bankName, // Use bankName from supplier
+      accountName: paymentData.preorder?.supplier?.accountName,
+      accountNumber: paymentData.preorder?.supplier?.accountNumber
     };
 
-    setIsSubmitting(true);
-    try {
-      await api.post('/expenses/log', payload);
-      setToast({ type: 'success', msg: 'Payment logged successfully as an expense!' });
-      setPaymentModalOpen(false);
-      setSelectedItem(null);
-    } catch (err) {
-      const msg = err.response?.data?.msg || 'Failed to log payment.';
-      setToast({ type: 'error', msg });
-    } finally {
-      setIsSubmitting(false);
-      setTimeout(() => setToast(null), 4000);
-    }
+    // Navigate to payment page with supplier data
+    navigate('/admin-dashboard/pre-order-payment', {
+      state: {
+        supplierData,
+        preOrderData: paymentData.preorder,
+        amount: paymentData.amount || ''
+      }
+    });
+
+    // Close the modal
+    setPaymentModalOpen(false);
   };
   
   const formatDate = (dateString) => {
@@ -363,7 +361,7 @@ const AdminDashboard = () => {
               <FontAwesomeIcon icon={faCreditCard} /> Log Payment for Pre-order
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handlePaymentLogSubmit} className="mt-4 grid gap-4">
+          <div className="mt-4 grid gap-4">
             <div className="p-3 border rounded-md bg-gray-50 text-sm">
               <h4 className="font-semibold mb-2">Supplier Bank Details</h4>
               <p><strong>Bank:</strong> {paymentData.preorder?.supplier?.bankName || 'N/A'}</p>
@@ -380,7 +378,6 @@ const AdminDashboard = () => {
                 value={paymentData.amount}
                 onChange={(e) => setPaymentData((p) => ({ ...p, amount: e.target.value }))}
                 placeholder="e.g., 25000"
-                required
                 className="mt-1"
               />
             </div>
@@ -389,11 +386,11 @@ const AdminDashboard = () => {
               <Button type="button" variant="outline" onClick={() => setPaymentModalOpen(false)}>
                 Skip for now
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Logging...' : 'Log Payment'}
+              <Button type="button" onClick={handleLogPaymentClick} disabled={isSubmitting}>
+                {isSubmitting ? 'Processing...' : 'Log Payment'}
               </Button>
             </DialogFooter>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
