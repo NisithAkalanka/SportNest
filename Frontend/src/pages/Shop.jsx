@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from "@/components/ui/badge";
 import { useCart } from '../context/CartContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faShoppingCart, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faShoppingCart, faSpinner, faTags } from '@fortawesome/free-solid-svg-icons';
 import api from '@/api';
 
 // ===== Optional Hero Background Image (leave empty for clean gradient) =====
@@ -19,6 +19,24 @@ const Shop = () => {
   const [addingItemId, setAddingItemId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+
+  // ★★★ Available coupon codes list (for display & copy) ★★★
+  const availableCoupons = [
+    { code: 'SAVE10', desc: '10% Off' },
+    { code: 'SPORT5', desc: '5% Off' },
+    { code: 'FREESHIP', desc: 'Free Shipping' },
+  ];
+
+  // ★★★ Click-to-copy state + handler ★★★
+  const [copiedCode, setCopiedCode] = useState(null);
+  const handleCopyToClipboard = (code) => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 2000);
+    }).catch(err => {
+      console.error('Failed to copy code: ', err);
+    });
+  };
 
   useEffect(() => {
     const fetchShopItems = async () => {
@@ -125,6 +143,38 @@ const Shop = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===== AVAILABLE COUPONS SECTION (WITH CLICK-TO-COPY) ===== */}
+        <section className="mt-8">
+          <div className="bg-gradient-to-r from-emerald-50 via-green-50 to-emerald-50 border-t-4 border-emerald-500 rounded-lg p-6 shadow-md">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <FontAwesomeIcon icon={faTags} className="text-4xl text-emerald-600" />
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">Exclusive Deals!</h2>
+                  <p className="text-gray-600 text-sm">Click on a code to copy it, then use it at checkout.</p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-6 flex flex-col sm:flex-row flex-wrap justify-start gap-x-6 gap-y-4">
+              {availableCoupons.map((coupon) => (
+                <div
+                  key={coupon.code}
+                  onClick={() => handleCopyToClipboard(coupon.code)}
+                  className="relative flex items-center gap-2 group cursor-pointer"
+                  title="Click to copy"
+                >
+                  <span
+                    className="font-mono text-lg font-bold bg-white text-emerald-700 border-2 border-dashed border-emerald-300 px-4 py-1 rounded-md transition-all group-hover:bg-emerald-600 group-hover:text-white group-hover:border-solid group-hover:border-emerald-700"
+                  >
+                    {copiedCode === coupon.code ? 'Copied!' : coupon.code}
+                  </span>
+                  <span className="text-sm text-gray-700">({coupon.desc})</span>
+                </div>
+              ))}
             </div>
           </div>
         </section>

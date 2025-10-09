@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash, faEdit, faFilePdf, faSearch, faBoxOpen, faExclamationTriangle, faMoneyBillWave } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faTrash, faEdit, faFilePdf, faSearch, faBoxOpen, faExclamationTriangle, faMoneyBillWave, faWarehouse } from '@fortawesome/free-solid-svg-icons';
 
 const api = axios.create({ baseURL: '/api' });
 api.interceptors.request.use((config) => {
@@ -38,6 +39,19 @@ const ManageInventory = () => {
   const [q, setQ] = useState('');
   const [catFilter, setCatFilter] = useState('All');
   const [sortBy, setSortBy] = useState('name-asc'); // name-asc | qty-asc | qty-desc | price-asc | price-desc
+  // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+  // ★★★ Direct Stock Management states ★★★
+  // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+  const [isStockDialogOpen, setIsStockDialogOpen] = useState(false);
+  const [stockFormData, setStockFormData] = useState({
+    itemId: '',
+    actionType: 'add',
+    quantity: '',
+    cost: '',
+    reason: 'Expired'
+  });
+  const [stockErrors, setStockErrors] = useState({});
+  const [isStockSubmitting, setIsStockSubmitting] = useState(false);
 
   const today = new Date();
   const twoYearsFromNow = new Date();
@@ -210,6 +224,48 @@ const ManageInventory = () => {
     }
   };
 
+  // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+  // ★★★ Direct Stock Management handlers ★★★
+  // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+  const resetStockForm = () => {
+    setStockFormData({ itemId: '', actionType: 'add', quantity: '', cost: '', reason: 'Expired' });
+    setStockErrors({});
+  };
+
+  const handleStockFormChange = (e) => {
+    const { name, value } = e.target;
+    setStockFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleStockSubmit = async (e) => {
+    e.preventDefault();
+    let errors = {};
+    if (!stockFormData.itemId) errors.itemId = "Please select an item.";
+    if (!stockFormData.quantity || Number(stockFormData.quantity) <= 0) errors.quantity = "Quantity must be a positive number.";
+    if (stockFormData.actionType === 'add' && stockFormData.cost && Number(stockFormData.cost) < 0) {
+      errors.cost = "Cost cannot be negative.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setStockErrors(errors);
+      return;
+    }
+
+    setIsStockSubmitting(true);
+    setStockErrors({});
+    try {
+      await api.post('/items/managestock', stockFormData);
+      alert('Stock has been successfully updated!');
+      setIsStockDialogOpen(false);
+      resetStockForm();
+      fetchData(); // Refresh the main table
+    } catch (err) {
+      alert(`Error: ${err.response?.data?.msg || 'Could not update stock.'}`);
+    } finally {
+      setIsStockSubmitting(false);
+    }
+  };
+
   const handleDownloadPdfReport = async () => {
     setIsReportGenerating(true);
     alert("Generating your PDF report. This may take a moment...");
@@ -357,6 +413,84 @@ const ManageInventory = () => {
             <FontAwesomeIcon icon={faFilePdf} className="mr-2 text-red-600"/>
             {isReportGenerating ? "Generating..." : "Download Report"}
           </Button>
+          {/* ★★★ Manage Stock button + dialog ★★★ */}
+          <Dialog open={isStockDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) resetStockForm(); setIsStockDialogOpen(isOpen); }}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="bg-white">
+                <FontAwesomeIcon icon={faWarehouse} className="mr-2 text-blue-600"/>
+                Manage Stock
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-white text-gray-900 sm:max-w-[480px]">
+              <DialogHeader>
+                <DialogTitle className="text-lg font-bold">Direct Stock Management</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleStockSubmit} className="pt-4">
+                <div className="grid gap-4">
+                  <div>
+                    <Label>Select Item</Label>
+                    <Select name="itemId" onValueChange={(v) => setStockFormData(p => ({...p, itemId: v}))} value={stockFormData.itemId}>
+                      <SelectTrigger className={`${stockErrors.itemId ? 'border-red-500' : ''} focus:ring-emerald-500 focus:ring-1`}>
+                        <SelectValue placeholder="Choose an item..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {items.map(it => <SelectItem key={it._id} value={it._id}>{it.name} ({it.quantity} in stock)</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    {stockErrors.itemId && <p className="text-red-600 text-xs mt-1">{stockErrors.itemId}</p>}
+                  </div>
+
+                  <div>
+                    <Label>Action</Label>
+                    <RadioGroup defaultValue="add" value={stockFormData.actionType} onValueChange={(v) => setStockFormData(p => ({...p, actionType: v}))} className="flex gap-4 pt-2">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="add" id="r-add" />
+                        <Label htmlFor="r-add">Add New Stock</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="remove" id="r-remove" />
+                        <Label htmlFor="r-remove">Remove Stock</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="s-quantity">Quantity to Change</Label>
+                      <Input id="s-quantity" name="quantity" type="number" min="1" value={stockFormData.quantity} onChange={handleStockFormChange} className={`${stockErrors.quantity ? 'border-red-500' : ''}`}/>
+                      {stockErrors.quantity && <p className="text-red-600 text-xs mt-1">{stockErrors.quantity}</p>}
+                    </div>
+                    {stockFormData.actionType === 'add' && (
+                      <div>
+                        <Label htmlFor="s-cost">Total Cost (LKR)</Label>
+                        <Input id="s-cost" name="cost" type="number" min="0" placeholder="Optional for expenses" value={stockFormData.cost} onChange={handleStockFormChange} className={`${stockErrors.cost ? 'border-red-500' : ''}`}/>
+                        {stockErrors.cost && <p className="text-red-600 text-xs mt-1">{stockErrors.cost}</p>}
+                      </div>
+                    )}
+                  </div>
+
+                  {stockFormData.actionType === 'remove' && (
+                    <div>
+                      <Label>Reason for Removal</Label>
+                      <Select name="reason" onValueChange={(v) => setStockFormData(p => ({...p, reason: v}))} value={stockFormData.reason}>
+                        <SelectTrigger className="focus:ring-emerald-500 focus:ring-1"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Expired">Expired Stock</SelectItem>
+                          <SelectItem value="Damaged">Damaged Stock</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+                <DialogFooter className="mt-6">
+                  <Button type="button" variant="outline" onClick={() => setIsStockDialogOpen(false)}>Cancel</Button>
+                  <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white" disabled={isStockSubmitting}>
+                    {isStockSubmitting ? 'Submitting...' : 'Confirm Update'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
 
           <Dialog open={isDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) resetForm(); setIsDialogOpen(isOpen); }}>
             <DialogTrigger asChild>
