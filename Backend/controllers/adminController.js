@@ -99,12 +99,8 @@ const getUserManagementSummary = async (req, res) => {
       }
     });
 
-    const uniquePlayers = await Player.aggregate([
-      { $group: { _id: "$memberId" } },
-      { $count: "totalPlayers" }
-    ]);
-
-    const totalPlayersCount = uniquePlayers.length > 0 ? uniquePlayers[0].totalPlayers : 0;
+    // Count total player registrations (not unique members)
+    const totalPlayersCount = await Player.countDocuments({});
 
     res.json({
       totalMembers,
@@ -168,7 +164,13 @@ const getUsersByPlan = async (req, res) => {
 // ================== Get Active Members ==================
 const getActiveMembers = async (req, res) => {
   try {
-    const users = await Member.find({ membershipPlan: { $ne: "None" } }).select("-password");
+    const users = await Member.find({ 
+      $and: [
+        { membershipPlan: { $ne: "None" } },
+        { membershipPlan: { $ne: null } },
+        { membershipPlan: { $exists: true } }
+      ]
+    }).select("-password");
     res.json(users);
   } catch (error) {
     console.error("Error fetching active members:", error);
@@ -189,19 +191,20 @@ const getInactiveMembers = async (req, res) => {
   }
 };
 
-// ================== Get Players by Sport ==================
-const getPlayersBySport = async (req, res) => {
+// ================== Get All Players ==================
+const getAllPlayers = async (req, res) => {
   try {
-    const sportName = req.params.sportName;
-    const players = await Player.find({ sport: sportName })
-      .populate('memberId', 'firstName lastName email contactNumber clubId');
+    const players = await Player.find({})
+      .populate('member', 'firstName lastName email contactNumber clubId')
+      .sort({ createdAt: -1 });
 
     const formattedPlayers = players.map(p => ({
       _id: p._id,
-      firstName: p.memberId?.firstName,
-      lastName: p.memberId?.lastName,
-      email: p.memberId?.email,
-      clubId: p.memberId?.clubId,
+      firstName: p.member?.firstName,
+      lastName: p.member?.lastName,
+      email: p.member?.email,
+      clubId: p.member?.clubId,
+      sportName: p.sportName,
       skillLevel: p.skillLevel,
       contactNumber: p.contactNumber,
       createdAt: p.createdAt,
@@ -209,6 +212,55 @@ const getPlayersBySport = async (req, res) => {
 
     res.json(formattedPlayers);
   } catch (error) {
+    console.error("Error fetching all players:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// ================== Get Players by Sport ==================
+const getPlayersBySport = async (req, res) => {
+  try {
+    const sportName = req.params.sportName;
+    const players = await Player.find({ sportName: sportName })
+      .populate('member', 'firstName lastName email contactNumber clubId');
+
+    const formattedPlayers = players.map(p => ({
+      _id: p._id,
+      firstName: p.member?.firstName,
+      lastName: p.member?.lastName,
+      email: p.member?.email,
+      clubId: p.member?.clubId,
+      skillLevel: p.skillLevel,
+      contactNumber: p.contactNumber,
+      createdAt: p.createdAt,
+    }));
+
+    res.json(formattedPlayers);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// ================== Delete Member ==================
+const deleteMember = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Check if member exists
+    const member = await Member.findById(id);
+    if (!member) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    // Delete associated player profiles first
+    await Player.deleteMany({ member: id });
+
+    // Delete the member
+    await Member.findByIdAndDelete(id);
+
+    res.json({ message: "Member deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting member:", error);
     res.status(500).json({ message: "Server Error" });
   }
 };
@@ -222,6 +274,8 @@ module.exports = {
   getUsersByPlan,
   getActiveMembers,
   getInactiveMembers,
+  getAllPlayers,
   getPlayersBySport,
-  getAllMembers
+  getAllMembers,
+  deleteMember
 };

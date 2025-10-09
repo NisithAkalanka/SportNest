@@ -77,6 +77,7 @@ import DeliveryManagement from "@/pages/DeliveryManagement";
 import DriverManagement from "@/pages/DriverManagement";
 import Vehicle from "@/pages/Vehicle";
 import FinancialManagement from "@/pages/FinancialManagement";
+import RefundManagement from "@/pages/RefundManagement";
 
 // Events (lazy)
 const SubmitEvent = lazy(() => import("@/pages/SubmitEvent"));
@@ -186,6 +187,7 @@ function App() {
                     <Route path="drivers" element={<DriverManagement />} />
                     <Route path="vehicles" element={<Vehicle />} />
                     <Route path="financial" element={<FinancialManagement />} />
+                    <Route path="refunds" element={<RefundManagement />} />
 
                     {/* Admin: events moderation + edit + report */}
                     <Route path="events/moderate" element={<ModerateEvents />} />

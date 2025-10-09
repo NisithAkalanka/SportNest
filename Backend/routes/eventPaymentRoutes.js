@@ -22,3 +22,7 @@ router.delete('/payments/:paymentId', auth, adminAuth, deletePayment);
 module.exports = router;
 
 
+
+
+
+

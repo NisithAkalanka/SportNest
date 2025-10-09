@@ -245,9 +245,9 @@ const MembershipPaymentPage = () => {
 
   const getPlanPrice = (planName) => {
     const prices = {
-      'Student Membership': 500,
-      'Ordinary Membership': 1500,
-      'Life Membership': 10000
+      'Student Membership': 20000,
+      'Ordinary Membership': 60000,
+      'Life Membership': 100000
     };
     return prices[planName] || 0;
   };

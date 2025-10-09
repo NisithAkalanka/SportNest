@@ -21,7 +21,8 @@ const {
     cancelMembership,
     renewMembership,
     getMembershipPlans,
-    processMembershipPayment
+    processMembershipPayment,
+    processRenewalPayment
 } = require('../controllers/memberController');
 
 // --- PUBLIC ROUTES (ආරක්ෂාවක් නැති, ඕනෑම කෙනෙකුට පිවිසිය හැකි මාර්ග) ---
@@ -47,6 +48,9 @@ router.post('/subscribe', protect, subscribeToMembership);
 
 // ★ Membership Payment Route
 router.post('/process-membership-payment', protect, processMembershipPayment);
+
+// ★ Membership Renewal Payment Route
+router.post('/process-renewal-payment', protect, processRenewalPayment);
 
 // ★ Membership Cancellation Route
 router.delete('/membership', protect, cancelMembership);

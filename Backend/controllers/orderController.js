@@ -90,6 +90,23 @@ const getAllOrders = async (req, res) => {
   }
 };
 
+// @route   GET /api/orders/my-orders
+// @desc    Get user's orders
+// @access  Private
+const getMyOrders = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const orders = await Order.find({ userId: userId })
+      .populate('items.item', 'name price imageUrl')
+      .sort({ orderDate: -1 });
+    
+    res.json(orders);
+  } catch (err) {
+    console.error('Get My Orders Error:', err.message);
+    res.status(500).json({ msg: 'Server Error' });
+  }
+};
+
 // @route   GET /api/orders/:id
 // @desc    Get order by ID
 // @access  Private
@@ -113,5 +130,6 @@ const getOrderById = async (req, res) => {
 module.exports = {
   checkout,
   getAllOrders,
+  getMyOrders,
   getOrderById
 };

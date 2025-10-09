@@ -25,6 +25,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import PlayerEditModal from '../components/PlayerEditModal';
 import MyEventsInline from '@/components/profile/MyEventsInline';
+import OrderHistory from '../components/OrderHistory';
 
 const MemberDashboard = () => {
   const { user, login, logout } = useContext(AuthContext);
@@ -454,6 +455,17 @@ const MemberDashboard = () => {
                 <Link to="/reviews">
                   <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">Go to Reviews Page</Button>
                 </Link>
+              </CardContent>
+            </Card>
+
+            {/* Order History & Refunds */}
+            <Card className="shadow-md ring-1 ring-slate-200/60">
+              <CardHeader>
+                <CardTitle>Order History & Refunds</CardTitle>
+                <CardDescription>View your order history and manage refund requests.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <OrderHistory />
               </CardContent>
             </Card>
           </div>

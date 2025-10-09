@@ -4,6 +4,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/MemberAuthContext';
+import MembershipRenewalPaymentForm from '../components/MembershipRenewalPaymentForm';
 
 const RenewMembershipPage = () => {
     const { state } = useLocation(); 
@@ -22,6 +23,7 @@ const RenewMembershipPage = () => {
     const [pageLoading, setPageLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const [showPaymentForm, setShowPaymentForm] = useState(false);
 
     useEffect(() => {
         // ★★★ දත්ත ලබා ගැනීමේ වඩාත් ස්ථාවර ක්‍රමය ★★★
@@ -82,31 +84,58 @@ const RenewMembershipPage = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // ★★★ `handleSubmit` function එක `renewal-success` පිටුවට යොමු වන සේ වෙනස් කරන ලදී ★★★
+    // ★★★ `handleSubmit` function එක payment form එකට යොමු වන සේ වෙනස් කරන ලදී ★★★
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsSubmitting(true);
         setError('');
 
-        try {
-            const config = { headers: { Authorization: `Bearer ${user.token}` } };
-            const submissionData = { newPlan: formData.newPlan };
-
-            await axios.post('/api/members/renew', submissionData, config);
-
-            // සාර්ථක වූ පසු, alert එකක් වෙනුවට RenewalSuccessPage එකට යොමු කිරීම
-            navigate('/renewal-success');
-
-        } catch (err)
- {
-            setError(err.response?.data?.message || 'An error occurred during renewal.');
-        } finally {
-            setIsSubmitting(false);
+        // Validate form
+        if (!formData.newPlan) {
+            setError('Please select a new plan');
+            return;
         }
+
+        // Show payment form instead of directly processing
+        setShowPaymentForm(true);
+    };
+
+    const handlePaymentSuccess = (paymentData) => {
+        // Navigate to success page with payment details
+        navigate('/renewal-success', {
+            state: {
+                membershipData: formData,
+                paymentData: paymentData,
+                paymentCompleted: true
+            }
+        });
+    };
+
+    const handlePaymentError = (errorMessage) => {
+        console.error('Payment error:', errorMessage);
+        setError(errorMessage);
+        setShowPaymentForm(false);
+    };
+
+    const handlePaymentCancel = () => {
+        setShowPaymentForm(false);
     };
     
     if (pageLoading) {
         return <div className="text-center p-20 font-semibold text-lg">Loading Membership Details...</div>;
+    }
+
+    // Show payment form if user has proceeded to payment
+    if (showPaymentForm) {
+        return (
+            <div className="min-h-screen bg-gray-50 py-8">
+                <MembershipRenewalPaymentForm
+                    membershipData={formData}
+                    onPaymentSuccess={handlePaymentSuccess}
+                    onPaymentError={handlePaymentError}
+                    onCancel={handlePaymentCancel}
+                />
+            </div>
+        );
     }
 
     return (
@@ -148,16 +177,17 @@ const RenewMembershipPage = () => {
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Select New Plan</label>
                             <select name="newPlan" value={formData.newPlan} onChange={handleChange} className="w-full mt-1 p-2 border rounded-md">
-                                <option>Student Membership</option>
-                                <option>Ordinary Membership</option>
-                                <option>Life Membership</option>
+                                <option value="">Select a plan</option>
+                                <option value="Student Membership">Student Membership - Rs. 20,000</option>
+                                <option value="Ordinary Membership">Ordinary Membership - Rs. 60,000</option>
+                                <option value="Life Membership">Life Membership - Rs. 100,000</option>
                             </select>
                         </div>
 
                         <div className="flex items-center justify-between pt-4">
                             <button type="button" onClick={() => navigate(-1)} className="px-6 py-2 border rounded-md font-medium text-gray-700 hover:bg-gray-50">Back</button>
-                            <button type="submit" disabled={isSubmitting} className="px-6 py-2 border rounded-md font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50">
-                                {isSubmitting ? 'Processing...' : 'Proceed'}
+                            <button type="submit" disabled={!formData.newPlan} className="px-6 py-2 border rounded-md font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50">
+                                Proceed to Payment
                             </button>
                         </div>
                     </form>

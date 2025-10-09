@@ -6,10 +6,12 @@ const {
   loginAdmin, 
   getUserManagementSummary,
   getUsersByPlan,
+  getAllPlayers,       // ✅ මේක එකතු කරන්න
   getPlayersBySport,   // ✅ මේක එකතු කරන්න
   getActiveMembers,
   getInactiveMembers,
-  getAllMembers        // ✅ මේකත් එකතු කරන්න
+  getAllMembers,       // ✅ මේකත් එකතු කරන්න
+  deleteMember         // ✅ මේක එකතු කරන්න
 } = require('../controllers/adminController');
 
 const { protect, admin } = require('../middleware/authMiddleware');
@@ -26,8 +28,10 @@ router.get('/users/all', getAllMembers);
 router.get('/users/status/active',  getActiveMembers);
 router.get('/users/status/inactive', getInactiveMembers);
 router.get('/users/plan/:planName',  getUsersByPlan);
+router.delete('/users/:id',         deleteMember);
 
 // ================== Players ==================
+router.get('/players/all',               getAllPlayers);
 router.get('/players/sport/:sportName',  getPlayersBySport);
 
 module.exports = router;

@@ -64,12 +64,14 @@ const eventsRoutes = require('./routes/eventsRoutes'); // general events API
 const eventsReportRoutes = require('./routes/eventsReportRoutes'); // reports only
 const eventPaymentRoutes = require('./routes/eventPaymentRoutes');
 const paymentMethodRoutes = require('./routes/paymentMethodRoutes');
+const refundRoutes = require('./routes/refundRoutes');
 
 // --- Mount order matters! ---
 app.use('/api/events/report', eventsReportRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/events', eventPaymentRoutes);
 app.use('/api/payments', paymentMethodRoutes);
+app.use('/api/refunds', refundRoutes);
 
 // Other APIs
 app.use('/api/admin', adminRoutes);
