@@ -2,10 +2,10 @@ import axios from 'axios';
 
 const API_URL = '/api/reviews';
 
-// ★★★ විසඳුම 1: Member ට සහ Admin ට වෙන් වෙන්ව token ලබාගන්නා ශ්‍රිත ★★★
+// solution 1: Member ta saha Admin ta wen wenwa token lbagnna shritha
 
-// Member-only functions සඳහා token ලබාගන්නා ශ්‍රිතය
-// මෙම ශ්‍රිතය 'userInfo' පමණක් සොයයි
+// Member-only functions sdha token lbgnna shrithya
+// mein 'userInfo' pmnak soyai
 const getMemberTokenConfig = () => {
     const memberInfoString = localStorage.getItem('userInfo'); 
     if (memberInfoString) {
@@ -16,12 +16,12 @@ const getMemberTokenConfig = () => {
             }
         } catch (e) { console.error("Error parsing userInfo", e); }
     }
-    // Member token එක නොමැතිනම්, කිසිවක් නොකරයි (error එකක් throw කරයි)
+    // Member token eka noathinm, kisiwak karanne na (error ekak throw krai)
     return null;
 };
 
-// Admin-only functions සඳහා token ලබාගන්නා ශ්‍රිතය
-// මෙම ශ්‍රිතය 'adminInfo' පමණක් සොයයි
+// Admin-only functions sadaha token ganna shrithaya
+// meya 'adminInfo' witharak hoyai
 const getAdminTokenConfig = () => {
     const adminInfoString = localStorage.getItem('adminInfo');
     if (adminInfoString) {
@@ -32,13 +32,13 @@ const getAdminTokenConfig = () => {
             }
         } catch (e) { console.error("Error parsing adminInfo", e); }
     }
-    // Admin token එක නොමැතිනම්, කිසිවක් නොකරයි
+    // Admin token eka nattam kisiwak nokarai.
     return null;
 };
 
 
 // --- Public Functions ---
-// (මෙහි වෙනසක් නැත)
+
 export const getFeaturedReviews = async () => {
     const response = await axios.get(`${API_URL}/featured`);
     return response.data;
@@ -46,24 +46,24 @@ export const getFeaturedReviews = async () => {
 
 
 // --- Member Functions ---
-// ★★★ විසඳුම 2: අදාළ ශ්‍රිත තුළ නිවැරදි token function එක call කිරීම ★★★
+// solution 2: adala shritha thula niwaradi token function eka call kirima
 
 export const getMyReview = async () => {
-    const config = getMemberTokenConfig(); // <-- 'getTokenConfig' වෙනුවට 'getMemberTokenConfig'
-    if (!config) return null; // Token නැත්නම් null return කරයි
+    const config = getMemberTokenConfig(); // <-- 'getTokenConfig' wenuwta 'getMemberTokenConfig'
+    if (!config) return null; // Token naththam null return karai
     const response = await axios.get(`${API_URL}/my-review`, config);
     return response.data;
 };
 
 export const createOrUpdateMyReview = async (reviewData) => {
-    const config = getMemberTokenConfig(); // <-- 'getTokenConfig' වෙනුවට 'getMemberTokenConfig'
+    const config = getMemberTokenConfig(); // <-- 'getTokenConfig' wenuwta 'getMemberTokenConfig'
     if (!config) throw new Error('Not authorized. Please login as a member.');
     const response = await axios.post(`${API_URL}/my-review`, reviewData, config);
     return response.data;
 };
 
 export const deleteMyReview = async () => {
-    const config = getMemberTokenConfig(); // <-- 'getTokenConfig' වෙනුවට 'getMemberTokenConfig'
+    const config = getMemberTokenConfig(); // <-- 'getTokenConfig' wenuwata 'getMemberTokenConfig'
     if (!config) throw new Error('Not authorized. Please login as a member.');
     const response = await axios.delete(`${API_URL}/my-review`, config);
     return response.data;
@@ -71,16 +71,16 @@ export const deleteMyReview = async () => {
 
 
 // --- Admin Functions ---
-// (Admin functions සඳහා 'getAdminTokenConfig' භාවිතා කිරීම)
+// (Admin functions sadaha 'getAdminTokenConfig' use kirima)
 export const getAllReviewsForAdmin = async () => {
-    const config = getAdminTokenConfig(); // <-- Admin සඳහා වෙන්වූ function එක
+    const config = getAdminTokenConfig(); // <-- Admin sdha wenwu function eka
     if (!config) throw new Error('Not authorized as Admin.');
     const response = await axios.get(`${API_URL}/admin/all`, config);
     return response.data;
 };
 
 export const toggleFeaturedStatus = async (reviewId) => {
-    const config = getAdminTokenConfig(); // <-- Admin සඳහා වෙන්වූ function එක
+    const config = getAdminTokenConfig(); // <-- Admin sdha wenwu function eka
     if (!config) throw new Error('Not authorized as Admin.');
     const response = await axios.patch(`${API_URL}/admin/feature/${reviewId}`, {}, config);
     return response.data;

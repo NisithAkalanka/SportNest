@@ -14,7 +14,10 @@ const ManageSuppliers = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({ _id: null, name: '', contactPerson: '', email: '', phone: '', address: '' });
+  const [formData, setFormData] = useState({ 
+    _id: null, name: '', contactPerson: '', email: '', phone: '', address: '',
+    bankName: '', accountNumber: '', accountName: ''
+  });
   const [errors, setErrors] = useState({});
   const [selectedPreorders, setSelectedPreorders] = useState(null);
 
@@ -26,7 +29,10 @@ const ManageSuppliers = () => {
   const [sortBy, setSortBy] = useState('name-asc'); // name-asc | email-asc
 
   const resetForm = () => {
-    setFormData({ _id: null, name: '', contactPerson: '', email: '', phone: '', address: '' });
+    setFormData({ 
+      _id: null, name: '', contactPerson: '', email: '', phone: '', address: '',
+      bankName: '', accountNumber: '', accountName: '' 
+    });
     setErrors({});
   };
 
@@ -88,6 +94,24 @@ const ManageSuppliers = () => {
       case 'address':
         if (value && hasAddressSpecialChars(value)) errorMsg = 'Address cannot contain special characters like @$%&*!';
         break;
+
+      // ★★★ Bank details validation ★★★
+      case 'bankName':
+        if (value && (/\d/.test(value) || hasSpecialChars(value))) {
+          errorMsg = 'Bank Name cannot contain numbers or special characters.';
+        }
+        break;
+      case 'accountName':
+        if (value && (/\d/.test(value) || hasSpecialChars(value))) {
+          errorMsg = "Account holder's name cannot contain numbers or special characters.";
+        }
+        break;
+      case 'accountNumber':
+        if (value && (!/^\d+$/.test(value) || value.length < 8 || value.length > 12)) {
+          errorMsg = 'Account number must contain only 8 to 12 digits.';
+        }
+        break;
+
       default:
         break;
     }
@@ -97,11 +121,19 @@ const ManageSuppliers = () => {
 
   const handleInputChange = (e) => {
     let { name, value } = e.target;
+
+    // Phone number: digits only, max 10
     if (name === 'phone') {
-      // allow only digits and cap at 10
       value = value.replace(/\D/g, '').slice(0, 10);
     }
+
+    // ★★★ Account number: digits only, max 12 ★★★
+    if (name === 'accountNumber') {
+      value = value.replace(/\D/g, '').slice(0, 12);
+    }
+
     setFormData(prevData => ({ ...prevData, [name]: value }));
+    // Keep passing allSuppliers for cross-field checks
     validateField(name, value, suppliers);
   };
 
@@ -113,8 +145,12 @@ const ManageSuppliers = () => {
     const isEmailValid = validateField('email', formData.email, suppliers);
     const isPhoneValid = validateField('phone', formData.phone, suppliers);
     const isAddressValid = validateField('address', formData.address, suppliers);
+    // ★★★ New validations for bank fields ★★★
+    const isBankNameValid = validateField('bankName', formData.bankName, suppliers);
+    const isAccountNameValid = validateField('accountName', formData.accountName, suppliers);
+    const isAccountNumberValid = validateField('accountNumber', formData.accountNumber, suppliers);
 
-    if (!isNameValid || !isContactPersonValid || !isEmailValid || !isPhoneValid || !isAddressValid) {
+    if (!isNameValid || !isContactPersonValid || !isEmailValid || !isPhoneValid || !isAddressValid || !isBankNameValid || !isAccountNameValid || !isAccountNumberValid) {
       alert('Please fix the errors before submitting.');
       return;
     }
@@ -125,6 +161,9 @@ const ManageSuppliers = () => {
       email: formData.email.trim(),
       phone: formData.phone.trim(),
       address: formData.address.trim(),
+      bankName: (formData.bankName || '').trim(),
+      accountNumber: (formData.accountNumber || '').trim(),
+      accountName: (formData.accountName || '').trim(),
     };
 
     try {
@@ -154,7 +193,10 @@ const ManageSuppliers = () => {
       contactPerson: supplierData.contactPerson || '',
       email: supplierData.email || '',
       phone: supplierData.phone || '',
-      address: supplierData.address || ''
+      address: supplierData.address || '',
+      bankName: supplierData.bankName || '',
+      accountNumber: supplierData.accountNumber || '',
+      accountName: supplierData.accountName || ''
     });
     setIsDialogOpen(true);
   };
@@ -244,7 +286,7 @@ const ManageSuppliers = () => {
                 <DialogTitle className="text-lg font-semibold">{formData._id ? "Edit Supplier" : "Add New Supplier"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit}>
-                <div className="grid gap-3 py-4">
+                <div className="grid gap-3 py-4 max-h-[70vh] overflow-y-auto pr-2">
                   <div>
                     <Label htmlFor="name" className="text-gray-700">Name</Label>
                     <Input id="name" name="name" value={formData.name} onChange={handleInputChange} required placeholder="Supplier name" className={`${errors.name ? 'border-red-500' : ''} focus-visible:ring-emerald-500`} />
@@ -287,6 +329,48 @@ const ManageSuppliers = () => {
                     <Label htmlFor="address" className="text-gray-700">Address</Label>
                     <Input id="address" name="address" value={formData.address} onChange={handleInputChange} placeholder="Optional address" className={`${errors.address ? 'border-red-500' : ''} focus-visible:ring-emerald-500`} />
                     {errors.address && <p className="text-red-600 text-xs mt-1">{errors.address}</p>}
+                  </div>
+                  {/* ★★★ Bank Details (Optional) ★★★ */}
+                  <div className="mt-4 pt-4 border-t">
+                    <h3 className="font-semibold text-gray-600 mb-2">Bank Details (Optional)</h3>
+                    <div className="grid gap-3">
+                      <div>
+                        <Label htmlFor="bankName" className="text-gray-700">Bank Name</Label>
+                        <Input
+                          id="bankName"
+                          name="bankName"
+                          value={formData.bankName}
+                          onChange={handleInputChange}
+                          placeholder="e.g., Commercial Bank"
+                          className={`${errors.bankName ? 'border-red-500' : ''} focus-visible:ring-emerald-500`}
+                        />
+                        {errors.bankName && <p className="text-red-600 text-xs mt-1">{errors.bankName}</p>}
+                      </div>
+                      <div>
+                        <Label htmlFor="accountName" className="text-gray-700">Account Holder's Name</Label>
+                        <Input
+                          id="accountName"
+                          name="accountName"
+                          value={formData.accountName}
+                          onChange={handleInputChange}
+                          placeholder="As it appears on the bank statement"
+                          className={`${errors.accountName ? 'border-red-500' : ''} focus-visible:ring-emerald-500`}
+                        />
+                        {errors.accountName && <p className="text-red-600 text-xs mt-1">{errors.accountName}</p>}
+                      </div>
+                      <div>
+                        <Label htmlFor="accountNumber" className="text-gray-700">Account Number</Label>
+                        <Input
+                          id="accountNumber"
+                          name="accountNumber"
+                          value={formData.accountNumber}
+                          onChange={handleInputChange}
+                          placeholder="Bank account number"
+                          className={`${errors.accountNumber ? 'border-red-500' : ''} focus-visible:ring-emerald-500`}
+                        />
+                        {errors.accountNumber && <p className="text-red-600 text-xs mt-1">{errors.accountNumber}</p>}
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <DialogFooter>

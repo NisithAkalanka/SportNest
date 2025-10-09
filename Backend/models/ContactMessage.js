@@ -25,7 +25,7 @@ const ContactMessageSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide a message.'],
   },
-  isRead: { // Admin ට පණිවිඩය කියෙව්වාද නැද්ද යන්න සලකුණු කිරීමට
+  isRead: { // Admin ta paniwidya kiyewwda ndd yanna lakunu kirima
     type: Boolean,
     default: false,
   },

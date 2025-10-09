@@ -3,8 +3,8 @@ import { generateReport } from '../api/salaryService';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// ★★★ 1. බොත්තම් සඳහා අයිකන (icons) import කර ගැනීම ★★★
-import { FileDown, BarChart2 } from 'lucide-react'; // 'lucide-react' library එක install කරගත යුතුය.
+// buttons sadaha (icons) import kr ganima
+import { FileDown, BarChart2 } from 'lucide-react'; // 'lucide-react' library eka install krgnn one
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -83,7 +83,7 @@ const SalaryPage = () => {
                     <div className="flex flex-col"><label className="mb-2 font-semibold text-gray-700">Year</label><Select onValueChange={setSelectedYear} value={selectedYear}><SelectTrigger className="focus:ring-2 focus:ring-blue-500"><SelectValue /></SelectTrigger><SelectContent>{years.map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}</SelectContent></Select></div>
                     <div className="flex flex-col"><label className="mb-2 font-semibold text-gray-700">Month</label><Select onValueChange={setSelectedMonth} value={selectedMonth}><SelectTrigger className="focus:ring-2 focus:ring-blue-500"><SelectValue /></SelectTrigger><SelectContent>{months.map(m => <SelectItem key={m.value} value={m.value.toString()}>{m.name}</SelectItem>)}</SelectContent></Select></div>
                     
-                    {/* ★★★ 2. "Generate Report" බොත්තම තැඹිලි පාට කර, අයිකනයක් සහ hover effect එකක් එක් කිරීම ★★★ */}
+                    {/* ★★★ 2. "Generate Report" button eka thabili pata krl, icon and hover effect ekk ekthu kirima*/}
                     <Button onClick={handleGenerateReport} disabled={isLoading} className="md:col-start-4 bg-orange-500 text-white hover:bg-orange-600 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
                         <BarChart2 className="mr-2 h-4 w-4" /> 
                         {isLoading ? 'Generating...' : 'Generate Report'}
@@ -97,12 +97,12 @@ const SalaryPage = () => {
             {reportData && !isLoading && (
                 <div className="animate-in fade-in-0 duration-600">
                     {reportData.length > 0 ? (
-                        // ★★★ 3. Report Details කාඩ්පතට ඉහළින් වර්ණවත් මායිමක් එක් කිරීම ★★★
+                        // ★★★ 3. Report Details card ekt ihalin pata maimak ekthu kirima 
                         <div className="bg-white p-6 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl border-t-4 border-blue-500">
                             <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
                                 <h2 className="text-2xl font-bold text-gray-800">Report Details</h2>
                                 
-                                {/* ★★★ 4. "Download as PDF" බොත්තම කොළ පාට කර, අයිකනයක් සහ hover effect එකක් එක් කිරීම ★★★ */}
+                                {/* ★★★ 4. "Download as PDF" button eka kola pt krl, icon and hover effect ekk ekthu kirima*/}
                                 <Button onClick={handleDownloadPdf} disabled={!reportData || reportData.length === 0} className="bg-green-600 text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
                                     <FileDown className="mr-2 h-4 w-4" /> 
                                     Download as PDF
@@ -110,7 +110,7 @@ const SalaryPage = () => {
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200">
-                                    {/* ★★★ 5. වගුවේ ශීර්ෂයට (Table Header) තද පැහැති පසුබිමක් ලබා දීම ★★★ */}
+                                    {/* waguwe Table Header eka thada pata kirima */}
                                     <thead className="bg-gray-200">
                                         <tr>
                                             <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Coach Name</th>
@@ -125,7 +125,7 @@ const SalaryPage = () => {
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {reportData.map(item => (
-                                            // ★★★ 6. එක් එක් පේළියට (row) hover effect එකක් එක් කිරීම ★★★
+                                            // ek ek peliyata (row) hover effect ekak ekathu kirim
                                             <tr key={item.coachId} className="hover:bg-blue-50 transition-colors duration-200">
                                                 <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{item.coachName}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-gray-700">{parseFloat(item.baseSalary).toFixed(2)}</td>
@@ -134,7 +134,7 @@ const SalaryPage = () => {
                                                 <td className="px-6 py-4 whitespace-nowrap text-gray-700">{item.dutyLeaves}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-gray-700">{item.unpaidLeaves}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-gray-700">{item.absences}</td>
-                                                {/* ★★★ 7. ශුද්ධ වැටුප (Net Salary) තද පැහැයෙන් (bold) පෙන්වීම ★★★ */}
+                                                {/* Net Salary bold kirim*/}
                                                 <td className="px-6 py-4 whitespace-nowrap font-bold text-gray-900 text-lg">{parseFloat(item.netSalary).toFixed(2)}</td>
                                             </tr>
                                         ))}

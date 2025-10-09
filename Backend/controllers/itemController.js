@@ -1,4 +1,5 @@
 const Item = require('../models/Item');
+const InventoryLog = require('../models/InventoryLog');
 const cloudinary = require('cloudinary').v2;
 const pdf = require('pdf-creator-node');
 const fs = require('fs');
@@ -182,11 +183,74 @@ const generateInventoryPdfReport = async (req, res) => {
     }
 };
 
+// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+// ★★★ Newly added Function – Manual Stock Management ★★★
+// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+
+// @route   POST /api/items/managestock
+// @desc    Manually add or remove stock for an item
+// @access  Admin
+const manageStock = async (req, res) => {
+  const { itemId, actionType, quantity, cost, reason } = req.body;
+
+  if (!itemId || !actionType || !quantity) {
+    return res.status(400).json({ msg: 'Missing required fields: itemId, actionType, quantity' });
+  }
+
+  const qty = Number(quantity);
+  if (isNaN(qty) || qty <= 0) {
+    return res.status(400).json({ msg: 'Quantity must be a positive number.' });
+  }
+
+  try {
+    const item = await Item.findById(itemId);
+    if (!item) {
+      return res.status(404).json({ msg: 'Item not found' });
+    }
+
+    let logType = '';
+    let quantityChange = 0;
+
+    if (actionType === 'add') {
+      item.quantity += qty;
+      logType = 'addition';
+      quantityChange = qty;
+    } else if (actionType === 'remove') {
+      if (item.quantity < qty) {
+        return res.status(400).json({ msg: `Cannot remove ${qty} units. Only ${item.quantity} are in stock.` });
+      }
+      item.quantity -= qty;
+      logType = reason === 'Expired' ? 'removal_expired' : 'removal_damaged';
+      quantityChange = -qty;
+    } else {
+      return res.status(400).json({ msg: 'Invalid action type.' });
+    }
+    
+    await item.save();
+
+    const logEntry = new InventoryLog({
+      item: itemId,
+      type: logType,
+      quantityChange,
+      cost: actionType === 'add' ? Number(cost) || 0 : 0,
+      reason: actionType === 'remove' ? reason : undefined
+    });
+    await logEntry.save();
+    
+    res.json({ msg: 'Stock updated successfully!', item });
+
+  } catch (err) {
+    console.error('Manage Stock Error:', err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
 module.exports = {
     addItem,
     getItems,
     updateItem,
     deleteItem,
     getShopItems,
-    generateInventoryPdfReport
+    generateInventoryPdfReport,
+    manageStock
 };

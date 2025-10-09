@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClipboardList, faDollarSign, faExclamationTriangle, faRedo, faBoxOpen, faShoppingCart, faUsers, faWarehouse } from '@fortawesome/free-solid-svg-icons';
+import { faClipboardList, faDollarSign, faExclamationTriangle, faRedo, faBoxOpen, faShoppingCart, faUsers, faWarehouse, faCreditCard } from '@fortawesome/free-solid-svg-icons';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 const AdminDashboard = () => {
@@ -21,6 +21,14 @@ const AdminDashboard = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [preQty, setPreQty] = useState(10);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ★★★ Payment modal states ★★★
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentData, setPaymentData] = useState({
+    amount: '',
+    preorder: null, // to hold created preorder
+  });
+
   const navigate = useNavigate();
 
 
@@ -103,14 +111,54 @@ const AdminDashboard = () => {
         itemName: selectedItem.name,
     };
     try {
-      await api.post('/preorders', payload);
-      setToast({ type: 'success', msg: 'Pre-order created and email sent!' });
+      const res = await api.post('/preorders', payload);
+      setToast({ type: 'success', msg: 'Pre-order created successfully! Please log the payment.' });
       localStorage.setItem('preorderUpdated', String(Date.now()));
-      fetchStats(); 
+      fetchStats();
       setPreorderOpen(false);
+
+      // ★★★ Open Payment modal with created preorder ★★★
+      setPaymentData({
+        amount: '',
+        preorder: res?.data?.preorder ?? res?.data ?? null
+      });
+      setPaymentModalOpen(true);
+
       setSelectedItem(null);
     } catch (err) {
       const msg = err.response?.data?.msg || 'Pre-order failed. Check server logs.';
+      setToast({ type: 'error', msg });
+    } finally {
+      setIsSubmitting(false);
+      setTimeout(() => setToast(null), 4000);
+    }
+  };
+
+  // ★★★ Log Payment handler ★★★
+  const handlePaymentLogSubmit = async (e) => {
+    e.preventDefault();
+    if (!paymentData.preorder || !paymentData.amount || Number(paymentData.amount) <= 0) {
+      setToast({ type: 'error', msg: 'Please enter a valid amount.' });
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+
+    const payload = {
+      description: `Payment for Pre-order: ${paymentData.preorder?.item?.name ?? 'Item'} (Qty: ${paymentData.preorder?.quantity ?? 'N/A'})`,
+      amount: Number(paymentData.amount),
+      supplierId: paymentData.preorder?.supplier?._id,
+      preorderId: paymentData.preorder?._id,
+      category: 'Supplier Payment'
+    };
+
+    setIsSubmitting(true);
+    try {
+      await api.post('/expenses/log', payload);
+      setToast({ type: 'success', msg: 'Payment logged successfully as an expense!' });
+      setPaymentModalOpen(false);
+      setSelectedItem(null);
+    } catch (err) {
+      const msg = err.response?.data?.msg || 'Failed to log payment.';
       setToast({ type: 'error', msg });
     } finally {
       setIsSubmitting(false);
@@ -302,6 +350,48 @@ const AdminDashboard = () => {
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setPreorderOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={isSubmitting || !selectedItem?.supplier?.email}>{isSubmitting ? 'Submitting...' : 'Submit Pre-order'}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ★★★ Payment Dialog – Log Supplier Payment ★★★ */}
+      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+        <DialogContent className="bg-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FontAwesomeIcon icon={faCreditCard} /> Log Payment for Pre-order
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handlePaymentLogSubmit} className="mt-4 grid gap-4">
+            <div className="p-3 border rounded-md bg-gray-50 text-sm">
+              <h4 className="font-semibold mb-2">Supplier Bank Details</h4>
+              <p><strong>Bank:</strong> {paymentData.preorder?.supplier?.bankName || 'N/A'}</p>
+              <p><strong>Account Name:</strong> {paymentData.preorder?.supplier?.accountName || 'N/A'}</p>
+              <p><strong>Account No:</strong> {paymentData.preorder?.supplier?.accountNumber || 'N/A'}</p>
+            </div>
+
+            <div>
+              <Label htmlFor="paymentAmount">Amount Paid (LKR)</Label>
+              <Input
+                id="paymentAmount"
+                type="number"
+                min="0"
+                value={paymentData.amount}
+                onChange={(e) => setPaymentData((p) => ({ ...p, amount: e.target.value }))}
+                placeholder="e.g., 25000"
+                required
+                className="mt-1"
+              />
+            </div>
+
+            <DialogFooter className="mt-4">
+              <Button type="button" variant="outline" onClick={() => setPaymentModalOpen(false)}>
+                Skip for now
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Logging...' : 'Log Payment'}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

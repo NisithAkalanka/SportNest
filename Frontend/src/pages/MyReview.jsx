@@ -147,7 +147,7 @@ const MyReview = ({ onReviewUpdate }) => {
                     <div>
                         <label htmlFor="reviewCategory" className="block mb-1 font-medium text-sm text-gray-200">Category *</label>
                         <Select onValueChange={value => setFormData(prev => ({ ...prev, category: value }))} value={formData.category}>
-                            {/* ★★★ විසඳුම 1: Category text එක පෙනීම සඳහා text color class එක ★★★ */}
+                            {/* solution 1: Category text eka penima sadha text color class eka */}
                             <SelectTrigger id="reviewCategory" className="text-zinc-900">
                                 <SelectValue placeholder="Select a category..." />
                             </SelectTrigger>
@@ -187,7 +187,7 @@ const MyReview = ({ onReviewUpdate }) => {
                             {isSubmitting ? 'Saving...' : (review ? 'Update Review' : 'Submit Review')}
                         </Button>
                         {review && 
-                            // ★★★ විසඳුම 2: Delete button එකට රතු පාටක් ලබාදීම ★★★
+                            // solution 2: Delete button ekata rathu pata damima
                             <Button 
                                 type="button" 
                                 variant="destructive" 

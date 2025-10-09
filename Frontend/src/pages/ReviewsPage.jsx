@@ -68,6 +68,14 @@ const ReviewsPage = () => {
         <main className="container mx-auto px-4 pb-16 md:pb-24">
           <style>{`
     /* Scoped overrides for MyReview form to match emerald glass UI */
+
+    /* ★★★★★★★★★★★★★★★★ THE FIX IS HERE ★★★★★★★★★★★★★★★★★★ */
+    /* This new rule sets the color for all labels, headings, and paragraphs inside the review form to a dark, readable color (text-gray-800). */
+    .myreview label, .myreview p, .myreview h2, .myreview h3 {
+        color: #1f2937 !important; 
+    }
+    /* ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★ */
+
     .myreview input[type="text"],
     .myreview input[type="email"],
     .myreview input[type="number"],

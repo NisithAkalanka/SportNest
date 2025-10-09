@@ -3,7 +3,7 @@ const Event = require("../models/Event");
 // small helper
 const sameId = (a, b) => a && b && String(a) === String(b);
 
-// POST /api/events/submit  (public/member) -> pending
+//pending events
 exports.submitEvent = async (req, res, next) => {
   try {
     const ev = await Event.create({
@@ -23,7 +23,7 @@ exports.submitEvent = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// GET /api/events?status=... (admin list)
+// admin list
 exports.listEvents = async (req, res, next) => {
   try {
     const { status, q } = req.query;
@@ -35,7 +35,7 @@ exports.listEvents = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// (Optional) GET /api/events/mine  -> events created by logged-in member
+// events created logged-in member
 exports.listMine = async (req, res, next) => {
   try {
     const uid = req.user?.id;
@@ -45,7 +45,7 @@ exports.listMine = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// GET /api/events/approved (public list)
+// public list
 exports.listApproved = async (req, res, next) => {
   try {
     const { q } = req.query;
@@ -64,7 +64,7 @@ exports.getById = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// PATCH /api/events/:id/approve (admin)
+// approve events (admin)
 exports.approve = async (req, res, next) => {
   try {
     const ev = await Event.findByIdAndUpdate(
@@ -77,7 +77,7 @@ exports.approve = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// PATCH /api/events/:id/reject (admin)
+// reject events (admin)
 exports.reject = async (req, res, next) => {
   try {
     const ev = await Event.findByIdAndUpdate(
@@ -90,13 +90,7 @@ exports.reject = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-/**
- * PUT /api/events/:id
- * Admin: can always edit.
- * Submitter: can edit ONLY when status !== 'approved'.
- * (Submitter cannot change workflow fields like status/approvedBy/submittedBy.)
- * Also guards against reducing capacity below current registrations.
- */
+
 exports.updateEvent = async (req, res, next) => {
   try {
     const ev = await Event.findById(req.params.id);
@@ -111,7 +105,7 @@ exports.updateEvent = async (req, res, next) => {
       return res.status(403).json({ error: "Not allowed to edit this event" });
     }
 
-    // sanitize payload for non-admins
+    //  non-admins
     const payload = { ...req.body };
     if (!isAdmin) {
       delete payload.status;
@@ -132,11 +126,7 @@ exports.updateEvent = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-/**
- * DELETE /api/events/:id
- * Admin: can always delete.
- * Submitter: can delete ONLY when status !== 'approved'.
- */
+
 exports.deleteEvent = async (req, res, next) => {
   try {
     const ev = await Event.findById(req.params.id);
@@ -156,7 +146,7 @@ exports.deleteEvent = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// POST /api/events/:id/register (public)
+// register (public)
 exports.register = async (req, res, next) => {
   try {
     const { name, email, phone } = req.body;
