@@ -1,4 +1,5 @@
 // File: Frontend/src/App.jsx — FINAL MERGED & CLEAN
+//suj
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Suspense, lazy } from "react";
