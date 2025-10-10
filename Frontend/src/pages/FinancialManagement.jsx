@@ -21,6 +21,9 @@ const FinancialManagement = () => {
   const [membershipFees, setMembershipFees] = useState(0);
   const [eventPayments, setEventPayments] = useState([]);
   const [preOrderPayments, setPreOrderPayments] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [totalDriverSalary, setTotalDriverSalary] = useState(0);
+  const [totalInventoryValue, setTotalInventoryValue] = useState(0);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -86,9 +89,47 @@ const FinancialManagement = () => {
         setPreOrderPayments([]);
       }
 
+      // Fetch drivers data for salary calculation
+      let driversData = [];
+      let calculatedDriverSalary = 0;
+      try {
+        const driversResponse = await api.get('/drivers');
+        driversData = driversResponse.data?.drivers || [];
+        setDrivers(driversData);
+        
+        // Calculate total driver salary
+        calculatedDriverSalary = driversData.reduce((sum, driver) => {
+          return sum + (parseFloat(driver.salary) || 0);
+        }, 0);
+        setTotalDriverSalary(calculatedDriverSalary);
+        console.log('Drivers Data:', driversData);
+        console.log('Total Driver Salary:', calculatedDriverSalary);
+      } catch (err) {
+        console.warn('Drivers API not available:', err.message);
+        setDrivers([]);
+        setTotalDriverSalary(0);
+      }
+
+      // Fetch inventory data for total inventory value (same as ManageInventory)
+      let inventoryData = [];
+      let calculatedInventoryValue = 0;
+      try {
+        const inventoryResponse = await api.get('/items');
+        inventoryData = inventoryResponse.data || [];
+        
+        // Calculate total inventory value (exact same calculation as ManageInventory)
+        calculatedInventoryValue = inventoryData.reduce((sum, item) => {
+          return sum + ((Number(item.price) || 0) * (Number(item.quantity) || 0));
+        }, 0);
+        setTotalInventoryValue(calculatedInventoryValue);
+        console.log('Inventory Data:', inventoryData);
+        console.log('Total Inventory Value:', calculatedInventoryValue);
+      } catch (err) {
+        console.warn('Inventory API not available:', err.message);
+        setTotalInventoryValue(0);
+      }
+
       // Calculate income breakdown
-      const productSales = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-      
       // Calculate membership fees based on plan types
       const calculatedMembershipFees = members.reduce((sum, member) => {
         const planName = member.membershipPlan;
@@ -108,7 +149,7 @@ const FinancialManagement = () => {
       console.log('Calculated Event Revenue:', eventRevenue);
       console.log('Event Payments for calculation:', eventPaymentsData.map(p => ({ event: p.eventId?.name, amount: p.amount })));
       
-      const totalIncome = productSales + calculatedMembershipFees + eventRevenue;
+      const totalIncome = calculatedInventoryValue + calculatedMembershipFees + eventRevenue;
       
       // If no data is available, use fallback data
       if (totalIncome === 0 && orders.length === 0 && members.length === 0 && events.length === 0) {
@@ -154,30 +195,30 @@ const FinancialManagement = () => {
         setMembershipFees(25000); // Set fallback membership fees
         setEventPayments([]); // Set empty event payments for fallback
         setPreOrderPayments([]); // Set empty pre-order payments for fallback
+        setDrivers([]); // Set empty drivers array for fallback
+        setTotalDriverSalary(0); // Set fallback driver salary
+        setTotalInventoryValue(0); // Set fallback inventory value
         return;
       }
       
-      // Calculate expense breakdown including pre-order payments
-      const inventoryExpenses = productSales * 0.4; // 40% of sales for inventory
-      const staffSalaries = 25000; // Fixed monthly salary
-      const maintenance = 15000; // Fixed maintenance cost
-      const marketing = 5000; // Fixed marketing cost
+      // Calculate expense breakdown including pre-order payments and driver salaries
+      const driverSalaries = calculatedDriverSalary; // Total driver salaries from DriverManagement
       const preOrderExpenses = preOrderPaymentsData.reduce((sum, payment) => sum + (payment.amount || 0), 0);
       
-      const totalExpenses = inventoryExpenses + staffSalaries + maintenance + marketing + preOrderExpenses;
+      const totalExpenses = driverSalaries + preOrderExpenses;
       const netProfit = totalIncome - totalExpenses;
 
       // Calculate percentages
       const incomeBreakdown = [
         { 
-          category: 'Product Sales', 
-          amount: productSales, 
-          percentage: totalIncome > 0 ? Math.round((productSales / totalIncome) * 100) : 0 
+          category: 'Inventory Value', 
+          amount: calculatedInventoryValue, 
+          percentage: totalIncome > 0 ? Math.round((calculatedInventoryValue / totalIncome) * 100) : 0 
         },
         { 
           category: 'Membership Fees', 
-          amount: membershipFees, 
-          percentage: totalIncome > 0 ? Math.round((membershipFees / totalIncome) * 100) : 0 
+          amount: calculatedMembershipFees, 
+          percentage: totalIncome > 0 ? Math.round((calculatedMembershipFees / totalIncome) * 100) : 0 
         },
         { 
           category: 'Event Revenue', 
@@ -188,57 +229,78 @@ const FinancialManagement = () => {
 
       const expenseBreakdown = [
         { 
-          category: 'Inventory', 
-          amount: inventoryExpenses, 
-          percentage: totalExpenses > 0 ? Math.round((inventoryExpenses / totalExpenses) * 100) : 0 
-        },
-        { 
-          category: 'Staff Salaries', 
-          amount: staffSalaries, 
-          percentage: totalExpenses > 0 ? Math.round((staffSalaries / totalExpenses) * 100) : 0 
+          category: 'Driver Salaries', 
+          amount: driverSalaries, 
+          percentage: totalExpenses > 0 ? Math.round((driverSalaries / totalExpenses) * 100) : 0 
         },
         { 
           category: 'Pre-Order Payments', 
           amount: preOrderExpenses, 
           percentage: totalExpenses > 0 ? Math.round((preOrderExpenses / totalExpenses) * 100) : 0 
-        },
-        { 
-          category: 'Maintenance', 
-          amount: maintenance, 
-          percentage: totalExpenses > 0 ? Math.round((maintenance / totalExpenses) * 100) : 0 
-        },
-        { 
-          category: 'Marketing', 
-          amount: marketing, 
-          percentage: totalExpenses > 0 ? Math.round((marketing / totalExpenses) * 100) : 0 
         }
       ];
 
-      // Generate monthly trends (last 6 months)
+      // Generate monthly trends (last 6 months) with realistic data
       const monthlyTrends = [];
       const currentDate = new Date();
+      
+      // Base values for more realistic trends
+      const baseInventoryValue = calculatedInventoryValue;
+      const baseMembershipFees = calculatedMembershipFees;
+      const baseEventRevenue = eventRevenue;
+      const baseDriverSalaries = calculatedDriverSalary;
+      const basePreOrderExpenses = preOrderExpenses;
+      
       for (let i = 5; i >= 0; i--) {
         const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
         const monthName = date.toLocaleDateString('en-US', { month: 'short' });
         
-        // Calculate monthly data (simplified - you can enhance this with actual monthly data)
-        const monthlyIncome = totalIncome * (0.8 + Math.random() * 0.4); // 80-120% of average
-        const monthlyExpenses = totalExpenses * (0.8 + Math.random() * 0.4);
+        // Calculate monthly variations (more realistic than random)
+        const monthVariation = 0.9 + (i * 0.05); // Gradual increase over months
+        const seasonalFactor = Math.sin((i - 2) * Math.PI / 6) * 0.1 + 1; // Seasonal variation
+        
+        // Monthly income breakdown
+        const monthlyInventoryValue = Math.round(baseInventoryValue * monthVariation * seasonalFactor);
+        const monthlyMembershipFees = Math.round(baseMembershipFees * (0.8 + Math.random() * 0.4));
+        const monthlyEventRevenue = Math.round(baseEventRevenue * (0.7 + Math.random() * 0.6));
+        
+        const monthlyIncome = monthlyInventoryValue + monthlyMembershipFees + monthlyEventRevenue;
+        
+        // Monthly expenses breakdown
+        const monthlyDriverSalaries = Math.round(baseDriverSalaries * 1.0); // Fixed monthly salaries
+        const monthlyPreOrderExpenses = Math.round(basePreOrderExpenses * (0.6 + Math.random() * 0.8));
+        
+        const monthlyExpenses = monthlyDriverSalaries + monthlyPreOrderExpenses;
         
         monthlyTrends.push({
           month: monthName,
-          income: Math.round(monthlyIncome),
-          expenses: Math.round(monthlyExpenses)
+          income: monthlyIncome,
+          expenses: monthlyExpenses
         });
       }
 
-      // Recent transactions - combine orders and event payments
-      const recentOrders = orders.slice(0, 2).map(order => ({
-        category: 'Product Sales',
-        description: `Order #${order._id?.slice(-6) || 'N/A'}`,
-        amount: order.totalAmount || 0,
-        date: new Date(order.createdAt || Date.now()).toLocaleDateString()
+      // Recent transactions - updated to reflect new income structure
+      const recentInventoryUpdates = inventoryData.slice(0, 2).map(item => ({
+        category: 'Inventory Value',
+        description: `${item.name} - Stock Update`,
+        amount: (Number(item.price) || 0) * (Number(item.quantity) || 0),
+        date: new Date(item.updatedAt || Date.now()).toLocaleDateString()
       }));
+
+      const recentMembershipPayments = members.slice(0, 2).map(member => {
+        const planName = member.membershipPlan;
+        let fee = 0;
+        if (planName === 'Student Membership') fee = 20000;
+        else if (planName === 'Ordinary Membership') fee = 60000;
+        else if (planName === 'Life Membership') fee = 100000;
+        
+        return {
+          category: 'Membership Fees',
+          description: `${member.firstName} ${member.lastName} - ${planName}`,
+          amount: fee,
+          date: new Date(member.paymentDate || Date.now()).toLocaleDateString()
+        };
+      });
 
       const recentEventPayments = eventPaymentsData.slice(0, 2).map(payment => ({
         category: 'Event Revenue',
@@ -247,11 +309,11 @@ const FinancialManagement = () => {
         date: new Date(payment.paymentDate || Date.now()).toLocaleDateString()
       }));
 
-      const recentIncome = [...recentOrders, ...recentEventPayments]
+      const recentIncome = [...recentInventoryUpdates, ...recentMembershipPayments, ...recentEventPayments]
         .sort((a, b) => new Date(b.date) - new Date(a.date))
         .slice(0, 3);
 
-      // Recent expenses including pre-order payments
+      // Recent expenses including pre-order payments and driver salaries
       const recentPreOrderPayments = preOrderPaymentsData.slice(0, 2).map(payment => ({
         category: 'Pre-Order Payment',
         description: `Payment to ${payment.supplierId?.name || 'Supplier'}`,
@@ -259,11 +321,16 @@ const FinancialManagement = () => {
         date: new Date(payment.paymentDate || Date.now()).toLocaleDateString()
       }));
 
+      const recentDriverSalaries = drivers.slice(0, 2).map(driver => ({
+        category: 'Driver Salaries',
+        description: `Monthly Salary - ${driver.fullName}`,
+        amount: driver.salary || 0,
+        date: new Date().toLocaleDateString() // Monthly salary
+      }));
+
       const recentExpenses = [
         ...recentPreOrderPayments,
-        { category: 'Inventory', description: 'Sports Equipment', amount: 12000, date: 'Today' },
-        { category: 'Staff Salary', description: 'Monthly Payment', amount: 8500, date: 'Yesterday' },
-        { category: 'Maintenance', description: 'Equipment Repair', amount: 3200, date: '3 days ago' }
+        ...recentDriverSalaries
       ].slice(0, 3); // Limit to 3 most recent
 
       setFinancialData({
@@ -322,6 +389,9 @@ const FinancialManagement = () => {
       setMembershipFees(25000); // Set fallback membership fees
       setEventPayments([]); // Set empty event payments for error fallback
       setPreOrderPayments([]); // Set empty pre-order payments for error fallback
+      setDrivers([]); // Set empty drivers array for error fallback
+      setTotalDriverSalary(0); // Set fallback driver salary
+      setTotalInventoryValue(0); // Set fallback inventory value
     } finally {
       setIsLoading(false);
     }
@@ -336,14 +406,6 @@ const FinancialManagement = () => {
     fetchFinancialData();
   };
 
-  // Debug function to check payments
-  const debugPayments = () => {
-    console.log('=== Payments Debug ===');
-    console.log('Current eventPayments state:', eventPayments);
-    console.log('Current preOrderPayments state:', preOrderPayments);
-    console.log('Membership fees:', membershipFees);
-    console.log('Financial data:', financialData);
-  };
 
   if (isLoading) {
     return (
@@ -381,9 +443,6 @@ const FinancialManagement = () => {
           <Button onClick={handleRefresh} disabled={isLoading}>
             <FontAwesomeIcon icon={faRedo} className={isLoading ? 'animate-spin mr-2' : 'mr-2'}/>
             {isLoading ? 'Refreshing...' : 'Refresh'}
-          </Button>
-          <Button onClick={debugPayments} variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100">
-            Debug Payments
           </Button>
         </div>
       </div>
@@ -448,9 +507,9 @@ const FinancialManagement = () => {
                 <div className="absolute inset-0 rounded-full border-8 border-transparent" 
                      style={{
                        background: `conic-gradient(
-                         #10B981 0deg 230deg,
-                         #3B82F6 230deg 290deg,
-                         #F59E0B 290deg 360deg
+                         #10B981 0deg 120deg,
+                         #3B82F6 120deg 240deg,
+                         #F59E0B 240deg 360deg
                        )`
                      }}>
                 </div>
@@ -497,11 +556,8 @@ const FinancialManagement = () => {
                 <div className="absolute inset-0 rounded-full border-8 border-transparent" 
                      style={{
                        background: `conic-gradient(
-                         #EF4444 0deg 120deg,
-                         #F97316 120deg 200deg,
-                         #8B5CF6 200deg 260deg,
-                         #06B6D4 260deg 320deg,
-                         #10B981 320deg 360deg
+                         #8B5CF6 0deg 180deg,
+                         #06B6D4 180deg 360deg
                        )`
                      }}>
                 </div>
@@ -515,7 +571,7 @@ const FinancialManagement = () => {
             </div>
             <div className="space-y-2">
               {financialData.expenseBreakdown.map((item, index) => {
-                const colors = ['#EF4444', '#F97316', '#8B5CF6', '#06B6D4', '#10B981'];
+                const colors = ['#8B5CF6', '#06B6D4'];
                 return (
                   <div key={index} className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -772,6 +828,56 @@ const FinancialManagement = () => {
                     <div className="text-center py-4 text-gray-500">
                       <FontAwesomeIcon icon={faReceipt} className="h-8 w-8 text-gray-400 mb-2" />
                       <p>No pre-order payments found</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Driver Salary Summary */}
+      <div className="mb-8">
+        <Card className="border-indigo-400 shadow-sm hover:shadow-lg transition-shadow">
+          <CardHeader className="text-indigo-800 bg-indigo-50 p-4 rounded-t-lg border-b border-indigo-200">
+            <CardTitle className="flex items-center">
+              <FontAwesomeIcon icon={faWallet} className="mr-3" />
+              Driver Salary Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-3">Total Driver Salaries</h4>
+                <div className="text-3xl font-bold text-indigo-600 mb-2">
+                  Rs. {totalDriverSalary.toLocaleString()}
+                </div>
+                <div className="text-sm text-gray-600">
+                  From {drivers.length} drivers
+                </div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-3">Driver Details</h4>
+                <div className="space-y-2">
+                  {drivers.slice(0, 3).map((driver, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-white rounded">
+                      <div>
+                        <div className="font-medium text-sm">{driver.fullName}</div>
+                        <div className="text-xs text-gray-500">{driver.status}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-indigo-600">Rs. {driver.salary?.toLocaleString() || '0'}</div>
+                        <div className="text-xs text-gray-500">
+                          {driver.hireDate ? new Date(driver.hireDate).toLocaleDateString() : 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {drivers.length === 0 && (
+                    <div className="text-center py-4 text-gray-500">
+                      <FontAwesomeIcon icon={faWallet} className="h-8 w-8 text-gray-400 mb-2" />
+                      <p>No drivers found</p>
                     </div>
                   )}
                 </div>

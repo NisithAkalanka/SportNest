@@ -50,7 +50,7 @@ const Vehicles = () => {
       setLoading(false);
     }
   };
-
+//nethmi
   // Validation functions
   const validateVehicleType = (type) => {
     const validTypes = ['Truck', 'Van', 'Bike', 'Mini Truck'];
