@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaCheckCircle, FaTruck, FaUser, FaMapMarkerAlt, FaCalendarAlt, FaClock } from 'react-icons/fa';
-import axios from 'axios';
+import api from '@/api';
 
 const DriverConfirmationPage = () => {
   const { token } = useParams();
@@ -18,7 +18,7 @@ const DriverConfirmationPage = () => {
 
   const fetchDeliveryDetails = async () => {
     try {
-      const response = await axios.get(`/api/deliveries/confirmation-status/${token}`);
+      const response = await api.get(`/deliveries/confirmation-status/${token}`);
       setDelivery(response.data);
     } catch (err) {
       setError(err.response?.data?.msg || 'Failed to load delivery details');
@@ -30,7 +30,7 @@ const DriverConfirmationPage = () => {
   const handleConfirmDelivery = async () => {
     setConfirming(true);
     try {
-      const response = await axios.get(`/api/deliveries/confirm/${token}`);
+      const response = await api.get(`/deliveries/confirm/${token}`);
       setSuccess(true);
       setTimeout(() => {
         navigate('/');

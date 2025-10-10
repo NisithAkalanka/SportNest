@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChartPie, faChartBar, faArrowUp, faArrowDown, faWallet, faDollarSign, faReceipt, faRedo } from '@fortawesome/free-solid-svg-icons';
+import { faChartPie, faChartBar, faArrowUp, faArrowDown, faWallet, faDollarSign, faReceipt, faRedo, faDownload } from '@fortawesome/free-solid-svg-icons';
 import api from '@/api';
+import { generateReport } from '../api/salaryService';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const FinancialManagement = () => {
   const [financialData, setFinancialData] = useState({
@@ -24,6 +27,8 @@ const FinancialManagement = () => {
   const [drivers, setDrivers] = useState([]);
   const [totalDriverSalary, setTotalDriverSalary] = useState(0);
   const [totalInventoryValue, setTotalInventoryValue] = useState(0);
+  const [coachSalaries, setCoachSalaries] = useState([]);
+  const [totalCoachSalary, setTotalCoachSalary] = useState(0);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -108,6 +113,31 @@ const FinancialManagement = () => {
         console.warn('Drivers API not available:', err.message);
         setDrivers([]);
         setTotalDriverSalary(0);
+      }
+
+      // Fetch coach salary data for current month (same as SalaryPage)
+      let coachSalaryData = [];
+      let calculatedCoachSalary = 0;
+      try {
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11, so add 1
+        
+        const salaryReportData = await generateReport(currentYear, currentMonth);
+        coachSalaryData = salaryReportData || [];
+        setCoachSalaries(coachSalaryData);
+        
+        // Calculate total coach salary (same calculation as SalaryPage)
+        calculatedCoachSalary = coachSalaryData.reduce((sum, item) => {
+          return sum + (parseFloat(item.netSalary) || 0);
+        }, 0);
+        setTotalCoachSalary(calculatedCoachSalary);
+        console.log('Coach Salary Data:', coachSalaryData);
+        console.log('Total Coach Salary:', calculatedCoachSalary);
+      } catch (err) {
+        console.warn('Coach salary API not available:', err.message);
+        setCoachSalaries([]);
+        setTotalCoachSalary(0);
       }
 
       // Fetch inventory data for total inventory value (same as ManageInventory)
@@ -197,15 +227,18 @@ const FinancialManagement = () => {
         setPreOrderPayments([]); // Set empty pre-order payments for fallback
         setDrivers([]); // Set empty drivers array for fallback
         setTotalDriverSalary(0); // Set fallback driver salary
+        setCoachSalaries([]); // Set empty coach salaries array for fallback
+        setTotalCoachSalary(0); // Set fallback coach salary
         setTotalInventoryValue(0); // Set fallback inventory value
         return;
       }
       
-      // Calculate expense breakdown including pre-order payments and driver salaries
+      // Calculate expense breakdown including pre-order payments, driver salaries, and coach salaries
       const driverSalaries = calculatedDriverSalary; // Total driver salaries from DriverManagement
+      const coachSalaries = calculatedCoachSalary; // Total coach salaries from SalaryPage
       const preOrderExpenses = preOrderPaymentsData.reduce((sum, payment) => sum + (payment.amount || 0), 0);
       
-      const totalExpenses = driverSalaries + preOrderExpenses;
+      const totalExpenses = driverSalaries + coachSalaries + preOrderExpenses;
       const netProfit = totalIncome - totalExpenses;
 
       // Calculate percentages
@@ -234,6 +267,11 @@ const FinancialManagement = () => {
           percentage: totalExpenses > 0 ? Math.round((driverSalaries / totalExpenses) * 100) : 0 
         },
         { 
+          category: 'Coach Salaries', 
+          amount: coachSalaries, 
+          percentage: totalExpenses > 0 ? Math.round((coachSalaries / totalExpenses) * 100) : 0 
+        },
+        { 
           category: 'Pre-Order Payments', 
           amount: preOrderExpenses, 
           percentage: totalExpenses > 0 ? Math.round((preOrderExpenses / totalExpenses) * 100) : 0 
@@ -249,6 +287,7 @@ const FinancialManagement = () => {
       const baseMembershipFees = calculatedMembershipFees;
       const baseEventRevenue = eventRevenue;
       const baseDriverSalaries = calculatedDriverSalary;
+      const baseCoachSalaries = calculatedCoachSalary;
       const basePreOrderExpenses = preOrderExpenses;
       
       for (let i = 5; i >= 0; i--) {
@@ -268,9 +307,10 @@ const FinancialManagement = () => {
         
         // Monthly expenses breakdown
         const monthlyDriverSalaries = Math.round(baseDriverSalaries * 1.0); // Fixed monthly salaries
+        const monthlyCoachSalaries = Math.round(baseCoachSalaries * 1.0); // Fixed monthly salaries
         const monthlyPreOrderExpenses = Math.round(basePreOrderExpenses * (0.6 + Math.random() * 0.8));
         
-        const monthlyExpenses = monthlyDriverSalaries + monthlyPreOrderExpenses;
+        const monthlyExpenses = monthlyDriverSalaries + monthlyCoachSalaries + monthlyPreOrderExpenses;
         
         monthlyTrends.push({
           month: monthName,
@@ -328,9 +368,17 @@ const FinancialManagement = () => {
         date: new Date().toLocaleDateString() // Monthly salary
       }));
 
+      const recentCoachSalaries = coachSalaryData.slice(0, 2).map(coach => ({
+        category: 'Coach Salaries',
+        description: `Monthly Salary - ${coach.coachName}`,
+        amount: coach.netSalary || 0,
+        date: new Date().toLocaleDateString() // Monthly salary
+      }));
+
       const recentExpenses = [
         ...recentPreOrderPayments,
-        ...recentDriverSalaries
+        ...recentDriverSalaries,
+        ...recentCoachSalaries
       ].slice(0, 3); // Limit to 3 most recent
 
       setFinancialData({
@@ -391,6 +439,8 @@ const FinancialManagement = () => {
       setPreOrderPayments([]); // Set empty pre-order payments for error fallback
       setDrivers([]); // Set empty drivers array for error fallback
       setTotalDriverSalary(0); // Set fallback driver salary
+      setCoachSalaries([]); // Set empty coach salaries array for error fallback
+      setTotalCoachSalary(0); // Set fallback coach salary
       setTotalInventoryValue(0); // Set fallback inventory value
     } finally {
       setIsLoading(false);
@@ -404,6 +454,149 @@ const FinancialManagement = () => {
   const handleRefresh = () => {
     console.log('Refreshing financial data...');
     fetchFinancialData();
+  };
+
+  const handleDownloadPDF = () => {
+    try {
+      const doc = new jsPDF();
+      const currentDate = new Date();
+      const reportDate = currentDate.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+
+      // Title
+      doc.setFontSize(20);
+      doc.text('SportNest Financial Report', 14, 22);
+      
+      // Report Date
+      doc.setFontSize(12);
+      doc.text(`Report Generated: ${reportDate}`, 14, 32);
+      
+      // Financial Summary
+      doc.setFontSize(16);
+      doc.text('Financial Summary', 14, 50);
+      
+      doc.setFontSize(12);
+      doc.text(`Total Income: Rs. ${financialData.totalIncome.toLocaleString()}`, 14, 60);
+      doc.text(`Total Expenses: Rs. ${financialData.totalExpenses.toLocaleString()}`, 14, 70);
+      doc.text(`Net Profit: Rs. ${financialData.netProfit.toLocaleString()}`, 14, 80);
+      
+      // Income Breakdown Table
+      doc.setFontSize(14);
+      doc.text('Income Breakdown', 14, 100);
+      
+      const incomeTableData = financialData.incomeBreakdown.map(item => [
+        item.category,
+        `Rs. ${item.amount.toLocaleString()}`,
+        `${item.percentage}%`
+      ]);
+      
+      autoTable(doc, {
+        head: [['Category', 'Amount', 'Percentage']],
+        body: incomeTableData,
+        startY: 110,
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [34, 197, 94] } // Green color for income
+      });
+      
+      // Expense Breakdown Table
+      const expenseTableY = doc.lastAutoTable.finalY + 20;
+      doc.setFontSize(14);
+      doc.text('Expense Breakdown', 14, expenseTableY);
+      
+      const expenseTableData = financialData.expenseBreakdown.map(item => [
+        item.category,
+        `Rs. ${item.amount.toLocaleString()}`,
+        `${item.percentage}%`
+      ]);
+      
+      autoTable(doc, {
+        head: [['Category', 'Amount', 'Percentage']],
+        body: expenseTableData,
+        startY: expenseTableY + 10,
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [239, 68, 68] } // Red color for expenses
+      });
+      
+      // Monthly Trends Table
+      const trendsTableY = doc.lastAutoTable.finalY + 20;
+      doc.setFontSize(14);
+      doc.text('Monthly Financial Trends', 14, trendsTableY);
+      
+      const trendsTableData = financialData.monthlyTrends.map(month => [
+        month.month,
+        `Rs. ${month.income.toLocaleString()}`,
+        `Rs. ${month.expenses.toLocaleString()}`,
+        `Rs. ${(month.income - month.expenses).toLocaleString()}`
+      ]);
+      
+      autoTable(doc, {
+        head: [['Month', 'Income', 'Expenses', 'Net Profit']],
+        body: trendsTableData,
+        startY: trendsTableY + 10,
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [59, 130, 246] } // Blue color for trends
+      });
+      
+      // Recent Transactions
+      const recentTableY = doc.lastAutoTable.finalY + 20;
+      doc.setFontSize(14);
+      doc.text('Recent Income Transactions', 14, recentTableY);
+      
+      const recentIncomeData = financialData.recentIncome.map(transaction => [
+        transaction.category,
+        transaction.description,
+        `Rs. ${transaction.amount.toLocaleString()}`,
+        transaction.date
+      ]);
+      
+      autoTable(doc, {
+        head: [['Category', 'Description', 'Amount', 'Date']],
+        body: recentIncomeData,
+        startY: recentTableY + 10,
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [34, 197, 94] }
+      });
+      
+      // Recent Expenses
+      const recentExpenseTableY = doc.lastAutoTable.finalY + 20;
+      doc.setFontSize(14);
+      doc.text('Recent Expense Transactions', 14, recentExpenseTableY);
+      
+      const recentExpenseData = financialData.recentExpenses.map(transaction => [
+        transaction.category,
+        transaction.description,
+        `Rs. ${transaction.amount.toLocaleString()}`,
+        transaction.date
+      ]);
+      
+      autoTable(doc, {
+        head: [['Category', 'Description', 'Amount', 'Date']],
+        body: recentExpenseData,
+        startY: recentExpenseTableY + 10,
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [239, 68, 68] }
+      });
+      
+      // Footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.text(`Page ${i} of ${pageCount}`, 14, doc.internal.pageSize.height - 10);
+        doc.text('SportNest Financial Management System', doc.internal.pageSize.width - 80, doc.internal.pageSize.height - 10);
+      }
+      
+      // Save the PDF
+      const fileName = `SportNest_Financial_Report_${currentDate.toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF report. Please try again.');
+    }
   };
 
 
@@ -440,6 +633,10 @@ const FinancialManagement = () => {
           <p className="text-lg text-gray-500 mt-1">Track income, expenses, and financial performance.</p>
         </div>
         <div className="flex gap-2">
+          <Button onClick={handleDownloadPDF} className="bg-green-600 hover:bg-green-700 text-white">
+            <FontAwesomeIcon icon={faDownload} className="mr-2"/>
+            Download PDF Report
+          </Button>
           <Button onClick={handleRefresh} disabled={isLoading}>
             <FontAwesomeIcon icon={faRedo} className={isLoading ? 'animate-spin mr-2' : 'mr-2'}/>
             {isLoading ? 'Refreshing...' : 'Refresh'}
@@ -556,8 +753,9 @@ const FinancialManagement = () => {
                 <div className="absolute inset-0 rounded-full border-8 border-transparent" 
                      style={{
                        background: `conic-gradient(
-                         #8B5CF6 0deg 180deg,
-                         #06B6D4 180deg 360deg
+                         #8B5CF6 0deg 120deg,
+                         #F59E0B 120deg 240deg,
+                         #06B6D4 240deg 360deg
                        )`
                      }}>
                 </div>
@@ -571,7 +769,7 @@ const FinancialManagement = () => {
             </div>
             <div className="space-y-2">
               {financialData.expenseBreakdown.map((item, index) => {
-                const colors = ['#8B5CF6', '#06B6D4'];
+                const colors = ['#8B5CF6', '#F59E0B', '#06B6D4'];
                 return (
                   <div key={index} className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -878,6 +1076,56 @@ const FinancialManagement = () => {
                     <div className="text-center py-4 text-gray-500">
                       <FontAwesomeIcon icon={faWallet} className="h-8 w-8 text-gray-400 mb-2" />
                       <p>No drivers found</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Coach Salary Summary */}
+      <div className="mb-8">
+        <Card className="border-orange-400 shadow-sm hover:shadow-lg transition-shadow">
+          <CardHeader className="text-orange-800 bg-orange-50 p-4 rounded-t-lg border-b border-orange-200">
+            <CardTitle className="flex items-center">
+              <FontAwesomeIcon icon={faWallet} className="mr-3" />
+              Coach Salary Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-3">Total Coach Salaries</h4>
+                <div className="text-3xl font-bold text-orange-600 mb-2">
+                  Rs. {totalCoachSalary.toLocaleString()}
+                </div>
+                <div className="text-sm text-gray-600">
+                  From {coachSalaries.length} coaches (Current Month)
+                </div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-3">Coach Details</h4>
+                <div className="space-y-2">
+                  {coachSalaries.slice(0, 3).map((coach, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-white rounded">
+                      <div>
+                        <div className="font-medium text-sm">{coach.coachName}</div>
+                        <div className="text-xs text-gray-500">Base: Rs. {coach.baseSalary?.toLocaleString() || '0'}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-orange-600">Rs. {coach.netSalary?.toLocaleString() || '0'}</div>
+                        <div className="text-xs text-gray-500">
+                          {coach.fullDays} full days
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {coachSalaries.length === 0 && (
+                    <div className="text-center py-4 text-gray-500">
+                      <FontAwesomeIcon icon={faWallet} className="h-8 w-8 text-gray-400 mb-2" />
+                      <p>No coach salary data found</p>
                     </div>
                   )}
                 </div>
