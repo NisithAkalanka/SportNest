@@ -13,6 +13,8 @@ const requestRefund = async (req, res) => {
     const userId = req.user._id || req.user.id;
 
     console.log('Refund request data:', { orderId, items, reason, description, refundMethod, userId });
+    console.log('User from req.user:', req.user);
+    console.log('Request body:', req.body);
 
     // Validate required fields
     if (!orderId || !items || !reason || !description) {

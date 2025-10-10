@@ -486,8 +486,20 @@ const getConfirmationStatus = async (req, res) => {
   const { token } = req.params;
   
   try {
+    console.log('Getting confirmation status for token:', token);
+    
+    // Validate token format (should be a hex string)
+    if (!token || typeof token !== 'string' || !/^[a-f0-9]+$/i.test(token)) {
+      console.log('Invalid token format:', token);
+      return res.status(400).json({ 
+        msg: 'Invalid token format' 
+      });
+    }
+    
     const delivery = await Delivery.findOne({ confirmationToken: token })
       .populate('driver', 'fullName email');
+    
+    console.log('Found delivery:', delivery ? 'Yes' : 'No');
     
     if (!delivery) {
       return res.status(404).json({ 
@@ -507,8 +519,16 @@ const getConfirmationStatus = async (req, res) => {
     });
     
   } catch (err) {
-    console.error('Get Confirmation Status Error:', err.message);
-    return res.status(500).send('Server Error');
+    console.error('Get Confirmation Status Error:', err);
+    console.error('Error details:', {
+      message: err.message,
+      stack: err.stack,
+      token: token
+    });
+    return res.status(500).json({ 
+      msg: 'Server Error',
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+    });
   }
 };
 
