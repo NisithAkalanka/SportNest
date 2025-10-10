@@ -1,11 +1,10 @@
+// Frontend/src/pages/SalaryPage.jsx
+
 import React, { useState } from 'react';
 import { generateReport } from '../api/salaryService';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-// buttons sadaha (icons) import kr ganima
-import { FileDown, BarChart2 } from 'lucide-react'; // 'lucide-react' library eka install krgnn one
-
+import { FileDown, BarChart2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -41,6 +40,7 @@ const SalaryPage = () => {
         }
     };
 
+   
     const handleDownloadPdf = () => {
         if (!reportData || reportData.length === 0) {
             alert("No data available to download.");
@@ -53,11 +53,7 @@ const SalaryPage = () => {
             doc.setFontSize(20);
             doc.text(`Salary Report - ${monthName} ${selectedYear}`, 14, 22);
             
-            const tableColumn = [
-                "Coach Name", "Basic Salary (LKR)", "Full Days", "Half Days", 
-                "Duty Leaves (Paid)", "Leaves (Unpaid)", "Absences", "Net Salary (LKR)"
-            ];
-            
+            const tableColumn = [ "Coach Name", "Basic Salary", "Full Days", "Half Days", "Duty Leaves", "Unpaid Leaves", "Absences", "Net Salary" ];
             const tableRows = reportData.map(item => [
                 item.coachName,
                 parseFloat(item.baseSalary || 0).toFixed(2),
@@ -66,86 +62,100 @@ const SalaryPage = () => {
                 parseFloat(item.netSalary || 0).toFixed(2)
             ]);
             
+            // total salary calculation
+            const totalNetSalary = reportData.reduce((total, item) => total + parseFloat(item.netSalary), 0);
+            
             autoTable(doc, { head: [tableColumn], body: tableRows, startY: 30 });
+            
+            // PDF eke Table ekt psse  Total ek ekthu kirima
+            const finalY = doc.lastAutoTable.finalY; 
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Total Salary Expenditure: LKR ${totalNetSalary.toFixed(2)}`, 14, finalY + 15);
+            
             doc.save(`Salary_Report_${monthName}_${selectedYear}.pdf`);
         } catch (pdfError) {
             console.error("Failed to generate PDF:", pdfError);
-            alert("An error occurred. Check the console for details.");
+            alert("An error occurred while generating the PDF. Check the console for details.");
         }
     };
+    
+    //cal salary
+    const totalSalary = reportData ? reportData.reduce((sum, item) => sum + parseFloat(item.netSalary), 0) : 0;
 
     return (
         <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
             <h1 className="text-3xl font-bold text-gray-800 mb-6">Salary Report</h1>
             
-            <div className="bg-white p-6 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl mb-8">
+            <div className="bg-white p-6 rounded-lg shadow-lg mb-8">
                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <div className="flex flex-col"><label className="mb-2 font-semibold text-gray-700">Year</label><Select onValueChange={setSelectedYear} value={selectedYear}><SelectTrigger className="focus:ring-2 focus:ring-blue-500"><SelectValue /></SelectTrigger><SelectContent>{years.map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}</SelectContent></Select></div>
-                    <div className="flex flex-col"><label className="mb-2 font-semibold text-gray-700">Month</label><Select onValueChange={setSelectedMonth} value={selectedMonth}><SelectTrigger className="focus:ring-2 focus:ring-blue-500"><SelectValue /></SelectTrigger><SelectContent>{months.map(m => <SelectItem key={m.value} value={m.value.toString()}>{m.name}</SelectItem>)}</SelectContent></Select></div>
-                    
-                    {/* ★★★ 2. "Generate Report" button eka thabili pata krl, icon and hover effect ekk ekthu kirima*/}
-                    <Button onClick={handleGenerateReport} disabled={isLoading} className="md:col-start-4 bg-orange-500 text-white hover:bg-orange-600 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
+                    <div className="flex flex-col"><label className="mb-2 font-semibold text-gray-700">Year</label><Select onValueChange={setSelectedYear} value={selectedYear}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{years.map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="flex flex-col"><label className="mb-2 font-semibold text-gray-700">Month</label><Select onValueChange={setSelectedMonth} value={selectedMonth}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{months.map(m => <SelectItem key={m.value} value={m.value.toString()}>{m.name}</SelectItem>)}</SelectContent></Select></div>
+                    <Button onClick={handleGenerateReport} disabled={isLoading} className="md:col-start-4 bg-orange-500 text-white hover:bg-orange-600">
                         <BarChart2 className="mr-2 h-4 w-4" /> 
                         {isLoading ? 'Generating...' : 'Generate Report'}
                     </Button>
                 </div>
             </div>
 
-            {isLoading && <p className="text-center text-blue-600 font-semibold">Generating report, please wait...</p>}
-            {error && <p className="text-red-600 bg-red-100 p-4 rounded-lg text-center font-medium">{error}</p>}
+            {isLoading && <p>Generating report...</p>}
+            {error && <p className="text-red-600">{error}</p>}
             
             {reportData && !isLoading && (
-                <div className="animate-in fade-in-0 duration-600">
+                <div>
                     {reportData.length > 0 ? (
-                        // ★★★ 3. Report Details card ekt ihalin pata maimak ekthu kirima 
-                        <div className="bg-white p-6 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl border-t-4 border-blue-500">
-                            <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
+                        <div className="bg-white p-6 rounded-lg shadow-lg border-t-4 border-blue-500">
+                            <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-2xl font-bold text-gray-800">Report Details</h2>
-                                
-                                {/* ★★★ 4. "Download as PDF" button eka kola pt krl, icon and hover effect ekk ekthu kirima*/}
-                                <Button onClick={handleDownloadPdf} disabled={!reportData || reportData.length === 0} className="bg-green-600 text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
+                                <Button onClick={handleDownloadPdf} className="bg-green-600 text-white hover:bg-green-700">
                                     <FileDown className="mr-2 h-4 w-4" /> 
                                     Download as PDF
                                 </Button>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200">
-                                    {/* waguwe Table Header eka thada pata kirima */}
                                     <thead className="bg-gray-200">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Coach Name</th>
-                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Basic Salary</th>
-                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Full Days</th>
-                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Half Days</th>
-                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Duty Leaves (Paid)</th>
-                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Leaves (Unpaid)</th>
-                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Absences</th>
-                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Net Salary</th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Coach Name</th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Basic Salary</th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Full Days</th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Half Days</th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Duty Leaves (Paid)</th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Leaves (Unpaid)</th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Absences</th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Net Salary</th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {reportData.map(item => (
-                                            // ek ek peliyata (row) hover effect ekak ekathu kirim
-                                            <tr key={item.coachId} className="hover:bg-blue-50 transition-colors duration-200">
-                                                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{item.coachName}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{parseFloat(item.baseSalary).toFixed(2)}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{item.fullDays}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{item.halfDays}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{item.dutyLeaves}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{item.unpaidLeaves}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{item.absences}</td>
-                                                {/* Net Salary bold kirim*/}
-                                                <td className="px-6 py-4 whitespace-nowrap font-bold text-gray-900 text-lg">{parseFloat(item.netSalary).toFixed(2)}</td>
+                                            <tr key={item.coachId} className="hover:bg-blue-50">
+                                                <td className="px-6 py-4">{item.coachName}</td>
+                                                <td className="px-6 py-4">{parseFloat(item.baseSalary).toFixed(2)}</td>
+                                                <td className="px-6 py-4">{item.fullDays}</td>
+                                                <td className="px-6 py-4">{item.halfDays}</td>
+                                                <td className="px-6 py-4">{item.dutyLeaves}</td>
+                                                <td className="px-6 py-4">{item.unpaidLeaves}</td>
+                                                <td className="px-6 py-4">{item.absences}</td>
+                                                <td className="px-6 py-4 font-bold text-lg">{parseFloat(item.netSalary).toFixed(2)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
+                                    {/* <<< NEW: Table ekt Total ekthu kirima>>> */}
+                                    <tfoot className="bg-gray-200">
+                                        <tr>
+                                            {/* mul columns 7m ekak wge penwimata `colSpan` damima */}
+                                            <td colSpan="7" className="px-6 py-4 text-right font-bold text-gray-700 text-lg">TOTAL SALARY EXPENDITURE</td>
+                                            {/* show total salary */}
+                                            <td className="px-6 py-4 whitespace-nowrap font-extrabold text-gray-900 text-xl">
+                                                {totalSalary.toFixed(2)}
+                                            </td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         </div>
                     ) : (
-                        <div className="bg-white p-8 rounded-lg shadow-lg text-center transition-all duration-300 hover:shadow-xl animate-in fade-in-0 duration-600">
-                            <p className="text-gray-600 font-semibold text-lg">No salary data found for the selected period.</p>
-                        </div>
+                        <div><p>No salary data found for the selected period.</p></div>
                     )}
                 </div>
             )}
