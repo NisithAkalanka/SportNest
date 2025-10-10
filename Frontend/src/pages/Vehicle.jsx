@@ -74,7 +74,7 @@ const Vehicles = () => {
     return '';
   };
 
-  // Validate all fields
+  // Validate all fi
   const validateForm = () => {
     const errors = {};
     
