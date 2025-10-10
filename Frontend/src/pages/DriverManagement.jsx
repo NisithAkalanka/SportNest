@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Download, Plus, Edit, Trash2, Eye, Calendar, Copy, Mail } from 'lucide-react';
+import { Search, Download, Plus, Edit, Trash2, Calendar, Copy, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -24,7 +24,6 @@ const DriverManagement = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState(null);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -98,11 +97,11 @@ const DriverManagement = () => {
     }
     const selectedDate = new Date(date);
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Start of today
+    today.setHours(23, 59, 59, 999); // End of today
     
-    // Only validate for new drivers, not updates
-    if (!selectedDriver && selectedDate < today) {
-      return 'Hire date cannot be in the past for new drivers';
+    // Allow only today and past dates for new drivers
+    if (!selectedDriver && selectedDate > today) {
+      return 'Hire date must be today or a past date';
     }
     return '';
   };
@@ -161,35 +160,6 @@ const DriverManagement = () => {
     }
   };
 
-  // Test API connection
-  const testApiConnection = async () => {
-    try {
-      console.log('Testing API connection...');
-      const response = await driverApi.testConnection();
-      console.log('API test response:', response);
-      setToast({ type: 'success', msg: 'API connection successful!' });
-    } catch (error) {
-      console.error('API connection test failed:', error);
-      setToast({ type: 'error', msg: 'API connection failed. Check console for details.' });
-    } finally {
-      setTimeout(() => setToast(null), 3000);
-    }
-  };
-
-  // Test database model
-  const testModel = async () => {
-    try {
-      console.log('Testing database model...');
-      const response = await driverApi.testModel();
-      console.log('Model test response:', response);
-      setToast({ type: 'success', msg: `Database model test successful! Found ${response.totalDrivers} drivers.` });
-    } catch (error) {
-      console.error('Model test failed:', error);
-      setToast({ type: 'error', msg: 'Database model test failed. Check console for details.' });
-    } finally {
-      setTimeout(() => setToast(null), 3000);
-    }
-  };
 
   // Load drivers
   const loadDrivers = async () => {
@@ -319,11 +289,6 @@ const DriverManagement = () => {
     }
   };
 
-  // Handle view
-  const handleView = (driver) => {
-    setSelectedDriver(driver);
-    setIsViewModalOpen(true);
-  };
 
   // Reset form
   const resetForm = () => {
@@ -555,17 +520,68 @@ const DriverManagement = () => {
           <p className="text-gray-600">Manage your company drivers</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={testApiConnection} className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
-            Test API
-          </Button>
-          <Button onClick={testModel} className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2">
-            Test DB
-          </Button>
           <Button onClick={handleExportPDF} className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
             <Download className="h-4 w-4" />
             Download PDF
           </Button>
         </div>
+      </div>
+
+      {/* Salary Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <Card className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-blue-600">Total Drivers</p>
+              <p className="text-2xl font-bold text-blue-800">{filteredDrivers.length}</p>
+            </div>
+            <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center">
+              <span className="text-blue-600 font-bold text-lg">👥</span>
+            </div>
+          </div>
+        </Card>
+        
+        <Card className="p-4 bg-gradient-to-r from-green-50 to-green-100 border-green-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-green-600">Active Drivers</p>
+              <p className="text-2xl font-bold text-green-800">
+                {filteredDrivers.filter(driver => driver.status === 'Active').length}
+              </p>
+            </div>
+            <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
+              <span className="text-green-600 font-bold text-lg">✓</span>
+            </div>
+          </div>
+        </Card>
+        
+        <Card className="p-4 bg-gradient-to-r from-yellow-50 to-yellow-100 border-yellow-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-yellow-600">Inactive Drivers</p>
+              <p className="text-2xl font-bold text-yellow-800">
+                {filteredDrivers.filter(driver => driver.status === 'Inactive').length}
+              </p>
+            </div>
+            <div className="w-10 h-10 bg-yellow-200 rounded-full flex items-center justify-center">
+              <span className="text-yellow-600 font-bold text-lg">⏸</span>
+            </div>
+          </div>
+        </Card>
+        
+        <Card className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-purple-600">Total Salary</p>
+              <p className="text-2xl font-bold text-purple-800">
+                Rs. {filteredDrivers.reduce((total, driver) => total + (parseFloat(driver.salary) || 0), 0).toLocaleString()}
+              </p>
+            </div>
+            <div className="w-10 h-10 bg-purple-200 rounded-full flex items-center justify-center">
+              <span className="text-purple-600 font-bold text-lg">💰</span>
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* Driver Information Form */}
@@ -653,19 +669,32 @@ const DriverManagement = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Hire Date</label>
-              <div className="relative">
-                  <Input
-                    type="date"
-                    value={formData.hireDate}
-                    onChange={(e) => handleInputChange('hireDate', e.target.value)}
-                    className={`pr-10 ${validationErrors.hireDate ? 'border-red-500' : ''}`}
-                    min={selectedDriver ? undefined : new Date().toISOString().split('T')[0]}
-                  />
-                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Hire Date
+                <span className="text-xs text-gray-500 ml-1">(Today or past)</span>
+              </label>
+              <div className="relative group">
+                <Input
+                  type="date"
+                  value={formData.hireDate}
+                  onChange={(e) => handleInputChange('hireDate', e.target.value)}
+                  className={`pr-10 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    validationErrors.hireDate 
+                      ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                  max={new Date().toISOString().split('T')[0]}
+                  placeholder="Select hire date"
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <Calendar className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" />
+                </div>
               </div>
               {validationErrors.hireDate && (
-                <p className="text-red-500 text-sm mt-1">{validationErrors.hireDate}</p>
+                <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                  <span className="text-red-500">⚠</span>
+                  {validationErrors.hireDate}
+                </p>
               )}
             </div>
             <div>
@@ -834,32 +863,21 @@ const DriverManagement = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleView(driver)}
-                        title="View driver details"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => window.open(`mailto:${driver.email}`, '_blank')}
-                        title="Send email to driver"
-                        className="hover:bg-green-50"
-                      >
-                        <Mail className="h-4 w-4 text-green-600" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
                         onClick={() => handleEdit(driver)}
                         title="Edit driver"
+                        className="hover:bg-blue-50"
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="h-4 w-4 text-blue-600" />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" title="Delete driver">
-                            <Trash2 className="h-4 w-4" />
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            title="Delete driver"
+                            className="hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
@@ -977,19 +995,32 @@ const DriverManagement = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Hire Date</label>
-                <div className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Hire Date
+                  <span className="text-xs text-gray-500 ml-1">(Today or past)</span>
+                </label>
+                <div className="relative group">
                   <Input
                     type="date"
                     value={formData.hireDate}
                     onChange={(e) => handleInputChange('hireDate', e.target.value)}
-                    className={`pr-10 ${validationErrors.hireDate ? 'border-red-500' : ''}`}
-                    min={selectedDriver ? undefined : new Date().toISOString().split('T')[0]}
+                    className={`pr-10 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      validationErrors.hireDate 
+                        ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                    max={new Date().toISOString().split('T')[0]}
+                    placeholder="Select hire date"
                   />
-                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <Calendar className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" />
+                  </div>
                 </div>
                 {validationErrors.hireDate && (
-                  <p className="text-red-500 text-sm mt-1">{validationErrors.hireDate}</p>
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    <span className="text-red-500">⚠</span>
+                    {validationErrors.hireDate}
+                  </p>
                 )}
               </div>
               <div>
@@ -1048,54 +1079,6 @@ const DriverManagement = () => {
         </DialogContent>
       </Dialog>
 
-      {/* View Modal */}
-      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Driver Details</DialogTitle>
-          </DialogHeader>
-          {selectedDriver && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Full Name</label>
-                  <p className="text-lg">{selectedDriver.fullName}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">License Number</label>
-                  <p className="text-lg font-mono">{selectedDriver.licenseNumber}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Phone</label>
-                  <p className="text-lg">{selectedDriver.phone}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Email</label>
-                  <p className="text-lg">{selectedDriver.email}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Hire Date</label>
-                  <p className="text-lg">{new Date(selectedDriver.hireDate).toLocaleDateString()}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Salary</label>
-                  <p className="text-lg">Rs. {selectedDriver.salary?.toLocaleString()}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Status</label>
-                  <Badge variant={selectedDriver.status === 'Active' ? 'default' : 'secondary'}>
-                    {selectedDriver.status}
-                  </Badge>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Address</label>
-                <p className="text-lg">{selectedDriver.address}</p>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Toast Notification */}
       {toast && (
