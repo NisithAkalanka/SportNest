@@ -5,9 +5,9 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../context/MemberAuthContext";
 
-// 🟠 Single Plan Card Component
+//  Single Plan Card Component
 const PlanCard = ({ plan, onSelect }) => (
-  <div className="bg-white rounded-2xl shadow-lg p-8 border-t-4 border-orange-500 flex flex-col hover:shadow-xl transition duration-300">
+  <div className="bg-white rounded-2xl shadow-lg p-8 border-t-4 border-green-500 flex flex-col hover:shadow-xl transition duration-300">
     <h2 className="text-2xl font-bold text-gray-800">{plan.name}</h2>
     <p className="text-4xl font-extrabold text-gray-900 my-4">
       LKR {plan.price.toLocaleString()}
@@ -37,7 +37,7 @@ const PlanCard = ({ plan, onSelect }) => (
 
     <button
       onClick={() => onSelect(plan)}
-      className="w-full bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition duration-300"
+      className="w-full bg-green-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-600 transition duration-300"
     >
       Select Plan
     </button>
