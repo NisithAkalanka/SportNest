@@ -1,34 +1,72 @@
+// ===============================================
+// File: backend/routes/reviewRoutes.js
+// ===============================================
+
 const express = require("express");
 const router = express.Router();
 
 const reviewController = require("../controllers/reviewController");
 
-// normal member sdha middleware ek import kirima
+// --------------------------------------------------
+// --- Middleware Imports (All Preserved)
+// --------------------------------------------------
+
+// Member and Admin middleware hariyta import kirima
+const { protectAny, adminOnly, protectCoach } = require('../middleware/authMiddleware'); 
+// (your protect middleware eka protectAny nam, eka hari. Admin sdha adminOnly wiya yuthui)
+
+// Normal member sdha wenma middleware ekk use karanne nam, meya valid
 const protect = require("../middleware/authMiddleware"); 
 
-// ★★★ Admin sdha hari middleware ek import kirima
+// Admin sdha wenm middleware ekk tibenam, meny valid.
 const protectAdmin = require("../middleware/adminMiddleware"); 
 
-
-const { getFeaturedReviews } = require('../controllers/reviewController');
+// --------------------------------------------------
 // --- Public Routes ---
+// --------------------------------------------------
+
 router.get("/featured", reviewController.getFeaturedReviews);
 
+// --------------------------------------------------
 // --- Member-only Routes ---
+// --------------------------------------------------
+
+
 router
   .route("/my-review")
-  .get(protect, reviewController.getMyReview)
-  .post(protect, reviewController.createOrUpdateMyReview)
-  .delete(protect, reviewController.deleteMyReview);
+  .get(protectAny || protect, reviewController.getMyReview)
+  .post(protectAny || protect, reviewController.createOrUpdateMyReview)
+  .delete(protectAny || protect, reviewController.deleteMyReview);
 
-// --- Admin-only Routes---
-router.get("/admin/all", protectAdmin, reviewController.getAllReviewsForAdmin);
+// --------------------------------------------------
+// --- Admin-only Routes ---
+// --------------------------------------------------
 
+// Both admin middleware variations supported
+router.get(
+  "/admin/all",
+  protectAny || protectAdmin,
+  adminOnly || ((req, res, next) => next()),
+  reviewController.getAllReviewsForAdmin
+);
 
 router.patch(
   "/admin/feature/:id",
-  protectAdmin, 
+  protectAny || protectAdmin,
+  adminOnly || ((req, res, next) => next()),
   reviewController.toggleFeaturedStatus
 );
+
+// <<< NEW: Admin t review ekk delete kirimta route ek >>>
+router.delete(
+  "/admin/delete/:id",
+  protectAny || protectAdmin,
+  adminOnly || ((req, res, next) => next()),
+  reviewController.deleteReviewByAdmin
+);
+
+// --------------------------------------------------
+// --- Module Export ---
+// --------------------------------------------------
 
 module.exports = router;

@@ -1,4 +1,4 @@
-// File: Frontend/src/App.jsx — FINAL MERGED & CLEAN
+// Frontend/src/App.jsx (FINAL & CORRECTED VERSION)
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Suspense, lazy } from "react";
@@ -61,6 +61,7 @@ import TrainingsPage from "@/pages/TrainingsPage";
 import CoachDashboard from "@/pages/CoachDashboard";
 import ManageTrainingsPage from "@/pages/ManageTrainingsPage";
 import FeedbacksPage from "@/pages/FeedbacksPage";
+import CoachAttendancePage from './pages/CoachAttendancePage';
 
 // --- Admin (Protected) Pages ---
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -92,7 +93,7 @@ const AppLoader = () => (
   <div className="min-h-[40vh] grid place-content-center text-emerald-600">Loading…</div>
 );
 
-// ★ NEW (event payment pages)
+// Event payment pages
 const EventPaymentPage = lazy(() => import('@/pages/EventPaymentPage'));
 const EventPaymentSuccessPage = lazy(() => import('@/pages/EventPaymentSuccessPage'));
 const EventTicketPage = lazy(() => import('@/pages/EventTicketPage'));
@@ -107,7 +108,6 @@ function App() {
               <Routes>
                 {/* --- Public Shell --- */}
                 <Route path="/" element={<PublicLayout />}> 
-                  {/* Public */}
                   <Route index element={<HomePage />} />
                   <Route path="shop" element={<Shop />} />
                   <Route path="cart" element={<CartPage />} />
@@ -132,23 +132,17 @@ function App() {
                   <Route path="reset-password/:token" element={<ResetPasswordPage />} />
                   <Route path="membership-payment" element={<MembershipPaymentPage />} />
                   <Route path="driver/confirm-delivery/:token" element={<DriverConfirmationPage />} />
-
-                  {/* Sports detail */}
                   <Route path="sports/tennis" element={<TennisPage />} />
                   <Route path="sports/cricket" element={<CricketPage />} />
                   <Route path="sports/badminton" element={<BadmintonPage />} />
                   <Route path="sports/netball" element={<NetballPage />} />
                   <Route path="sports/swimming" element={<SwimmingPage />} />
-
-                  {/* Events (public) */}
                   <Route path="events" element={<ApprovedEvents />} />
                   <Route path="events/submit" element={<SubmitEvent />} />
                   <Route path="events/:id" element={<EventDetails />} />
                   <Route path="events/payment" element={<EventPaymentPage />} />
                   <Route path="events/payment-success" element={<EventPaymentSuccessPage />} />
                   <Route path="events/ticket" element={<EventTicketPage />} />
-
-                  {/* Member-protected (under Public) */}
                   <Route element={<MemberRoute />}> 
                     <Route path="member-dashboard" element={<MemberDashboard />} />
                     <Route path="subscription-success" element={<SubscriptionSuccessPage />} />
@@ -166,6 +160,7 @@ function App() {
                     <Route path="dashboard" element={<CoachDashboard />} />
                     <Route path="training-sessions" element={<ManageTrainingsPage />} />
                     <Route path="feedbacks" element={<FeedbacksPage />} />
+                    <Route path="attendance" element={<CoachAttendancePage />} /> 
                   </Route>
                 </Route>
 
@@ -177,6 +172,7 @@ function App() {
                     <Route path="preorders" element={<Preorders />} />
                     <Route path="suppliers" element={<ManageSuppliers />} />
                     <Route path="coaches" element={<ManageCoachesPage />} />
+                    {/* <<< මෙන්න නිවැරදි Admin attendance route එක >>> */}
                     <Route path="attendance" element={<AttendancePage />} />
                     <Route path="salaries" element={<SalaryPage />} />
                     <Route path="reviews" element={<ManageReviewsPage />} />
@@ -186,8 +182,6 @@ function App() {
                     <Route path="drivers" element={<DriverManagement />} />
                     <Route path="vehicles" element={<Vehicle />} />
                     <Route path="financial" element={<FinancialManagement />} />
-
-                    {/* Admin: events moderation + edit + report */}
                     <Route path="events/moderate" element={<ModerateEvents />} />
                     <Route path="events/:id/edit" element={<EditEvent />} />
                     <Route path="events/report" element={<EventsReport />} />

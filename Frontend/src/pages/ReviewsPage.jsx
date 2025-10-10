@@ -72,7 +72,7 @@ const ReviewsPage = () => {
     /* ★★★★★★★★★★★★★★★★ THE FIX IS HERE ★★★★★★★★★★★★★★★★★★ */
     /* This new rule sets the color for all labels, headings, and paragraphs inside the review form to a dark, readable color (text-gray-800). */
     .myreview label, .myreview p, .myreview h2, .myreview h3 {
-        color: #1f2937 !important; 
+        color: #070607ff !important; 
     }
     /* ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★ */
 
@@ -83,12 +83,12 @@ const ReviewsPage = () => {
     .myreview textarea {
       background: rgba(255,255,255,0.92) !important;
       color: #111827 !important; /* gray-900 */
-      border: 1px solid rgba(15,23,42,0.12) !important; /* slate-900 alpha */
+      border: 1px solid rgba(32, 173, 74, 0.86) !important; /* slate-900 alpha */
       border-radius: 0.75rem !important; /* rounded-xl */
     }
     .myreview input::placeholder,
     .myreview textarea::placeholder {
-      color: #9CA3AF !important; /* gray-400 */
+      color: #259855ff !important; /* gray-400 */
     }
     .myreview button[type="submit"],
     .myreview .btn-primary {
@@ -137,4 +137,4 @@ const ReviewsPage = () => {
   );
 };
 
-export default ReviewsPage;
+export default ReviewsPage;     
