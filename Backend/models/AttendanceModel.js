@@ -1,3 +1,5 @@
+// Backend/models/AttendanceModel.js
+
 const mongoose = require('mongoose');
 
 const attendanceSchema = new mongoose.Schema({
@@ -10,17 +12,34 @@ const attendanceSchema = new mongoose.Schema({
         type: Date,
         required: true,
     },
+    // niwadu catogarize kirima
+    attendanceType: {
+        type: String,
+        enum: ['Full-Day', 'Half-Day', 'Leave', 'Duty-Leave'],
+        required: true,
+    },
+    // inTime aniwarya na (leave gnn wita)
+    inTime: {
+        type: String, 
+    },
+    // outTime aniwarya na
+    outTime: {
+        type: String,
+    },
+    // hethuwa leave damimata
+    leaveReason: {
+        type: String,
+        trim: true,
+    },
     status: {
         type: String,
-        //  1. Enum list ekt 'Leave' add kirima
-        enum: ['Work Full-Day', 'Work Half-Day', 'Absent', 'Duty-Leave', 'Leave'],
-        required: true,
+        enum: ['Pending', 'Approved', 'Rejected'],
+        default: 'Pending',
     },
 }, { 
     timestamps: true
 }); 
 
-// mema Index ek Data Integrity sdha important nisa, eya active wa thabima
 attendanceSchema.index({ memberId: 1, date: 1 }, { unique: true });
 
 const Attendance = mongoose.model('Attendance', attendanceSchema);

@@ -1,7 +1,14 @@
-const Review = require("../models/ReviewModel");
+// ===============================================
+// File: backend/controllers/reviewController.js
+// ===============================================
+
+const Review = require("../models/ReviewModel"); 
 const mongoose = require('mongoose');
 
+// --------------------------------------------------
 // --- For Members ---
+// --------------------------------------------------
+
 exports.getMyReview = async (req, res) => {
   try {
     const review = await Review.findOne({ memberId: req.user._id });
@@ -22,6 +29,7 @@ exports.createOrUpdateMyReview = async (req, res) => {
     if (!rating || !title || !category || !message) {
       return res.status(400).json({ message: "All fields are required." });
     }
+
     const reviewData = {
       memberId: req.user._id,
       rating,
@@ -29,11 +37,13 @@ exports.createOrUpdateMyReview = async (req, res) => {
       category,
       message,
     };
+
     const review = await Review.findOneAndUpdate(
       { memberId: req.user._id },
       reviewData,
       { new: true, upsert: true, runValidators: true }
     );
+
     res.status(201).json({ message: "Your review has been saved!", review });
   } catch (error) {
     res
@@ -58,19 +68,30 @@ exports.deleteMyReview = async (req, res) => {
   }
 };
 
+// --------------------------------------------------
 // --- For Public & Admins ---
+// --------------------------------------------------
+
 exports.getFeaturedReviews = async (req, res) => {
   try {
     // Support both flags: isFeatured / featured
     const filter = { $or: [{ isFeatured: true }, { featured: true }] };
 
     // Build query and conditionally populate based on schema
-    let q = Review.find(filter).sort({ updatedAt: -1, createdAt: -1 }).limit(6);
+    let q = Review.find(filter)
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .limit(6);
 
     if (Review.schema.path('memberId')) {
-      q = q.populate({ path: 'memberId', select: 'firstName lastName role profileImage clubId' });
+      q = q.populate({
+        path: 'memberId',
+        select: 'firstName lastName role profileImage clubId',
+      });
     } else if (Review.schema.path('member')) {
-      q = q.populate({ path: 'member', select: 'firstName lastName role profileImage clubId' });
+      q = q.populate({
+        path: 'member',
+        select: 'firstName lastName role profileImage clubId',
+      });
     }
 
     const docs = await q.lean();
@@ -78,20 +99,24 @@ exports.getFeaturedReviews = async (req, res) => {
     // Map into a simple shape expected by the Home page widget
     const items = docs.map((r) => {
       const person = r.memberId || r.member || {};
-      const name = (person.firstName || person.lastName)
-        ? `${person.firstName || ''} ${person.lastName || ''}`.trim()
-        : (r.title || 'Member');
+      const name =
+        (person.firstName || person.lastName)
+          ? `${person.firstName || ''} ${person.lastName || ''}`.trim()
+          : (r.title || 'Member');
       const role = person.role || r.category || 'Member';
       const avatar = person.profileImage || '/uploads/default-avatar.png';
       const message = r.message || r.comment || r.text || '';
       const rating = r.rating ?? r.stars ?? 5;
+
       return { id: r._id, name, role, avatar, message, rating };
     });
 
     return res.status(200).json(items);
   } catch (error) {
     console.error('getFeaturedReviews error:', error);
-    return res.status(500).json({ message: 'Error fetching featured reviews.' });
+    return res
+      .status(500)
+      .json({ message: 'Error fetching featured reviews.' });
   }
 };
 
@@ -108,9 +133,10 @@ exports.getAllReviewsForAdmin = async (req, res) => {
     const reviews = await q;
     res.status(200).json(reviews);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: 'Error fetching all reviews.', error: error.message });
+    res.status(500).json({
+      message: 'Error fetching all reviews.',
+      error: error.message,
+    });
   }
 };
 
@@ -130,5 +156,28 @@ exports.toggleFeaturedStatus = async (req, res) => {
       message: "Error updating review status.",
       error: error.message,
     });
+  }
+};
+
+// --------------------------------------------------
+// --- NEW: Admin Delete Function ---
+// --------------------------------------------------
+
+exports.deleteReviewByAdmin = async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found.' });
+    }
+
+    await Review.deleteOne({ _id: req.params.id });
+    res.status(200).json({ message: 'Review has been successfully deleted.' });
+
+  } catch (error) {
+    console.error("Error deleting review by admin:", error);
+    res
+      .status(500)
+      .json({ message: 'Server error while deleting the review.' });
   }
 };
