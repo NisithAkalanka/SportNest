@@ -1075,210 +1075,245 @@ const DeliveryManagement = () => {
 
       {/* Edit Delivery Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Delivery</DialogTitle>
+        <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto bg-white shadow-2xl border-0 rounded-xl">
+          <DialogHeader className="pb-6 border-b border-gray-100">
+            <DialogTitle className="flex items-center gap-3 text-2xl font-bold text-gray-800">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <FontAwesomeIcon icon={faEdit} className="text-blue-600 text-lg" />
+              </div>
+              Edit Delivery
+            </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleEditDelivery} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-orderId">Order ID</Label>
-                <Input
-                  id="edit-orderId"
-                  name="orderId"
-                  value={formData.orderId}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-customer">Customer</Label>
-                <Input
-                  id="edit-customer"
-                  name="customer"
-                  value={formData.customer}
-                  onChange={handleInputChange}
-                  required
-                  className={validationErrors.customer ? 'border-red-500' : ''}
-                />
-                {validationErrors.customer && (
-                  <p className="text-red-500 text-sm mt-1">{validationErrors.customer}</p>
-                )}
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="edit-address">Address</Label>
-                <Input
-                  id="edit-address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-deliveryDate">Delivery Date</Label>
-                <div className="flex gap-2">
-                  <div className="flex-1 relative">
-                    <Input
-                      id="edit-deliveryDate"
-                      name="deliveryDate"
-                      type="datetime-local"
-                      value={formData.deliveryDate}
-                      onChange={handleInputChange}
-                      required
-                      min={toDatetimeLocal(new Date())}
-                      className="w-full"
-                    />
-                    <FontAwesomeIcon
-                      icon={faCalendarAlt}
-                      className="absolute right-3 top-3 text-gray-400 pointer-events-none"
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() =>
-                      setFormData(prev => ({
-                        ...prev,
-                        deliveryDate: toDatetimeLocal(getSuggestedDeliveryDate()),
-                      }))
-                    }
-                    title="Auto suggest a suitable time"
-                    className="whitespace-nowrap"
-                  >
-                    Auto
-                  </Button>
+          <form onSubmit={handleEditDelivery} className="space-y-6 pt-6">
+            {/* Form Fields */}
+            <div className="space-y-6">
+              {/* First Row */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-orderId" className="text-sm font-semibold text-gray-700">Order ID</Label>
+                  <Input
+                    id="edit-orderId"
+                    name="orderId"
+                    value={formData.orderId}
+                    onChange={handleInputChange}
+                    required
+                    className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+                  />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Auto suggests now + 3h (or tomorrow 10:00 AM if after 7 PM).
-                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-customer" className="text-sm font-semibold text-gray-700">Customer</Label>
+                  <Input
+                    id="edit-customer"
+                    name="customer"
+                    value={formData.customer}
+                    onChange={handleInputChange}
+                    required
+                    className={`h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg ${validationErrors.customer ? 'border-red-500' : ''}`}
+                  />
+                  {validationErrors.customer && (
+                    <p className="text-red-500 text-sm">{validationErrors.customer}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-address" className="text-sm font-semibold text-gray-700">Address</Label>
+                  <Input
+                    id="edit-address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    required
+                    className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+                  />
+                </div>
               </div>
-
-              <div>
-                <Label htmlFor="edit-status" className="text-sm font-medium text-gray-700 mb-2 block">
-                  Status
-                </Label>
-                <Select value={formData.status} onValueChange={handleStatusChange}>
-                  <SelectTrigger className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-400">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg">
-                    {statusOptions.map(status => (
-                      <SelectItem 
-                        key={status} 
-                        value={status}
-                        className="px-3 py-2 hover:bg-blue-50 focus:bg-blue-50 cursor-pointer transition-colors duration-150"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${
-                            status === 'Pending' ? 'bg-yellow-400' :
-                            status === 'Assigned' ? 'bg-purple-400' :
-                            status === 'In Transit' ? 'bg-blue-400' :
-                            status === 'Delivered' ? 'bg-green-400' :
-                            status === 'Cancelled' ? 'bg-red-400' : 'bg-gray-400'
-                          }`}></div>
-                          <span className="font-medium">{status}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="edit-driverId" className="text-sm font-medium text-gray-700 mb-2 block">
-                  Driver
-                </Label>
-                <Select value={formData.driverId} onValueChange={handleDriverChange}>
-                  <SelectTrigger className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-400">
-                    <SelectValue placeholder="Select Driver" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    <SelectItem 
-                      value="none"
-                      className="px-3 py-2 hover:bg-gray-50 focus:bg-gray-50 cursor-pointer transition-colors duration-150"
+              {/* Second Row */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-deliveryDate" className="text-sm font-semibold text-gray-700">Delivery Date</Label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <Input
+                        id="edit-deliveryDate"
+                        name="deliveryDate"
+                        type="datetime-local"
+                        value={formData.deliveryDate}
+                        onChange={handleInputChange}
+                        required
+                        min={toDatetimeLocal(new Date())}
+                        className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg pr-10"
+                      />
+                      <FontAwesomeIcon
+                        icon={faCalendarAlt}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        setFormData(prev => ({
+                          ...prev,
+                          deliveryDate: toDatetimeLocal(getSuggestedDeliveryDate()),
+                        }))
+                      }
+                      title="Auto suggest a suitable time"
+                      className="h-11 px-4 border-gray-300 hover:bg-gray-50 rounded-lg"
                     >
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-gray-400"></div>
-                        <span className="font-medium text-gray-600">No Driver Assigned</span>
-                      </div>
-                    </SelectItem>
-                    {drivers.length > 0 ? (
-                      drivers.map(driver => (
+                      Auto
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Auto suggests now + 3h (or tomorrow 10:00 AM if after 7 PM).
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-status" className="text-sm font-semibold text-gray-700">Status</Label>
+                  <Select value={formData.status} onValueChange={handleStatusChange}>
+                    <SelectTrigger className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg">
+                      <SelectValue placeholder="Select Status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border border-gray-200 rounded-lg shadow-xl">
+                      {statusOptions.map(status => (
                         <SelectItem 
-                          key={driver._id} 
-                          value={driver._id}
-                          className="px-3 py-2 hover:bg-blue-50 focus:bg-blue-50 cursor-pointer transition-colors duration-150"
+                          key={status} 
+                          value={status}
+                          className="px-4 py-3 hover:bg-blue-50 focus:bg-blue-50 cursor-pointer transition-colors duration-150"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                              <span className="text-blue-600 font-medium text-sm">
-                                {driver.fullName?.charAt(0) || 'D'}
-                              </span>
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-medium text-gray-900">{driver.fullName}</span>
-                              <span className="text-xs text-gray-500">{driver.email}</span>
-                            </div>
-                            <div className="ml-auto">
-                              <span className={`px-2 py-1 text-xs rounded-full ${
-                                driver.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                              }`}>
-                                {driver.status}
-                              </span>
-                            </div>
+                            <div className={`w-3 h-3 rounded-full ${
+                              status === 'Pending' ? 'bg-yellow-400' :
+                              status === 'Assigned' ? 'bg-purple-400' :
+                              status === 'In Transit' ? 'bg-blue-400' :
+                              status === 'Delivered' ? 'bg-green-400' :
+                              status === 'Cancelled' ? 'bg-red-400' : 'bg-gray-400'
+                            }`}></div>
+                            <span className="font-medium text-gray-800">{status}</span>
                           </div>
                         </SelectItem>
-                      ))
-                    ) : (
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-driverId" className="text-sm font-semibold text-gray-700">Driver (Optional)</Label>
+                  <Select value={formData.driverId} onValueChange={handleDriverChange}>
+                    <SelectTrigger className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg">
+                      <SelectValue placeholder="Select Driver" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
                       <SelectItem 
-                        value="no-drivers" 
-                        disabled
-                        className="px-3 py-2 text-gray-400 cursor-not-allowed"
+                        value="none"
+                        className="px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 cursor-pointer transition-colors duration-150"
                       >
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                          <span>No drivers available</span>
+                        <div className="flex items-center gap-3">
+                          <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+                          <span className="font-medium text-gray-600">No Driver Assigned</span>
                         </div>
                       </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-                {formData.driverId && formData.driverId !== 'none' && (
-                  <div className="mt-2 p-2 bg-blue-50 rounded text-sm">
-                    <span className="text-blue-600">Selected Driver: </span>
-                    <span className="font-medium">
-                      {drivers.find(d => d._id === formData.driverId)?.fullName}
-                    </span>
-                    <br />
-                    <span className="text-blue-600">Email: </span>
-                    <span className="font-medium">
-                      {drivers.find(d => d._id === formData.driverId)?.email}
-                    </span>
-                    <br />
-                    <span className="text-xs text-gray-500">
-                      An email will be sent to this driver when delivery is updated.
-                    </span>
-                  </div>
-                )}
+                      {drivers.length > 0 ? (
+                        drivers.map(driver => (
+                          <SelectItem 
+                            key={driver._id} 
+                            value={driver._id}
+                            className="px-4 py-3 hover:bg-blue-50 focus:bg-blue-50 cursor-pointer transition-colors duration-150"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                <span className="text-blue-600 font-medium text-sm">
+                                  {driver.fullName?.charAt(0) || 'D'}
+                                </span>
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-medium text-gray-900">{driver.fullName}</span>
+                                <span className="text-xs text-gray-500">{driver.email}</span>
+                              </div>
+                              <div className="ml-auto">
+                                <span className={`px-2 py-1 text-xs rounded-full ${
+                                  driver.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {driver.status}
+                                </span>
+                              </div>
+                            </div>
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem 
+                          value="no-drivers" 
+                          disabled
+                          className="px-4 py-3 text-gray-400 cursor-not-allowed"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                            <span>No drivers available</span>
+                          </div>
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {formData.driverId && formData.driverId !== 'none' && (
+                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center mt-0.5">
+                          <span className="text-blue-600 text-xs">i</span>
+                        </div>
+                        <div className="text-sm">
+                          <div className="font-semibold text-blue-800 mb-1">Selected Driver Information</div>
+                          <div className="text-blue-700">
+                            <span className="font-medium">Name:</span> {drivers.find(d => d._id === formData.driverId)?.fullName}
+                          </div>
+                          <div className="text-blue-700">
+                            <span className="font-medium">Email:</span> {drivers.find(d => d._id === formData.driverId)?.email}
+                          </div>
+                          <div className="text-xs text-blue-600 mt-2">
+                            An email will be sent to this driver when delivery is updated.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="edit-notes">Notes</Label>
+
+              {/* Notes Section */}
+              <div className="space-y-2">
+                <Label htmlFor="edit-notes" className="text-sm font-semibold text-gray-700">Notes (Optional)</Label>
                 <Textarea
                   id="edit-notes"
                   name="notes"
                   value={formData.notes}
                   onChange={handleInputChange}
+                  placeholder="Additional notes for this delivery"
                   rows={3}
+                  className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg resize-none"
                 />
               </div>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Updating...' : 'Update Delivery'}
-              </Button>
+            {/* Action Buttons */}
+            <DialogFooter className="pt-6 border-t border-gray-100">
+              <div className="flex justify-end gap-3">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsEditDialogOpen(false);
+                    setSelectedDelivery(null);
+                    resetForm();
+                  }}
+                  className="h-11 px-6 border-gray-300 hover:bg-gray-50 rounded-lg"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting} 
+                  className="h-11 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                  <FontAwesomeIcon icon={faEdit} className="mr-2" />
+                  {isSubmitting ? 'Updating...' : 'Update Delivery'}
+                </Button>
+              </div>
             </DialogFooter>
           </form>
         </DialogContent>

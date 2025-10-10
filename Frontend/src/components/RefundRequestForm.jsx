@@ -110,6 +110,17 @@ const RefundRequestForm = ({ order, onSuccess, onCancel }) => {
       };
 
       console.log('Submitting refund request:', refundData);
+      console.log('API base URL:', api.defaults.baseURL);
+      console.log('Request headers:', api.defaults.headers);
+      
+      // Test if API is reachable
+      try {
+        const testResponse = await api.get('/members/my-profile');
+        console.log('API connection test successful');
+      } catch (testErr) {
+        console.error('API connection test failed:', testErr);
+      }
+      
       const response = await api.post('/refunds/request', refundData);
       
       setSuccess('Refund request submitted successfully! Admin will review your request shortly.');
@@ -122,7 +133,10 @@ const RefundRequestForm = ({ order, onSuccess, onCancel }) => {
 
     } catch (err) {
       console.error('Refund request error:', err);
-      setError(err.response?.data?.msg || 'Failed to submit refund request. Please try again.');
+      console.error('Error response:', err.response);
+      console.error('Error status:', err.response?.status);
+      console.error('Error data:', err.response?.data);
+      setError(err.response?.data?.msg || err.response?.data?.message || 'Failed to submit refund request. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -154,6 +168,11 @@ const RefundRequestForm = ({ order, onSuccess, onCancel }) => {
         <CardDescription>
           Submit a refund request for your order. All orders are eligible for refund requests. Admin will review your request and approve or decline it.
         </CardDescription>
+        <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className="text-sm text-amber-800 font-medium">
+            ⚠️ Request for a refund is valid only 3 days
+          </p>
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
