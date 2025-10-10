@@ -512,16 +512,6 @@ const MembershipRenewalPaymentForm = ({
                 </div>
               </div>
 
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  onClick={addNewPaymentMethod}
-                  disabled={loading}
-                  className="flex-1"
-                >
-                  {loading ? 'Adding...' : 'Add Card'}
-                </Button>
-              </div>
             </div>
           )}
         </CardContent>

@@ -6,7 +6,7 @@ import axios from 'axios';
 import { AdminAuthContext } from '@/context/AdminAuthContext'; // ඔබගේ context path එකට අනුව සකසන්න
 import { FaUsers, FaUserCheck, FaUserTimes, FaIdCard, FaFutbol, FaChild } from 'react-icons/fa'; // Icons
 import DetailsPopup from '@/components/DetailsPopup';
-
+//neth
 // ★★★ Reusable Sub-Statistic Component for clean UI ★★★
 const DetailRow = ({ icon, label, value, onClick }) => (
   <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">

@@ -235,34 +235,46 @@ const PreOrderPaymentPage = () => {
           <Button
             onClick={() => navigate('/admin-dashboard')}
             variant="outline"
-            className="mb-4"
+            className="mb-6 border-gray-300 text-gray-700 hover:bg-gray-50 font-medium px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
           >
             <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
             Back to Dashboard
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900">Log Pre-Order Payment</h1>
-          <p className="text-gray-600 mt-2">Record payment details for supplier pre-order</p>
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 text-white shadow-lg">
+            <h1 className="text-3xl font-bold mb-2">Pre-Order Payment</h1>
+            <p className="text-blue-100 text-lg">Record payment details for supplier pre-order</p>
+          </div>
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
+          <div className="bg-red-50 border-l-4 border-red-400 text-red-700 px-6 py-4 rounded-lg mb-6 shadow-sm">
+            <div className="flex items-center">
+              <div className="w-5 h-5 bg-red-400 rounded-full flex items-center justify-center mr-3">
+                <span className="text-white text-xs font-bold">!</span>
+              </div>
+              <p className="font-medium">{error}</p>
+            </div>
           </div>
         )}
 
         {success && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-            {success}
+          <div className="bg-green-50 border-l-4 border-green-400 text-green-700 px-6 py-4 rounded-lg mb-6 shadow-sm">
+            <div className="flex items-center">
+              <div className="w-5 h-5 bg-green-400 rounded-full flex items-center justify-center mr-3">
+                <FontAwesomeIcon icon={faCheckCircle} className="text-white text-xs" />
+              </div>
+              <p className="font-medium">{success}</p>
+            </div>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Supplier Details Card */}
-          <Card className="shadow-lg border-2 border-blue-100">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
-              <CardTitle className="text-xl font-bold text-gray-800 flex items-center">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-3">
-                  <FontAwesomeIcon icon={faBuilding} className="text-white text-sm" />
+          <Card className="shadow-xl border-0 rounded-xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+              <CardTitle className="text-xl font-bold flex items-center">
+                <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
+                  <FontAwesomeIcon icon={faBuilding} className="text-white text-lg" />
                 </div>
                 Supplier Details
               </CardTitle>
@@ -322,11 +334,11 @@ const PreOrderPaymentPage = () => {
           </Card>
 
           {/* Payment Details Card */}
-          <Card className="shadow-lg border-2 border-green-100">
-            <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b">
-              <CardTitle className="text-xl font-bold text-gray-800 flex items-center">
-                <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3">
-                  <FontAwesomeIcon icon={faMoneyBillWave} className="text-white text-sm" />
+          <Card className="shadow-xl border-0 rounded-xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+              <CardTitle className="text-xl font-bold flex items-center">
+                <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
+                  <FontAwesomeIcon icon={faMoneyBillWave} className="text-white text-lg" />
                 </div>
                 Payment Details
               </CardTitle>
@@ -436,23 +448,24 @@ const PreOrderPaymentPage = () => {
               variant="outline"
               onClick={() => navigate('/admin-dashboard')}
               disabled={loading}
+              className="border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-8 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={loading || !formData.amount || !formData.referenceNumber || !formData.paymentDate}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
             >
               {loading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Logging Payment...
+                  Processing...
                 </>
               ) : (
                 <>
                   <FontAwesomeIcon icon={faCheckCircle} className="mr-2" />
-                  Log Payment
+                  Payment
                 </>
               )}
             </Button>
