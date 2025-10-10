@@ -1,237 +1,299 @@
-// File: frontend/src/pages/AttendancePage.jsx (With Hover Animation)
-
+// ===============================================
+// File: Frontend/src/pages/AttendancePage.jsx
+// ===============================================
+//yoma
 import React, { useState, useEffect, useMemo } from 'react';
-import { getCoaches, getAttendance, markAttendance, deleteAttendance } from '../api/attendanceService';
+import { 
+    getPendingForAdmin, 
+    updateStatusByAdmin, 
+    getAllAttendanceForAdmin, 
+    deleteAttendanceByAdmin, 
+    updateRecordByAdmin 
+} from '../api/attendanceService';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const AttendancePage = () => {
-    const getTodayString = () => new Date().toISOString().slice(0, 10);
-    
-    const [selectedDate, setSelectedDate] = useState(getTodayString);
-    const [coaches, setCoaches] = useState([]);
-    const [attendanceRecords, setAttendanceRecords] = useState([]);
-    const [selectedCoach, setSelectedCoach] = useState('');
-    const [selectedStatus, setSelectedStatus] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const [pending, setPending] = useState([]);
+    const [history, setHistory] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [isEditing, setIsEditing] = useState(false);
+    const [success, setSuccess] = useState('');
+    const [activeTab, setActiveTab] = useState('pending');
 
-    const [searchQuery, setSearchQuery] = useState('');
-    
+    const [editingRecord, setEditingRecord] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Fetch data
     const fetchData = async () => {
+        setLoading(true);
+        setError('');
+        setSuccess('');
         try {
-            setIsLoading(true);
-            const [coachesData, attendanceData] = await Promise.all([getCoaches(), getAttendance()]);
-            setCoaches(coachesData);
-            setAttendanceRecords(attendanceData);
-            setError('');
+            if (activeTab === 'pending') {
+                const pendingData = await getPendingForAdmin();
+                setPending(pendingData);
+            } else {
+                const historyData = await getAllAttendanceForAdmin();
+                setHistory(historyData);
+            }
         } catch (err) {
-            setError('Failed to fetch initial data.');
+            console.error("Fetch Error:", err.response || err);
+            setError(`Failed to fetch ${activeTab} data.`);
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [activeTab]);
 
-    useEffect(() => {
-        const todayStr = getTodayString();
-        if (selectedDate !== todayStr) {
-            setSelectedDate(todayStr);
+    // Status & Delete
+    const handleUpdateStatus = async (id, newStatus) => {
+        if (!window.confirm(`Are you sure you want to ${newStatus.toLowerCase()} this request?`)) return;
+        setError(''); setSuccess('');
+        try {
+            const result = await updateStatusByAdmin(id, newStatus);
+            setSuccess(result.message);
+            fetchData();
+        } catch (err) {
+            setError(err.response?.data?.message || `Failed to ${newStatus.toLowerCase()} attendance.`);
         }
-    }, []);
+    };
 
-
-    useEffect(() => {
-        if (selectedCoach && selectedDate) {
-            const dayOfWeek = new Date(selectedDate + 'T00:00:00Z').getUTCDay();
-            if (dayOfWeek === 0) return;
-            const existingRecord = attendanceRecords.find(record => 
-                record.memberId?._id === selectedCoach && record.date === selectedDate
-            );
-            if (existingRecord) {
-                setSelectedStatus(existingRecord.status);
-                setIsEditing(true);
-            } else {
-                setSelectedStatus('');
-                setIsEditing(false);
+    const handleDeleteByAdmin = async (id) => {
+        if (window.confirm('ADMIN ACTION: Are you sure you want to permanently delete this record? This cannot be undone.')) {
+            setError(''); setSuccess('');
+            try {
+                const result = await deleteAttendanceByAdmin(id);
+                setSuccess(result.message);
+                fetchData();
+            } catch (err) {
+                setError(err.response?.data?.message || 'Failed to delete record.');
             }
-        } else {
-            setIsEditing(false);
         }
-    }, [selectedCoach, selectedDate, attendanceRecords]);
-    
-    const groupedAttendance = useMemo(() => {
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().slice(0, 10);
-        const groups = attendanceRecords.reduce((acc, record) => {
+    };
+
+    // Modal logic (only status editable)
+    const handleEditClick = (record) => {
+        setEditingRecord({
+            ...record,
+            date: record.date.includes('T') ? record.date.split('T')[0] : record.date
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleModalSelectChange = (value) => {
+        setEditingRecord(prev => ({ ...prev, status: value }));
+    };
+
+    const handleSaveChanges = async () => {
+        setError(''); setSuccess('');
+        try {
+            const result = await updateRecordByAdmin(editingRecord._id, { status: editingRecord.status });
+            setSuccess(result.message);
+            fetchData();
+            setIsModalOpen(false);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to update status.');
+        }
+    };
+
+    // Helpers
+    const getStatusBadge = (status) => {
+        switch (status) {
+            case 'Approved': return 'bg-green-100 text-green-800';
+            case 'Pending': return 'bg-yellow-100 text-yellow-800';
+            case 'Rejected': return 'bg-red-100 text-red-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    };
+
+    const groupedHistory = useMemo(() => {
+        return history.reduce((acc, record) => {
             const coachId = record.memberId?._id;
             if (!coachId) return acc;
             if (!acc[coachId]) {
-                acc[coachId] = { coachName: `${record.memberId.firstName} ${record.memberId.lastName || ''}`, records: [], summary: { 'Work Full-Day': 0, 'Work Half-Day': 0, 'Absent': 0, 'Duty-Leave': 0, 'Leave': 0 }};
+                acc[coachId] = {
+                    coachName: `${record.memberId.firstName || ''} ${record.memberId.lastName || ''}`.trim() || 'Unnamed Coach',
+                    records: [],
+                    summary: { Approved: 0, Pending: 0, Rejected: 0 }
+                };
             }
             acc[coachId].records.push(record);
-            if (record.date && record.date >= thirtyDaysAgoStr) {
-                if (acc[coachId].summary[record.status] !== undefined) acc[coachId].summary[record.status]++;
+            if (acc[coachId].summary[record.status] !== undefined) {
+                acc[coachId].summary[record.status]++;
             }
             return acc;
         }, {});
-        Object.values(groups).forEach(group => group.records.sort((a, b) => (b.date || '').localeCompare(a.date || '')));
-        return groups;
-    }, [attendanceRecords]);
+    }, [history]);
 
-    const resetForm = () => {
-        setSelectedCoach('');
-        setSelectedStatus('');
-        setSelectedDate(getTodayString());
-        setIsEditing(false);
-    };
+    // Pending table
+    const renderPendingTable = () => (
+        <div className="overflow-x-auto bg-white rounded-lg shadow-md mt-4">
+            <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                    <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Coach</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                    {pending.length > 0 ? pending.map(rec => (
+                        <tr key={rec._id}>
+                            <td className="px-6 py-4">{`${rec.memberId?.firstName || 'N/A'} ${rec.memberId?.lastName || ''}`}</td>
+                            <td className="px-6 py-4">{rec.date}</td>
+                            <td className="px-6 py-4">{rec.attendanceType}</td>
+                            <td className="px-6 py-4 max-w-xs whitespace-pre-wrap">{rec.leaveReason || '-'}</td>
+                            <td className="px-6 py-4">{`${rec.inTime || '--:--'} - ${rec.outTime || '--:--'}`}</td>
+                            <td className="px-6 py-4 flex gap-2">
+                                <Button onClick={() => handleUpdateStatus(rec._id, 'Approved')} size="sm" className="bg-green-600 hover:bg-green-700">Approve</Button>
+                                <Button onClick={() => handleUpdateStatus(rec._id, 'Rejected')} size="sm" variant="destructive">Reject</Button>
+                            </td>
+                        </tr>
+                    )) : <tr><td colSpan="6" className="text-center p-4 text-gray-500">No pending requests.</td></tr>}
+                </tbody>
+            </table>
+        </div>
+    );
 
-    const handleMarkOrUpdate = async (e) => {
-        e.preventDefault();
-        if (!selectedCoach || !selectedDate || !selectedStatus) {
-            alert('Please fill all fields'); return;
-        }
-        try {
-            const result = await markAttendance({ memberId: selectedCoach, date: selectedDate, status: selectedStatus });
-            alert(result.message);
-            resetForm();
-            await fetchData();
-        } catch (err) {
-            alert(`Failed to save attendance: ${err.response?.data?.message || 'Error'}`);
-        }
-    };
-
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this record?')) {
-            try {
-                await deleteAttendance(id);
-                alert('Record deleted successfully');
-                await fetchData();
-            } catch (err) {
-                alert(err.response?.data?.message || 'Failed to delete record.');
-            }
-        }
-    };
-
-    const handleEditClick = (record) => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        setSelectedCoach(record.memberId._id);
-        setSelectedDate(record.date);
-    };
-
-    const handleDateChange = (e) => {
-        const newDate = e.target.value;
-        const dayOfWeek = new Date(newDate + 'T00:00:00Z').getUTCDay();
-
-        if (dayOfWeek === 0) { 
-            alert("Sundays are holidays and cannot be selected.");
-        } else {
-            setSelectedDate(newDate);
-        }
-    };
-
-    const getStatusBadge = (status) => {
-        switch (status) { case 'Work Full-Day': return 'bg-green-100 text-green-800'; case 'Work Half-Day': return 'bg-yellow-100 text-yellow-800'; case 'Absent': return 'bg-red-100 text-red-800'; case 'Duty-Leave': return 'bg-blue-100 text-blue-800'; case 'Leave': return 'bg-purple-100 text-purple-800'; default: return 'bg-gray-100 text-gray-800';}
-    };
-    
-    const filteredCoachIds = useMemo(() => {
-        if (!searchQuery) {
-            return Object.keys(groupedAttendance);
-        }
-        return Object.keys(groupedAttendance).filter(coachId =>
-            groupedAttendance[coachId].coachName.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [searchQuery, groupedAttendance]);
-
-    return (
-        <div className="space-y-8">
-            <h1 className="text-2xl font-bold">Coach Attendance Management</h1>
-            <div className="bg-white p-6 rounded-lg shadow-md sticky top-4 z-40">
-                <h2 className="text-xl font-semibold mb-4">{isEditing ? 'Update Attendance Record' : 'Mark New Attendance'}</h2>
-                <form onSubmit={handleMarkOrUpdate} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-                    <div className="flex flex-col"><label className="mb-1 font-medium">Coach</label><Select onValueChange={setSelectedCoach} value={selectedCoach}><SelectTrigger><SelectValue placeholder="Select Coach" /></SelectTrigger><SelectContent className="z-50 bg-white border shadow-lg">{coaches.map((coach) => (<SelectItem key={coach._id} value={coach._id}>{coach.firstName} {coach.lastName}</SelectItem>))}</SelectContent></Select></div>
-                    <div className="flex flex-col"><label className="mb-1 font-medium">Date</label>
-                    <Input type="date" value={selectedDate} onChange={handleDateChange} max={getTodayString()} /></div>
-                    <div className="flex flex-col"><label className="mb-1 font-medium">Status</label>
-                        <Select onValueChange={setSelectedStatus} value={selectedStatus}>
-                            <SelectTrigger><SelectValue placeholder={isEditing ? "Update status..." : "Select Status"} /></SelectTrigger>
-                            <SelectContent className="z-50 bg-white border shadow-lg">
-                                <SelectItem value="Work Full-Day">Work Full-Day</SelectItem>
-                                <SelectItem value="Work Half-Day">Work Half-Day</SelectItem>
-                                <SelectItem value="Absent">Absent</SelectItem>
-                                <SelectItem value="Duty-Leave">Duty-Leave</SelectItem>
-                                <SelectItem value="Leave">Leave</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className='flex gap-2 md:col-start-5'>
-                        <Button
-                            type="submit"
-                            disabled={!selectedCoach || !selectedStatus}
-                            className="bg-orange-500 hover:bg-orange-600 text-white"
-                        >
-                            {isEditing ? 'Update' : 'Mark'}
-                        </Button>
-                        {isEditing && (<Button type="button" variant="outline" onClick={resetForm}>Cancel</Button>)}
-                    </div>
-                </form>
-            </div>
-            <div>
-                 <h2 className="text-xl font-semibold mb-4">Attendance History & 30-Day Summary</h2>
-                 
-                <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
-                     <Input
-                        type="text"
-                        placeholder="Search by coach name..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full md:w-1/3"
-                    />
-                </div>
-
-                {isLoading ? <p>Loading...</p> : error ? <p className="text-red-500">{error}</p> :
-                <div className="space-y-6">
-                    {filteredCoachIds.length > 0 ? (filteredCoachIds.map(coachId => { 
-                        const { coachName, records, summary } = groupedAttendance[coachId]; 
-                        return (
-                        // ★★★★★★★★★★★★★★★★★★★★★★★ මෙන්න වෙනස් කළ කොටස ★★★★★★★★★★★★★★★★★★★★★★★
-                        <div 
-                            key={coachId} 
-                            className="bg-white p-6 rounded-lg shadow-md transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-2 cursor-pointer"
-                        >
-                        {/* ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★ */}
-                            <h3 className="text-lg font-bold text-gray-800 mb-4">{coachName}</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 border-b pb-4">
-                                <div className="text-center p-2 rounded-lg bg-green-50"><p className="text-2xl font-bold text-green-700">{summary['Work Full-Day']}</p><p className="text-sm text-gray-600">Full Days</p></div>
-                                <div className="text-center p-2 rounded-lg bg-yellow-50"><p className="text-2xl font-bold text-yellow-700">{summary['Work Half-Day']}</p><p className="text-sm text-gray-600">Half Days</p></div>
-                                <div className="text-center p-2 rounded-lg bg-red-50"><p className="text-2xl font-bold text-red-700">{summary['Absent']}</p><p className="text-sm text-gray-600">Absences</p></div>
-                                <div className="text-center p-2 rounded-lg bg-blue-50"><p className="text-2xl font-bold text-blue-700">{summary['Duty-Leave']}</p><p className="text-sm text-gray-600">Duty Leaves</p></div>
-                                <div className="text-center p-2 rounded-lg bg-purple-50"><p className="text-2xl font-bold text-purple-700">{summary['Leave']}</p><p className="text-sm text-gray-600">Leaves</p></div>
+    // History view
+    const renderHistoryView = () => (
+        <div className="space-y-6 mt-4">
+            {Object.keys(groupedHistory).length > 0 ? 
+                Object.values(groupedHistory).map(coachData => (
+                    <div key={coachData.coachName} className="bg-white p-6 rounded-lg shadow-md">
+                        <h3 className="text-xl font-bold text-gray-800 mb-4">{coachData.coachName}</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 border-b pb-4">
+                            <div className="text-center p-2 rounded-lg bg-green-50">
+                                <p className="text-2xl font-bold text-green-700">{coachData.summary.Approved}</p>
+                                <p className="text-sm text-gray-600">Approved</p>
                             </div>
-                            <details open={records.length < 5 && records.length > 0}>
-                                <summary className="font-medium text-indigo-600 hover:underline">View All Records ({records.length})</summary>
-                                <div className="overflow-x-auto mt-4">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th></tr></thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">{records.map((record) => (<tr key={record._id}><td className="px-6 py-4 whitespace-nowrap">{record.date}</td><td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(record.status)}`}>{record.status}</span></td><td className="px-6 py-4 whitespace-nowrap flex gap-4"><button onClick={() => handleEditClick(record)} className="text-indigo-600 hover:text-indigo-900 font-medium">Update</button><button onClick={() => handleDelete(record._id)} className="text-red-600 hover:text-red-900 font-medium">Delete</button></td></tr>))}</tbody>
-                                    </table>
-                                </div>
-                            </details>
+                            <div className="text-center p-2 rounded-lg bg-yellow-50">
+                                <p className="text-2xl font-bold text-yellow-700">{coachData.summary.Pending}</p>
+                                <p className="text-sm text-gray-600">Pending</p>
+                            </div>
+                            <div className="text-center p-2 rounded-lg bg-red-50">
+                                <p className="text-2xl font-bold text-red-700">{coachData.summary.Rejected}</p>
+                                <p className="text-sm text-gray-600">Rejected</p>
+                            </div>
                         </div>
-                    )})) : (
-                         <div className="bg-white p-6 rounded-lg shadow-md text-center text-gray-500">
-                            <p>No coach found for "{searchQuery}". Clear the search to see all coaches.</p>
-                         </div>
-                    )}
-                </div>}
+                        <details>
+                            <summary className="font-medium text-indigo-600 hover:underline cursor-pointer">View All Records ({coachData.records.length})</summary>
+                            <div className="overflow-x-auto mt-4">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {coachData.records.sort((a, b) => new Date(b.date) - new Date(a.date)).map(record => (
+                                            <tr key={record._id}>
+                                                <td className="px-6 py-4">{record.date}</td>
+                                                <td className="px-6 py-4">{record.attendanceType}</td>
+                                                <td className="px-6 py-4 max-w-xs whitespace-pre-wrap">{record.leaveReason || '-'}</td>
+                                                <td className="px-6 py-4">{`${record.inTime || '--:--'} - ${record.outTime || '--:--'}`}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(record.status)}`}>
+                                                        {record.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 flex gap-4">
+                                                    <button onClick={() => handleEditClick(record)} className="text-indigo-600 hover:text-indigo-900 font-medium">Edit</button>
+                                                    <button onClick={() => handleDeleteByAdmin(record._id)} className="text-red-600 hover:text-red-900 font-medium">Delete</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </details>
+                    </div>
+                ))
+             : (
+                <div className="text-center p-6 bg-white rounded-lg shadow-md">
+                    <p className="text-gray-500">No historical records found.</p>
+                </div>
+             )}
+        </div>
+    );
+
+    // Render
+    return (
+        <div className="space-y-6">
+            <h1 className="text-2xl font-bold">Coach Attendance Approval</h1>
+            {error && <p className="text-red-500 bg-red-50 p-3 rounded-md">{error}</p>}
+            {success && <p className="text-green-500 bg-green-50 p-3 rounded-md">{success}</p>}
+
+            <div className="flex border-b">
+                <button onClick={() => setActiveTab('pending')} className={`py-2 px-4 ${activeTab === 'pending' ? 'border-b-2 border-blue-600 font-semibold' : ''}`}>
+                    Pending Requests ({loading && activeTab === 'pending' ? '...' : pending.length})
+                </button>
+                <button onClick={() => setActiveTab('history')} className={`py-2 px-4 ${activeTab === 'history' ? 'border-b-2 border-blue-600 font-semibold' : ''}`}>
+                    Full History
+                </button>
             </div>
+
+            {loading ? <p className="text-center mt-4">Loading...</p> : (
+                activeTab === 'pending' ? renderPendingTable() : renderHistoryView()
+            )}
+
+            {/* 🟦 Admin Status Edit Modal */}
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogContent className="sm:max-w-[450px] rounded-2xl shadow-xl bg-gradient-to-b from-white to-gray-50 p-6">
+                    <DialogHeader>
+                        <DialogTitle className="text-lg font-semibold text-gray-800 mb-1">🛠 Edit Attendance Status</DialogTitle>
+                        <p className="text-sm text-gray-500 mb-3">Only the status field can be modified by the admin.</p>
+                    </DialogHeader>
+
+                    <div className="grid gap-4">
+                        <div>
+                            <Label>Date</Label>
+                            <Input value={editingRecord?.date || ''} disabled className="bg-gray-100 text-gray-600" />
+                        </div>
+                        <div>
+                            <Label>Attendance Type</Label>
+                            <Input value={editingRecord?.attendanceType || ''} disabled className="bg-gray-100 text-gray-600" />
+                        </div>
+                        <div>
+                            <Label>Status</Label>
+                            <Select onValueChange={handleModalSelectChange} value={editingRecord?.status || ''}>
+                                <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Pending">Pending</SelectItem>
+                                    <SelectItem value="Approved">Approved</SelectItem>
+                                    <SelectItem value="Rejected">Rejected</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="mt-5 flex justify-end gap-3">
+                        <DialogClose asChild>
+                            <Button variant="outline" className="rounded-lg">Cancel</Button>
+                        </DialogClose>
+                        <Button onClick={handleSaveChanges} className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow">
+                            Save Changes
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
+
 export default AttendancePage;

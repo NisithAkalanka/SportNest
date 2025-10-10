@@ -1,24 +1,26 @@
+// Backend/routes/attendanceRoutes.js
+
 const express = require('express');
 const router = express.Router();
-const {
-    getAllCoaches,
-    markAttendance,
-    getAttendanceHistory,
-    deleteAttendance
-} = require('../controllers/attendanceController');
+const attendanceController = require('../controllers/attendanceController');
+const { protectAny, adminOnly, protectCoach } = require('../middleware/authMiddleware');
 
-const { protect, admin } = require('../middleware/authMiddleware'); // Admin ට පමණක් access දීමට
+// --- Coach Routes ---
+router.route('/coach')
+    .post(protectAny, protectCoach, attendanceController.submitAttendanceByCoach)
+    .get(protectAny, protectCoach, attendanceController.getCoachAttendanceHistory);
 
-// Coach hamoma laba ganimata route eka (Dropdown ekt)
-// router.get('/coaches', protect, admin, getAllCoaches);
-router.get('/coaches', getAllCoaches); // danta admin middleware eka nomathiwa test krmu
+router.route('/coach/:id')
+    .put(protectAny, protectCoach, attendanceController.updateAttendanceByCoach)
+    .delete(protectAny, protectCoach, attendanceController.deleteAttendanceByCoach);
 
-// attendance reports labaganimata saha aluthin mark kirimata Routes
-router.route('/')
-    .get(getAttendanceHistory)      // GET -> /api/attendance
-    .post(markAttendance);     // POST -> /api/attendance
+// --- Admin Routes ---
+router.get('/admin/pending', protectAny, adminOnly, attendanceController.getAllPendingAttendance); 
+router.get('/admin/all', protectAny, adminOnly, attendanceController.getAdminAttendanceView);
+router.put('/admin/update/:id', protectAny, adminOnly, attendanceController.updateAttendanceStatus); // Approve/Reject
+router.delete('/admin/delete/:id', protectAny, adminOnly, attendanceController.deleteAttendanceForAdmin); // Delete any record
 
-// delete kirimata Route ek
-router.delete('/:id', deleteAttendance); // DELETE -> /api/attendance/60d5ecb8b48f4f3a2c8f8b8f (EX: ID)
+// <<< NEW: Admin t sampurna record ekkma update kirima >>>
+router.put('/admin/full-update/:id', protectAny, adminOnly, attendanceController.updateAttendanceByAdmin);
 
 module.exports = router;

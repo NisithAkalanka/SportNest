@@ -2,10 +2,9 @@
 
 import React, { useContext } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { AuthContext } from "../../context/MemberAuthContext";
+import { AuthContext } from "../../context/MemberAuthContext"; // Path එක නිවැරදිදැයි බලන්න
 
 const CoachNavbar = () => {
-  // Active/inactive link style
   const linkClass = ({ isActive }) =>
     `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
       isActive
@@ -26,17 +25,21 @@ const CoachNavbar = () => {
     <nav className="bg-[#0D1B2A] border-b border-white/10 shadow">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Brand */}
           <div className="flex-shrink-0">
             <span className="text-white font-bold text-xl">SportNest Coach Portal</span>
           </div>
 
-          {/* Links */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-center space-x-2">
               <NavLink to="/coach/dashboard" end className={linkClass}>
                 Dashboard
               </NavLink>
+
+              {/* <<< NEW LINK >>> Attendance සඳහා නව link එක */}
+              <NavLink to="/coach/attendance" className={linkClass}>
+                Attendance
+              </NavLink>
+
               <NavLink to="/coach/feedbacks" className={linkClass}>
                 Feedbacks
               </NavLink>
