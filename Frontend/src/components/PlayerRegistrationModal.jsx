@@ -209,7 +209,7 @@ const PlayerRegistrationModal = ({ sportName, onClose, onRegisterSuccess }) => {
 
                         <div className="flex justify-end space-x-4 pt-4">
                             <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-                            <Button type="submit" disabled={loading} style={{backgroundColor: '#FF6700'}}>
+                            <Button type="submit" disabled={loading} style={{backgroundColor: '#2abf1aff'}}>
                                 {loading ? 'Submitting...' : 'Submit Registration'}
                             </Button>
                         </div>

@@ -1,19 +1,19 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom'; // 1. useNavigate import කරගන්න
-import { FaArrowLeft } from 'react-icons/fa';   // 2. Icon එකක් import කරගන්න
+import { useNavigate } from 'react-router-dom'; 
+import { FaArrowLeft } from 'react-icons/fa';   
 
-// ★ ඔබගේ کلب එකේ සැබෑ ජයග්‍රහණ වල දත්ත මෙහි ඇතුළත් කළ හැක
+
 const achievementsData = [
     {
         title: "National Champions 2024 - Cricket",
         description: "Our Under-19 cricket team clinched the National Championship title in a thrilling final, showcasing exceptional talent and teamwork throughout the tournament.",
-        imageUrl: "https://images.unsplash.com/photo-1629285483773-635c159a35e2?q=80&w=1770&auto=format&fit=crop",
+        imageUrl: "https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?q=80&w=1907&auto=format&fit=crop",
         year: "2024",
     },
     {
         title: "Regional Tennis Tournament Winners",
         description: "Bringing home the trophy! Our tennis squad dominated the regional finals with stellar performances in both singles and doubles categories.",
-        imageUrl: "https://images.unsplash.com/photo-1543180404-58e925c4b4fb?q=80&w=1852&auto=format&fit=crop",
+        imageUrl: "https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?q=80&w=1907&auto=format&fit=crop",
         year: "2023",
     },
     {
@@ -25,13 +25,13 @@ const achievementsData = [
 ];
 
 const AchievementsPage = () => {
-    const navigate = useNavigate(); // 3. useNavigate initialize කරගන්න
+    const navigate = useNavigate(); // 3. useNavigate initialize 
 
     return (
         <div className="bg-gray-100 min-h-screen">
             <div className="container mx-auto px-4 py-16">
 
-                {/* ★★★ 4. Back Button එක මෙතැන එකතු කර ඇත ★★★ */}
+                
                 <div className="mb-8">
                     <button
                         onClick={() => navigate(-1)}
