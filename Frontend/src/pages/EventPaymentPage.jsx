@@ -8,12 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCreditCard, faEdit, faTrashAlt, faCheck, faTimes, faPlus, faSave } from '@fortawesome/free-solid-svg-icons';
-import axios from 'axios';
+import api from '@/api';
 
 const EventPaymentPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { eventData, registrationData } = location.state || {};
+  const { eventData, registrationData, returnToEvents } = location.state || {};
 
   const [formData, setFormData] = useState({
     // Payment Information
@@ -40,7 +40,12 @@ const EventPaymentPage = () => {
 
   // Redirect if no event data
   useEffect(() => {
+    console.log('🔍 EventPaymentPage mounted with data:');
+    console.log('Event data:', eventData);
+    console.log('Registration data:', registrationData);
+    
     if (!eventData || !registrationData) {
+      console.log('❌ Missing required data, redirecting to events');
       navigate('/events');
     }
   }, [eventData, registrationData, navigate]);
@@ -54,7 +59,7 @@ const EventPaymentPage = () => {
     try {
       const token = JSON.parse(localStorage.getItem('userInfo'))?.token;
       if (token) {
-        const response = await axios.get('/api/payments/methods', {
+        const response = await api.get('/payments/methods', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setSavedPaymentMethods(response.data || []);
@@ -161,7 +166,7 @@ const EventPaymentPage = () => {
         isDefault: savedPaymentMethods.length === 0
       };
 
-      const response = await axios.post('/api/payments/methods', paymentData, {
+      const response = await api.post('/payments/methods', paymentData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -195,7 +200,7 @@ const EventPaymentPage = () => {
         expiryYear: formData.expiryYear
       };
 
-      await axios.put(`/api/payments/methods/${editingPaymentId}`, paymentData, {
+      await api.put(`/payments/methods/${editingPaymentId}`, paymentData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -226,7 +231,7 @@ const EventPaymentPage = () => {
         return;
       }
 
-      await axios.delete(`/api/payments/methods/${paymentId}`, {
+      await api.delete(`/payments/methods/${paymentId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -250,7 +255,7 @@ const EventPaymentPage = () => {
         return;
       }
 
-      await axios.put(`/api/payments/methods/${paymentId}/default`, {}, {
+      await api.put(`/payments/methods/${paymentId}/default`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -322,24 +327,55 @@ const EventPaymentPage = () => {
         createAccount: formData.createAccount
       };
 
+      console.log('🔄 Event data:', eventData);
+      console.log('🔄 Registration data:', registrationData);
+      console.log('🔄 Submitting payment data:', paymentData);
+      console.log('🔑 Token available:', !!token);
+      console.log('🔑 Token preview:', token ? `${token.substring(0, 20)}...` : 'No token');
+      // Since payment endpoint is public, we can make the request without auth if needed
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const response = await axios.post('/api/events/payment', paymentData, config);
-
-      setSuccess('Payment successful! Redirecting to your ticket...');
+      console.log('🔑 Using config:', config);
       
-      // Redirect to ticket page
+      // Try with auth first, fallback to no auth if it fails
+      let response;
+      try {
+        response = await api.post('/events/payment', paymentData, config);
+      } catch (authError) {
+        if (authError.response?.status === 401 && token) {
+          console.log('🔄 Auth failed, retrying without token...');
+          response = await api.post('/events/payment', paymentData, {});
+        } else {
+          throw authError;
+        }
+      }
+      console.log('✅ Payment response:', response.data);
+
+      setSuccess('Payment successful! Redirecting to success page...');
+      
+      // Always redirect to success page after successful payment
       setTimeout(() => {
-        navigate('/events/ticket', {
+        navigate('/events/payment-success', {
           state: {
             eventData,
             registrationData,
-            paymentId: response.data.paymentId
+            paymentId: response.data.paymentId,
+            shouldRefreshEvents: true, // Flag to indicate events should be refreshed
+            returnToEvents: returnToEvents // Pass the return flag to success page
           }
         });
       }, 1500);
 
     } catch (error) {
-      setError(error.response?.data?.message || 'Registration failed. Please try again.');
+      console.error('💥 Payment error:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          'Registration failed. Please try again.';
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

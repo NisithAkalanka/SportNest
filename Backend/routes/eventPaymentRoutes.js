@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
+  healthCheck,
   processEventPayment,
   getEventPayments,
   getAllEventPayments,
@@ -12,6 +13,7 @@ const auth = require('../middleware/authMiddleware');
 const adminAuth = require('../middleware/adminMiddleware');
 
 // Public routes
+router.get('/payment/health', healthCheck);
 router.post('/payment', processEventPayment);
 
 // Protected routes
