@@ -458,54 +458,105 @@ const FinancialManagement = () => {
 
   const handleDownloadPDF = () => {
     try {
-      const doc = new jsPDF();
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = doc.internal.pageSize.getWidth();
       const currentDate = new Date();
       const reportDate = currentDate.toLocaleDateString('en-US', { 
         year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+        month: '2-digit', 
+        day: '2-digit' 
+      });
+      const reportTime = currentDate.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        hour12: true
       });
 
-      // Title
+      // Simple header - Company name and address
       doc.setFontSize(20);
-      doc.text('SportNest Financial Report', 14, 22);
-      
-      // Report Date
-      doc.setFontSize(12);
-      doc.text(`Report Generated: ${reportDate}`, 14, 32);
-      
-      // Financial Summary
-      doc.setFontSize(16);
-      doc.text('Financial Summary', 14, 50);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 0, 0);
+      doc.text('SportNest', 20, 30);
       
       doc.setFontSize(12);
-      doc.text(`Total Income: Rs. ${financialData.totalIncome.toLocaleString()}`, 14, 60);
-      doc.text(`Total Expenses: Rs. ${financialData.totalExpenses.toLocaleString()}`, 14, 70);
-      doc.text(`Net Profit: Rs. ${financialData.netProfit.toLocaleString()}`, 14, 80);
+      doc.setFont('helvetica', 'normal');
+      doc.text('No.7, Padukka, Colombo', 20, 38);
       
-      // Income Breakdown Table
-      doc.setFontSize(14);
-      doc.text('Income Breakdown', 14, 100);
+      // Report title
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Financial Management Report', pageWidth/2, 50, { align: 'center' });
       
-      const incomeTableData = financialData.incomeBreakdown.map(item => [
+      // Report metadata
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Generated: ${reportDate}, ${reportTime}`, 20, 60);
+      doc.text(`Total Revenue: Rs. ${financialData.totalIncome.toLocaleString()}`, 20, 68);
+
+      // Financial Summary Table
+      const summaryData = [
+        ['Total Revenue', `Rs. ${financialData.totalIncome.toLocaleString()}`],
+        ['Total Expenses', `Rs. ${financialData.totalExpenses.toLocaleString()}`],
+        ['Net Profit', `Rs. ${financialData.netProfit.toLocaleString()}`],
+        ['Profit Margin', `${financialData.totalIncome > 0 ? ((financialData.netProfit / financialData.totalIncome) * 100).toFixed(1) : 0}%`]
+      ];
+      
+      autoTable(doc, {
+        head: [['Financial Metric', 'Amount']],
+        body: summaryData,
+        startY: 80,
+        styles: { 
+          fontSize: 10,
+          cellPadding: 6,
+          halign: 'left'
+        },
+        headStyles: { 
+          fillColor: [59, 130, 246],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252]
+        },
+        columnStyles: {
+          1: { halign: 'right' }
+        }
+      });
+      
+      // Revenue Breakdown Table
+      const revenueTableY = doc.lastAutoTable.finalY + 20;
+      const revenueTableData = financialData.incomeBreakdown.map(item => [
         item.category,
         `Rs. ${item.amount.toLocaleString()}`,
         `${item.percentage}%`
       ]);
       
       autoTable(doc, {
-        head: [['Category', 'Amount', 'Percentage']],
-        body: incomeTableData,
-        startY: 110,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [34, 197, 94] } // Green color for income
+        head: [['Revenue Source', 'Amount (LKR)', 'Percentage']],
+        body: revenueTableData,
+        startY: revenueTableY,
+        styles: { 
+          fontSize: 10,
+          cellPadding: 6,
+          halign: 'left'
+        },
+        headStyles: { 
+          fillColor: [16, 185, 129],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252]
+        },
+        columnStyles: {
+          1: { halign: 'right' },
+          2: { halign: 'center' }
+        }
       });
       
       // Expense Breakdown Table
       const expenseTableY = doc.lastAutoTable.finalY + 20;
-      doc.setFontSize(14);
-      doc.text('Expense Breakdown', 14, expenseTableY);
-      
       const expenseTableData = financialData.expenseBreakdown.map(item => [
         item.category,
         `Rs. ${item.amount.toLocaleString()}`,
@@ -513,18 +564,30 @@ const FinancialManagement = () => {
       ]);
       
       autoTable(doc, {
-        head: [['Category', 'Amount', 'Percentage']],
+        head: [['Expense Category', 'Amount (LKR)', 'Percentage']],
         body: expenseTableData,
-        startY: expenseTableY + 10,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [239, 68, 68] } // Red color for expenses
+        startY: expenseTableY,
+        styles: { 
+          fontSize: 10,
+          cellPadding: 6,
+          halign: 'left'
+        },
+        headStyles: { 
+          fillColor: [239, 68, 68],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [254, 242, 242]
+        },
+        columnStyles: {
+          1: { halign: 'right' },
+          2: { halign: 'center' }
+        }
       });
       
       // Monthly Trends Table
       const trendsTableY = doc.lastAutoTable.finalY + 20;
-      doc.setFontSize(14);
-      doc.text('Monthly Financial Trends', 14, trendsTableY);
-      
       const trendsTableData = financialData.monthlyTrends.map(month => [
         month.month,
         `Rs. ${month.income.toLocaleString()}`,
@@ -533,61 +596,28 @@ const FinancialManagement = () => {
       ]);
       
       autoTable(doc, {
-        head: [['Month', 'Income', 'Expenses', 'Net Profit']],
+        head: [['Month', 'Revenue', 'Expenses', 'Net Profit']],
         body: trendsTableData,
-        startY: trendsTableY + 10,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [59, 130, 246] } // Blue color for trends
+        startY: trendsTableY,
+        styles: { 
+          fontSize: 10,
+          cellPadding: 6,
+          halign: 'left'
+        },
+        headStyles: { 
+          fillColor: [59, 130, 246],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [239, 246, 255]
+        },
+        columnStyles: {
+          1: { halign: 'right' },
+          2: { halign: 'right' },
+          3: { halign: 'right' }
+        }
       });
-      
-      // Recent Transactions
-      const recentTableY = doc.lastAutoTable.finalY + 20;
-      doc.setFontSize(14);
-      doc.text('Recent Income Transactions', 14, recentTableY);
-      
-      const recentIncomeData = financialData.recentIncome.map(transaction => [
-        transaction.category,
-        transaction.description,
-        `Rs. ${transaction.amount.toLocaleString()}`,
-        transaction.date
-      ]);
-      
-      autoTable(doc, {
-        head: [['Category', 'Description', 'Amount', 'Date']],
-        body: recentIncomeData,
-        startY: recentTableY + 10,
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [34, 197, 94] }
-      });
-      
-      // Recent Expenses
-      const recentExpenseTableY = doc.lastAutoTable.finalY + 20;
-      doc.setFontSize(14);
-      doc.text('Recent Expense Transactions', 14, recentExpenseTableY);
-      
-      const recentExpenseData = financialData.recentExpenses.map(transaction => [
-        transaction.category,
-        transaction.description,
-        `Rs. ${transaction.amount.toLocaleString()}`,
-        transaction.date
-      ]);
-      
-      autoTable(doc, {
-        head: [['Category', 'Description', 'Amount', 'Date']],
-        body: recentExpenseData,
-        startY: recentExpenseTableY + 10,
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [239, 68, 68] }
-      });
-      
-      // Footer
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.text(`Page ${i} of ${pageCount}`, 14, doc.internal.pageSize.height - 10);
-        doc.text('SportNest Financial Management System', doc.internal.pageSize.width - 80, doc.internal.pageSize.height - 10);
-      }
       
       // Save the PDF
       const fileName = `SportNest_Financial_Report_${currentDate.toISOString().split('T')[0]}.pdf`;

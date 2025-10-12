@@ -15,6 +15,7 @@ const {
   confirmDelivery,
   getConfirmationStatus,
   testDrivers,
+  testDatabase,
   testEmail
 } = require('../controllers/deliveryController');
 
@@ -27,6 +28,7 @@ router.get('/confirmation-status/:token', getConfirmationStatus);
 
 // --- Debug routes ---
 router.get('/test-drivers', testDrivers);
+router.get('/test-database', testDatabase);
 router.post('/test-email', testEmail);
 
 // --- Admin only routes (protected) ---

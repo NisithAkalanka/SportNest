@@ -32,7 +32,8 @@ const MembershipRenewalPaymentForm = ({
   const planPrices = {
     'Student Membership': 20000,
     'Ordinary Membership': 60000,
-    'Life Membership': 100000
+    'Life Membership': 100000,
+    'Life Time Membership': 100000
   };
 
   const selectedPlanPrice = planPrices[membershipData?.newPlan] || 0;
@@ -87,8 +88,8 @@ const MembershipRenewalPaymentForm = ({
     return true;
   };
 
-  const validateCVC = (cvc) => {
-    return /^\d{3,4}$/.test(cvc);
+  const validateCVV = (cvv) => {
+    return /^\d{3}$/.test(cvv);
   };
 
   const validateForm = () => {
@@ -106,8 +107,8 @@ const MembershipRenewalPaymentForm = ({
       } else if (!validateExpiry(paymentForm.expiryMonth, paymentForm.expiryYear)) {
         errors.expiry = 'Card has expired';
       }
-      if (!validateCVC(paymentForm.cvc)) {
-        errors.cvc = 'Please enter a valid CVC';
+      if (!validateCVV(paymentForm.cvc)) {
+        errors.cvc = 'Please enter a valid CVV (3 digits)';
       }
     } else {
       if (!selectedPaymentMethod) {
@@ -482,13 +483,13 @@ const MembershipRenewalPaymentForm = ({
                 </div>
 
                 <div className="md:col-span-2">
-                  <Label htmlFor="cvc">CVC</Label>
+                  <Label htmlFor="cvc">CVV</Label>
                   <Input
                     id="cvc"
                     value={paymentForm.cvc}
-                    onChange={(e) => handleInputChange('cvc', e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    onChange={(e) => handleInputChange('cvc', e.target.value.replace(/\D/g, '').slice(0, 3))}
                     placeholder="123"
-                    maxLength={4}
+                    maxLength={3}
                     className={validationErrors.cvc ? 'border-red-500' : ''}
                   />
                   {validationErrors.cvc && (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,8 @@ import axios from 'axios';
 
 const ShippingPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { grandTotal, appliedCoupon, discountAmount, shippingCost, wrapCost, totalAmount } = location.state || {};
   
   // Add error boundary for cart context
   let cartItems = [];
@@ -62,8 +64,8 @@ const ShippingPage = () => {
   const [isEditingBilling, setIsEditingBilling] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
-  // Calculate total amount
-  const totalAmount = cartItems.reduce((total, item) => {
+  // Use grand total from cart if available, otherwise calculate basic total
+  const displayTotal = grandTotal || cartItems.reduce((total, item) => {
     return total + (item.item?.price || 0) * item.quantity;
   }, 0);
 
@@ -257,7 +259,7 @@ const ShippingPage = () => {
     setLoading(true);
 
     try {
-      // Navigate to payment page with billing data
+      // Navigate to payment page with billing data and total amount
       navigate('/payment', { 
         state: { 
           billingData: savedBillingData || {
@@ -270,7 +272,13 @@ const ShippingPage = () => {
             postalCode: formData.postalCode,
             province: formData.province,
             country: formData.country
-          }
+          },
+          grandTotal: displayTotal,
+          appliedCoupon: appliedCoupon,
+          discountAmount: discountAmount,
+          shippingCost: shippingCost,
+          wrapCost: wrapCost,
+          totalAmount: totalAmount
         } 
       });
       
@@ -328,8 +336,8 @@ const ShippingPage = () => {
           </div>
           <div className="w-20 h-1 bg-green-500 rounded-full"></div>
           <div className="flex items-center">
-            <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
-            <span className="ml-3 text-sm font-bold text-blue-600">Shipping</span>
+            <div className="w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
+            <span className="ml-3 text-sm font-bold text-emerald-500">Shipping</span>
           </div>
           <div className="w-20 h-1 bg-gray-300 rounded-full"></div>
           <div className="flex items-center">
@@ -347,12 +355,12 @@ const ShippingPage = () => {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Billing Information */}
-          <Card className="shadow-lg border-2 border-blue-100">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
+          <Card className="shadow-lg border-2 border-emerald-100">
+            <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50 border-b">
               <div className="flex justify-between items-center">
                 <div>
                   <CardTitle className="text-2xl font-bold text-gray-800 flex items-center">
-                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-3">
+                    <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center mr-3">
                       <span className="text-white font-bold text-sm">1</span>
                     </div>
                     Billing Details
@@ -365,7 +373,7 @@ const ShippingPage = () => {
                       size="sm"
                       variant="outline"
                       onClick={handleEditBillingData}
-                      className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                      className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
                     >
                       <FontAwesomeIcon icon={faEdit} className="h-3 w-3 mr-1" />
                       Edit
@@ -441,7 +449,7 @@ const ShippingPage = () => {
                         value={formData.firstName}
                         onChange={(e) => handleInputChange('firstName', e.target.value)}
                         required
-                        className={`h-12 focus:border-blue-500 focus:ring-blue-500 ${
+                        className={`h-12 focus:border-emerald-500 focus:ring-emerald-500 ${
                           validationErrors.firstName ? 'border-red-500' : 'border-gray-300'
                         }`}
                         placeholder="Enter your first name (letters only)"
@@ -464,7 +472,7 @@ const ShippingPage = () => {
                         value={formData.lastName}
                         onChange={(e) => handleInputChange('lastName', e.target.value)}
                         required
-                        className={`h-12 focus:border-blue-500 focus:ring-blue-500 ${
+                        className={`h-12 focus:border-emerald-500 focus:ring-emerald-500 ${
                           validationErrors.lastName ? 'border-red-500' : 'border-gray-300'
                         }`}
                         placeholder="Enter your last name (letters only)"
@@ -490,7 +498,7 @@ const ShippingPage = () => {
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
                       required
-                      className={`h-12 focus:border-blue-500 focus:ring-blue-500 ${
+                      className={`h-12 focus:border-emerald-500 focus:ring-emerald-500 ${
                         validationErrors.email ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="Enter your email address (letters, @ and . only)"
@@ -515,7 +523,7 @@ const ShippingPage = () => {
                       value={formData.country}
                       onChange={(e) => handleInputChange('country', e.target.value)}
                       required
-                      className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      className="h-12 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
                       placeholder="Enter your country"
                     />
                   </div>
@@ -530,7 +538,7 @@ const ShippingPage = () => {
                       value={formData.address}
                       onChange={(e) => handleInputChange('address', e.target.value.slice(0, 150))}
                       required
-                      className={`h-12 focus:border-blue-500 focus:ring-blue-500 ${
+                      className={`h-12 focus:border-emerald-500 focus:ring-emerald-500 ${
                         validationErrors.address ? 'border-red-500' : 'border-gray-300'
                       }`}
                       maxLength="150"
@@ -551,7 +559,7 @@ const ShippingPage = () => {
                         value={formData.city}
                         onChange={(e) => handleInputChange('city', e.target.value)}
                         required
-                        className={`h-12 focus:border-blue-500 focus:ring-blue-500 ${
+                        className={`h-12 focus:border-emerald-500 focus:ring-emerald-500 ${
                           validationErrors.city ? 'border-red-500' : 'border-gray-300'
                         }`}
                         placeholder="Enter your city (letters only)"
@@ -570,7 +578,7 @@ const ShippingPage = () => {
                         Province <span className="text-red-500">*</span>
                       </Label>
                       <Select value={formData.province} onValueChange={(value) => handleInputChange('province', value)}>
-                        <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        <SelectTrigger className="h-12 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -589,7 +597,7 @@ const ShippingPage = () => {
                         value={formData.postalCode}
                         onChange={(e) => handleInputChange('postalCode', e.target.value.replace(/\D/g, '').slice(0, 4))}
                         required
-                        className={`h-12 focus:border-blue-500 focus:ring-blue-500 ${
+                        className={`h-12 focus:border-emerald-500 focus:ring-emerald-500 ${
                           validationErrors.postalCode ? 'border-red-500' : 'border-gray-300'
                         }`}
                         placeholder="Enter postal code (4 digits)"
@@ -616,7 +624,7 @@ const ShippingPage = () => {
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value.replace(/\D/g, '').slice(0, 10))}
                       required
-                      className={`h-12 focus:border-blue-500 focus:ring-blue-500 ${
+                      className={`h-12 focus:border-emerald-500 focus:ring-emerald-500 ${
                         validationErrors.phone ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="Enter your phone number (10 digits)"
@@ -676,7 +684,7 @@ const ShippingPage = () => {
                       type="button"
                       onClick={handleSaveBillingData}
                       disabled={!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.address || !formData.city || !formData.postalCode}
-                      className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isEditingBilling ? 'Update Billing Info' : 'Save Billing Info'}
                     </Button>
@@ -805,18 +813,36 @@ const ShippingPage = () => {
                 <div className="border-t-2 border-gray-200 pt-4 space-y-3">
                   <div className="flex justify-between items-center py-2">
                     <span className="text-gray-600">Subtotal ({cartItemCount} items)</span>
-                    <span className="font-semibold text-gray-800">Rs. {totalAmount.toFixed(2)}</span>
+                    <span className="font-semibold text-gray-800">Rs. {(totalAmount || displayTotal).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between items-center py-3 bg-blue-50 rounded-lg px-4">
+                  {appliedCoupon && (
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600">Discount ({appliedCoupon})</span>
+                      <span className="font-semibold text-green-600">- Rs. {(discountAmount || 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-gray-600">Shipping</span>
+                    <span className="font-semibold text-gray-800">
+                      {shippingCost === 0 ? 'Free' : `Rs. ${(shippingCost || 0).toFixed(2)}`}
+                    </span>
+                  </div>
+                  {wrapCost > 0 && (
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600">Gift wrap</span>
+                      <span className="font-semibold text-gray-800">Rs. {(wrapCost || 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center py-3 bg-emerald-50 rounded-lg px-4">
                     <span className="font-bold text-xl text-gray-800">Total</span>
-                    <span className="font-bold text-2xl text-blue-600">Rs. {totalAmount.toFixed(2)}</span>
+                    <span className="font-bold text-2xl text-emerald-500">Rs. {displayTotal.toFixed(2)}</span>
                   </div>
                 </div>
 
                 <div className="pt-4">
                   <Button 
                     type="submit" 
-                    className="w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" 
+                    className="w-full h-14 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-lg rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" 
                     disabled={loading || !savedBillingData}
                   >
                     {loading ? (

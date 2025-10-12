@@ -23,8 +23,9 @@ const PreOrderPaymentPage = () => {
     
     // Payment Details
     amount: '',
-    paymentMethod: 'bank_transfer',
-    referenceNumber: '',
+    paymentMethod: 'online',
+    paymentAccountNumber: '',
+    cvv: '',
     paymentDate: new Date().toISOString().split('T')[0],
     notes: ''
   });
@@ -87,15 +88,28 @@ const PreOrderPaymentPage = () => {
     return '';
   };
 
-  const validateReferenceNumber = (refNumber) => {
-    if (!refNumber || refNumber.trim() === '') {
-      return 'Reference number is required';
+  const validateAccountNumber = (accountNumber) => {
+    if (!accountNumber || accountNumber.trim() === '') {
+      return 'Account number is required';
     }
-    if (refNumber.length < 3) {
-      return 'Reference number must be at least 3 characters';
+    if (accountNumber.length !== 16) {
+      return 'Account number must be exactly 16 digits';
     }
-    if (refNumber.length > 50) {
-      return 'Reference number cannot exceed 50 characters';
+    if (!/^[0-9]+$/.test(accountNumber)) {
+      return 'Account number must contain only numbers';
+    }
+    return '';
+  };
+
+  const validateCVV = (cvv) => {
+    if (!cvv || cvv.trim() === '') {
+      return 'CVV is required';
+    }
+    if (cvv.length !== 3) {
+      return 'CVV must be exactly 3 digits';
+    }
+    if (!/^[0-9]+$/.test(cvv)) {
+      return 'CVV must contain only numbers';
     }
     return '';
   };
@@ -118,12 +132,21 @@ const PreOrderPaymentPage = () => {
     return '';
   };
 
+  const validateNotes = (notes) => {
+    if (notes && notes.length > 150) {
+      return 'Notes cannot exceed 150 characters';
+    }
+    return '';
+  };
+
   const validateForm = () => {
     const errors = {};
     
     errors.amount = validateAmount(formData.amount);
-    errors.referenceNumber = validateReferenceNumber(formData.referenceNumber);
+    errors.paymentAccountNumber = validateAccountNumber(formData.paymentAccountNumber);
+    errors.cvv = validateCVV(formData.cvv);
     errors.paymentDate = validatePaymentDate(formData.paymentDate);
+    errors.notes = validateNotes(formData.notes);
     
     setValidationErrors(errors);
     return !Object.values(errors).some(error => error !== '');
@@ -175,7 +198,8 @@ const PreOrderPaymentPage = () => {
         accountNumber: formData.accountNumber,
         amount: parseFloat(formData.amount),
         paymentMethod: formData.paymentMethod,
-        referenceNumber: formData.referenceNumber,
+        paymentAccountNumber: formData.paymentAccountNumber,
+        cvv: formData.cvv,
         paymentDate: formData.paymentDate,
         notes: formData.notes,
         preOrderId: preOrderData?._id,
@@ -240,9 +264,9 @@ const PreOrderPaymentPage = () => {
             <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
             Back to Dashboard
           </Button>
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="bg-gradient-to-r from-emerald-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
             <h1 className="text-3xl font-bold mb-2">Pre-Order Payment</h1>
-            <p className="text-blue-100 text-lg">Record payment details for supplier pre-order</p>
+            <p className="text-emerald-100 text-lg">Record payment details for supplier pre-order</p>
           </div>
         </div>
 
@@ -271,7 +295,7 @@ const PreOrderPaymentPage = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Supplier Details Card */}
           <Card className="shadow-xl border-0 rounded-xl overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+            <CardHeader className="bg-gradient-to-r from-emerald-500 to-green-600 text-white">
               <CardTitle className="text-xl font-bold flex items-center">
                 <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
                   <FontAwesomeIcon icon={faBuilding} className="text-white text-lg" />
@@ -387,25 +411,47 @@ const PreOrderPaymentPage = () => {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="referenceNumber" className="text-sm font-medium text-gray-700">
-                    Reference Number *
+                  <Label htmlFor="paymentAccountNumber" className="text-sm font-medium text-gray-700">
+                    Account Number *
                   </Label>
                   <Input
-                    id="referenceNumber"
-                    value={formData.referenceNumber}
-                    onChange={(e) => handleInputChange('referenceNumber', e.target.value)}
-                    className={`mt-1 ${validationErrors.referenceNumber ? 'border-red-500' : 'border-gray-300'}`}
-                    placeholder="Transaction reference or cheque number"
-                    maxLength="50"
+                    id="paymentAccountNumber"
+                    value={formData.paymentAccountNumber}
+                    onChange={(e) => handleInputChange('paymentAccountNumber', e.target.value)}
+                    className={`mt-1 ${validationErrors.paymentAccountNumber ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholder="Enter 16-digit account number"
+                    maxLength="16"
                     required
                     onKeyPress={(e) => {
-                      if (!/[a-zA-Z0-9\s-]/.test(e.key)) {
+                      if (!/[0-9]/.test(e.key)) {
                         e.preventDefault();
                       }
                     }}
                   />
-                  {validationErrors.referenceNumber && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.referenceNumber}</p>
+                  {validationErrors.paymentAccountNumber && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.paymentAccountNumber}</p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="cvv" className="text-sm font-medium text-gray-700">
+                    CVV *
+                  </Label>
+                  <Input
+                    id="cvv"
+                    value={formData.cvv}
+                    onChange={(e) => handleInputChange('cvv', e.target.value)}
+                    className={`mt-1 ${validationErrors.cvv ? 'border-red-500' : 'border-gray-300'}`}
+                    placeholder="Enter 3-digit CVV"
+                    maxLength="3"
+                    required
+                    onKeyPress={(e) => {
+                      if (!/[0-9]/.test(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                  />
+                  {validationErrors.cvv && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.cvv}</p>
                   )}
                 </div>
                 <div>
@@ -434,9 +480,16 @@ const PreOrderPaymentPage = () => {
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => handleInputChange('notes', e.target.value)}
-                  className="mt-1"
-                  placeholder="Additional payment notes or comments"
+                  className={`mt-1 ${validationErrors.notes ? 'border-red-500' : 'border-gray-300'}`}
+                  placeholder="Additional payment notes or comments (max 150 characters)"
+                  maxLength="150"
                 />
+                {validationErrors.notes && (
+                  <p className="text-red-500 text-sm mt-1">{validationErrors.notes}</p>
+                )}
+                <p className="text-gray-500 text-xs mt-1">
+                  {formData.notes.length}/150 characters
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -454,7 +507,7 @@ const PreOrderPaymentPage = () => {
             </Button>
             <Button
               type="submit"
-              disabled={loading || !formData.amount || !formData.referenceNumber || !formData.paymentDate}
+              disabled={loading || !formData.amount || !formData.paymentAccountNumber || !formData.cvv || !formData.paymentDate}
               className="bg-green-600 hover:bg-green-700 text-white font-semibold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
             >
               {loading ? (
