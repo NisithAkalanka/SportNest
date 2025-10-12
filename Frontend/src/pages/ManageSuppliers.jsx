@@ -9,17 +9,33 @@ import { Label } from "@/components/ui/label";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash, faEdit, faFileCsv, faSearch, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+// ★★★ Dropdown (Select) component for Bank Name ★★★
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ManageSuppliers = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({ 
+  const [formData, setFormData] = useState({
     _id: null, name: '', contactPerson: '', email: '', phone: '', address: '',
     bankName: '', accountNumber: '', accountName: ''
   });
   const [errors, setErrors] = useState({});
   const [selectedPreorders, setSelectedPreorders] = useState(null);
+
+  // ★★★ Bank list options ★★★
+  const bankList = [
+    "Bank of Ceylon (BOC)",
+    "People's Bank",
+    "Commercial Bank of Ceylon",
+    "Hatton National Bank (HNB)",
+    "Sampath Bank",
+    "National Savings Bank (NSB)",
+    "National Development Bank (NDB)",
+    "Nations Trust Bank (NTB)",
+    "Seylan Bank",
+    "DFCC Bank"
+  ];
 
   // Report download state
   const [isReportDownloading, setIsReportDownloading] = useState(false);
@@ -29,9 +45,9 @@ const ManageSuppliers = () => {
   const [sortBy, setSortBy] = useState('name-asc'); // name-asc | email-asc
 
   const resetForm = () => {
-    setFormData({ 
+    setFormData({
       _id: null, name: '', contactPerson: '', email: '', phone: '', address: '',
-      bankName: '', accountNumber: '', accountName: '' 
+      bankName: '', accountNumber: '', accountName: ''
     });
     setErrors({});
   };
@@ -79,7 +95,7 @@ const ManageSuppliers = () => {
         break;
       case 'email':
         if (!value.trim()) errorMsg = 'Email is required.';
-        // ✅ Lowercase-only email validation (matches login/register pages)
+        // lower-case emails only to match the rest of app
         else if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(value.trim())) {
           errorMsg = 'Please enter a valid email (lowercase letters only).';
         }
@@ -95,12 +111,7 @@ const ManageSuppliers = () => {
         if (value && hasAddressSpecialChars(value)) errorMsg = 'Address cannot contain special characters like @$%&*!';
         break;
 
-      // ★★★ Bank details validation ★★★
-      case 'bankName':
-        if (value && (/\d/.test(value) || hasSpecialChars(value))) {
-          errorMsg = 'Bank Name cannot contain numbers or special characters.';
-        }
-        break;
+      // Note: bankName is a dropdown now; no regex validation needed.
       case 'accountName':
         if (value && (/\d/.test(value) || hasSpecialChars(value))) {
           errorMsg = "Account holder's name cannot contain numbers or special characters.";
@@ -127,14 +138,20 @@ const ManageSuppliers = () => {
       value = value.replace(/\D/g, '').slice(0, 10);
     }
 
-    // ★★★ Account number: digits only, max 12 ★★★
+    // Account number: digits only, max 12
     if (name === 'accountNumber') {
       value = value.replace(/\D/g, '').slice(0, 12);
     }
 
     setFormData(prevData => ({ ...prevData, [name]: value }));
-    // Keep passing allSuppliers for cross-field checks
     validateField(name, value, suppliers);
+  };
+
+  // ★★★ Handle Select (dropdown) changes ★★★
+  const handleSelectChange = (fieldName, selectedValue) => {
+    setFormData(prevData => ({ ...prevData, [fieldName]: selectedValue }));
+    // Clear any previous error for this field
+    setErrors(prevErrors => ({ ...prevErrors, [fieldName]: '' }));
   };
 
   const handleSubmit = async (e) => {
@@ -145,13 +162,20 @@ const ManageSuppliers = () => {
     const isEmailValid = validateField('email', formData.email, suppliers);
     const isPhoneValid = validateField('phone', formData.phone, suppliers);
     const isAddressValid = validateField('address', formData.address, suppliers);
-    // ★★★ New validations for bank fields ★★★
-    const isBankNameValid = validateField('bankName', formData.bankName, suppliers);
     const isAccountNameValid = validateField('accountName', formData.accountName, suppliers);
     const isAccountNumberValid = validateField('accountNumber', formData.accountNumber, suppliers);
 
-    if (!isNameValid || !isContactPersonValid || !isEmailValid || !isPhoneValid || !isAddressValid || !isBankNameValid || !isAccountNameValid || !isAccountNumberValid) {
-      alert('Please fix the errors before submitting.');
+    // If any bank detail is provided, require all three
+    const bankDetailsProvided = formData.bankName || formData.accountName || formData.accountNumber;
+    let areAllBankDetailsValid = true;
+    if (bankDetailsProvided && (!formData.bankName || !formData.accountName || !formData.accountNumber)) {
+      alert('If you provide bank details, please fill in all bank fields: Bank Name, Account Name, and Account Number.');
+      areAllBankDetailsValid = false;
+    }
+
+    if (!isNameValid || !isContactPersonValid || !isEmailValid || !isPhoneValid || !isAddressValid
+      || !isAccountNameValid || !isAccountNumberValid || !areAllBankDetailsValid) {
+      if (areAllBankDetailsValid) alert('Please fix the errors before submitting.');
       return;
     }
 
@@ -161,7 +185,7 @@ const ManageSuppliers = () => {
       email: formData.email.trim(),
       phone: formData.phone.trim(),
       address: formData.address.trim(),
-      bankName: (formData.bankName || '').trim(),
+      bankName: formData.bankName, // dropdown value as-is
       accountNumber: (formData.accountNumber || '').trim(),
       accountName: (formData.accountName || '').trim(),
     };
@@ -281,7 +305,7 @@ const ManageSuppliers = () => {
                 <FontAwesomeIcon icon={faPlus} className="mr-2" /> Add New Supplier
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-white text-gray-900 sm:max-w-[520px] rounded-lg shadow p-5 border">
+            <DialogContent className="bg-white text-gray-900 sm:max-w:[520px] rounded-lg shadow p-5 border">
               <DialogHeader>
                 <DialogTitle className="text-lg font-semibold">{formData._id ? "Edit Supplier" : "Add New Supplier"}</DialogTitle>
               </DialogHeader>
@@ -297,81 +321,89 @@ const ManageSuppliers = () => {
                     <Input id="contactPerson" name="contactPerson" value={formData.contactPerson} onChange={handleInputChange} placeholder="Optional" className={`${errors.contactPerson ? 'border-red-500' : ''} focus-visible:ring-emerald-500`} />
                     {errors.contactPerson && <p className="text-red-600 text-xs mt-1">{errors.contactPerson}</p>}
                   </div>
-                  <div>
-                    <Label htmlFor="email" className="text-gray-700">Email</Label>
-                    <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required placeholder="supplier@example.com" className={`${errors.email ? 'border-red-500' : ''} focus-visible:ring-emerald-500`} />
-                    {errors.email && <p className="text-red-600 text-xs mt-1">{errors.email}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="phone" className="text-gray-700">Phone</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      onPaste={(e) => {
-                        e.preventDefault();
-                        const pasted = (e.clipboardData || window.clipboardData).getData('text') || '';
-                        const digits = pasted.replace(/\D/g, '').slice(0, 10);
-                        setFormData(prev => ({ ...prev, phone: digits }));
-                        validateField('phone', digits, suppliers);
-                      }}
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={10}
-                      required
-                      placeholder="07XXXXXXXX"
-                      className={`${errors.phone ? 'border-red-500' : ''} focus-visible:ring-emerald-500`}
-                    />
-                    {errors.phone && <p className="text-red-600 text-xs mt-1">{errors.phone}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="address" className="text-gray-700">Address</Label>
-                    <Input id="address" name="address" value={formData.address} onChange={handleInputChange} placeholder="Optional address" className={`${errors.address ? 'border-red-500' : ''} focus-visible:ring-emerald-500`} />
-                    {errors.address && <p className="text-red-600 text-xs mt-1">{errors.address}</p>}
-                  </div>
-                  {/* ★★★ Bank Details (Optional) ★★★ */}
-                  <div className="mt-4 pt-4 border-t">
-                    <h3 className="font-semibold text-gray-600 mb-2">Bank Details (Optional)</h3>
-                    <div className="grid gap-3">
-                      <div>
-                        <Label htmlFor="bankName" className="text-gray-700">Bank Name</Label>
-                        <Input
-                          id="bankName"
-                          name="bankName"
-                          value={formData.bankName}
-                          onChange={handleInputChange}
-                          placeholder="e.g., Commercial Bank"
-                          className={`${errors.bankName ? 'border-red-500' : ''} focus-visible:ring-emerald-500`}
-                        />
-                        {errors.bankName && <p className="text-red-600 text-xs mt-1">{errors.bankName}</p>}
-                      </div>
-                      <div>
-                        <Label htmlFor="accountName" className="text-gray-700">Account Holder's Name</Label>
-                        <Input
-                          id="accountName"
-                          name="accountName"
-                          value={formData.accountName}
-                          onChange={handleInputChange}
-                          placeholder="As it appears on the bank statement"
-                          className={`${errors.accountName ? 'border-red-500' : ''} focus-visible:ring-emerald-500`}
-                        />
-                        {errors.accountName && <p className="text-red-600 text-xs mt-1">{errors.accountName}</p>}
-                      </div>
-                      <div>
-                        <Label htmlFor="accountNumber" className="text-gray-700">Account Number</Label>
-                        <Input
-                          id="accountNumber"
-                          name="accountNumber"
-                          value={formData.accountNumber}
-                          onChange={handleInputChange}
-                          placeholder="Bank account number"
-                          className={`${errors.accountNumber ? 'border-red-500' : ''} focus-visible:ring-emerald-500`}
-                        />
-                        {errors.accountNumber && <p className="text-red-600 text-xs mt-1">{errors.accountNumber}</p>}
+                    <div>
+                      <Label htmlFor="email" className="text-gray-700">Email</Label>
+                      <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required placeholder="supplier@example.com" className={`${errors.email ? 'border-red-500' : ''} focus-visible:ring-emerald-500`} />
+                      {errors.email && <p className="text-red-600 text-xs mt-1">{errors.email}</p>}
+                    </div>
+                    <div>
+                      <Label htmlFor="phone" className="text-gray-700">Phone</Label>
+                      <Input
+                        id="phone"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        onPaste={(e) => {
+                          e.preventDefault();
+                          const pasted = (e.clipboardData || window.clipboardData).getData('text') || '';
+                          const digits = pasted.replace(/\D/g, '').slice(0, 10);
+                          setFormData(prev => ({ ...prev, phone: digits }));
+                          validateField('phone', digits, suppliers);
+                        }}
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={10}
+                        required
+                        placeholder="07XXXXXXXX"
+                        className={`${errors.phone ? 'border-red-500' : ''} focus-visible:ring-emerald-500`}
+                      />
+                      {errors.phone && <p className="text-red-600 text-xs mt-1">{errors.phone}</p>}
+                    </div>
+                    <div>
+                      <Label htmlFor="address" className="text-gray-700">Address</Label>
+                      <Input id="address" name="address" value={formData.address} onChange={handleInputChange} placeholder="Optional address" className={`${errors.address ? 'border-red-500' : ''} focus-visible:ring-emerald-500`} />
+                      {errors.address && <p className="text-red-600 text-xs mt-1">{errors.address}</p>}
+                    </div>
+
+                    {/* ★★★ Bank Details (Optional) ★★★ */}
+                    <div className="mt-4 pt-4 border-t">
+                      <h3 className="font-semibold text-gray-600 mb-2">Bank Details (Optional)</h3>
+                      <div className="grid gap-3">
+
+                        {/* Bank Name — dropdown */}
+                        <div>
+                          <Label htmlFor="bankName" className="text-gray-700">Bank Name</Label>
+                          <Select onValueChange={(value) => handleSelectChange('bankName', value)} value={formData.bankName}>
+                            <SelectTrigger id="bankName" className="focus:ring-emerald-500 focus:ring-1">
+                              <SelectValue placeholder="Select a bank" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {bankList.map((bank) => (
+                                <SelectItem key={bank} value={bank}>{bank}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Account Holder's Name */}
+                        <div>
+                          <Label htmlFor="accountName" className="text-gray-700">Account Holder's Name</Label>
+                          <Input
+                            id="accountName"
+                            name="accountName"
+                            value={formData.accountName}
+                            onChange={handleInputChange}
+                            placeholder="As it appears on the bank statement"
+                            className={`${errors.accountName ? 'border-red-500' : ''} focus-visible:ring-emerald-500`}
+                          />
+                          {errors.accountName && <p className="text-red-600 text-xs mt-1">{errors.accountName}</p>}
+                        </div>
+
+                        {/* Account Number */}
+                        <div>
+                          <Label htmlFor="accountNumber" className="text-gray-700">Account Number</Label>
+                          <Input
+                            id="accountNumber"
+                            name="accountNumber"
+                            value={formData.accountNumber}
+                            onChange={handleInputChange}
+                            placeholder="Bank account number"
+                            className={`${errors.accountNumber ? 'border-red-500' : ''} focus-visible:ring-emerald-500`}
+                          />
+                          {errors.accountNumber && <p className="text-red-600 text-xs mt-1">{errors.accountNumber}</p>}
+                        </div>
                       </div>
                     </div>
-                  </div>
                 </div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => { setIsDialogOpen(false); resetForm(); }}>Cancel</Button>
