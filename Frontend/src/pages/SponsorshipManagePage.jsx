@@ -175,7 +175,7 @@ const SponsorshipManagePage = () => {
                 <PDFLayout ref={pdfContentRef} data={formData} />
             </div>
             
-            {/* Back Button එකතු කර ඇත */}
+            
             <div className="mb-8">
                 <button
                     onClick={() => navigate(-1)}
