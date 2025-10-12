@@ -98,7 +98,7 @@ const PaymentPage = () => {
       }
       
       if (processedValue && processedValue.length !== 3) {
-        error = 'CVC must be exactly 3 digits';
+        error = 'CVV must be exactly 3 digits';
       } else {
         error = '';
       }
@@ -136,7 +136,7 @@ const PaymentPage = () => {
     }
 
     if (paymentForm.cvc.length !== 3) {
-      alert('CVC must be exactly 3 digits');
+      alert('CVV must be exactly 3 digits');
       return;
     }
 
@@ -204,7 +204,7 @@ const PaymentPage = () => {
     }
 
     if (paymentForm.cvc.length !== 3) {
-      alert('CVC must be exactly 3 digits');
+      alert('CVV must be exactly 3 digits');
       return;
     }
 
@@ -330,8 +330,8 @@ const PaymentPage = () => {
           </div>
           <div className="w-20 h-1 bg-green-500 rounded-full"></div>
           <div className="flex items-center">
-            <div className="w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">3</div>
-            <span className="ml-3 text-sm font-bold text-purple-600">Payment</span>
+            <div className="w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</div>
+            <span className="ml-3 text-sm font-bold text-emerald-500">Payment</span>
           </div>
         </div>
       </div>
@@ -344,12 +344,12 @@ const PaymentPage = () => {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Payment Methods */}
-          <Card className="shadow-lg border-2 border-purple-100">
-            <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 border-b">
+          <Card className="shadow-lg border-2 border-emerald-100">
+            <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50 border-b">
               <div className="flex justify-between items-center">
                 <div>
                   <CardTitle className="text-2xl font-bold text-gray-800 flex items-center">
-                    <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center mr-3">
+                    <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center mr-3">
                       <FontAwesomeIcon icon={faCreditCard} className="text-white text-sm" />
                     </div>
                     Payment Methods
@@ -358,7 +358,7 @@ const PaymentPage = () => {
                 </div>
                 <Button
                   onClick={() => setIsAddingPayment(true)}
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className="bg-emerald-500 hover:bg-emerald-600"
                 >
                   <FontAwesomeIcon icon={faPlus} className="h-3 w-3 mr-1" />
                   Add Payment Method
@@ -375,7 +375,7 @@ const PaymentPage = () => {
               ) : (
                 <div className="space-y-4">
                   {paymentMethods.map((payment) => (
-                    <div key={payment.id} className={`p-4 rounded-lg border-2 ${selectedPaymentMethod === payment.id ? 'border-purple-500 bg-purple-50' : 'border-gray-200 bg-white'}`}>
+                    <div key={payment.id} className={`p-4 rounded-lg border-2 ${selectedPaymentMethod === payment.id ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-white'}`}>
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-2">
@@ -384,7 +384,7 @@ const PaymentPage = () => {
                               name="paymentMethod"
                               checked={selectedPaymentMethod === payment.id}
                               onChange={() => setSelectedPaymentMethod(payment.id)}
-                              className="text-purple-600"
+                              className="text-emerald-500"
                             />
                             <span className="font-semibold text-gray-800">{payment.cardName}</span>
                             {payment.isDefault && (
@@ -480,7 +480,7 @@ const PaymentPage = () => {
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="cvc">CVC *</Label>
+                        <Label htmlFor="cvc">CVV *</Label>
                         <Input
                           id="cvc"
                           value={paymentForm.cvc}
@@ -520,7 +520,7 @@ const PaymentPage = () => {
                       </Button>
                       <Button
                         onClick={isEditingPayment ? handleUpdatePaymentMethod : handleAddPaymentMethod}
-                        className="bg-purple-600 hover:bg-purple-700"
+                        className="bg-emerald-500 hover:bg-emerald-600"
                       >
                         {isEditingPayment ? 'Update Payment Method' : 'Add Payment Method'}
                       </Button>
@@ -605,16 +605,16 @@ const PaymentPage = () => {
                       🎉 Free shipping on orders over Rs. 5,000!
                     </div>
                   )}
-                  <div className="flex justify-between items-center py-3 bg-purple-50 rounded-lg px-4">
+                  <div className="flex justify-between items-center py-3 bg-emerald-50 rounded-lg px-4">
                     <span className="font-bold text-xl text-gray-800">Total</span>
-                    <span className="font-bold text-2xl text-purple-600">Rs. {totalAmount.toFixed(2)}</span>
+                    <span className="font-bold text-2xl text-emerald-500">Rs. {totalAmount.toFixed(2)}</span>
                   </div>
                 </div>
 
                 <div className="pt-4">
                   <Button 
                     onClick={handleProcessPayment}
-                    className="w-full h-14 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" 
+                    className="w-full h-14 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-lg rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" 
                     disabled={loading || !selectedPaymentMethod}
                   >
                     {loading ? (

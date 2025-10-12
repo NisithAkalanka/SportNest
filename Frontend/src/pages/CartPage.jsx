@@ -43,7 +43,16 @@ const CartPage = () => {
 
   // Checkout → go to Shipping details page
   const handleCheckout = () => {
-    navigate('/shipping');
+    navigate('/shipping', { 
+      state: { 
+        grandTotal: grandTotal,
+        appliedCoupon: appliedCoupon,
+        discountAmount: discountAmount,
+        shippingCost: shippingCost,
+        wrapCost: wrapCost,
+        totalAmount: totalAmount
+      } 
+    });
   };
 
   // Remove item using Context

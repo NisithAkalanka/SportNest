@@ -492,11 +492,9 @@ const DriverManagement = () => {
 
   // Filter drivers based on search term, status, and email
   const filteredDrivers = drivers.filter(driver => {
+    // Filter by first letter of driver's name when search term is provided
     const matchesSearch = !searchTerm || 
-      driver.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      driver.licenseNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      driver.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      driver.address?.toLowerCase().includes(searchTerm.toLowerCase());
+      driver.fullName?.toLowerCase().startsWith(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'All Status' || driver.status === statusFilter;
     
@@ -520,7 +518,7 @@ const DriverManagement = () => {
           <p className="text-gray-600">Manage your company drivers</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleExportPDF} className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2">
+          <Button onClick={handleExportPDF} className="bg-emerald-500 hover:bg-emerald-600 text-white flex items-center gap-2">
             <Download className="h-4 w-4" />
             Download PDF
           </Button>
@@ -529,56 +527,56 @@ const DriverManagement = () => {
 
       {/* Salary Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+        <Card className="p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-emerald-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-blue-600">Total Drivers</p>
-              <p className="text-2xl font-bold text-blue-800">{filteredDrivers.length}</p>
+              <p className="text-sm font-medium text-emerald-500">Total Drivers</p>
+              <p className="text-2xl font-bold text-emerald-800">{filteredDrivers.length}</p>
             </div>
-            <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center">
-              <span className="text-blue-600 font-bold text-lg">👥</span>
+            <div className="w-10 h-10 bg-emerald-200 rounded-full flex items-center justify-center">
+              <span className="text-emerald-500 font-bold text-lg">👥</span>
             </div>
           </div>
         </Card>
         
-        <Card className="p-4 bg-gradient-to-r from-green-50 to-green-100 border-green-200">
+        <Card className="p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-emerald-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-green-600">Active Drivers</p>
-              <p className="text-2xl font-bold text-green-800">
+              <p className="text-sm font-medium text-emerald-500">Active Drivers</p>
+              <p className="text-2xl font-bold text-emerald-800">
                 {filteredDrivers.filter(driver => driver.status === 'Active').length}
               </p>
             </div>
-            <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
-              <span className="text-green-600 font-bold text-lg">✓</span>
+            <div className="w-10 h-10 bg-emerald-200 rounded-full flex items-center justify-center">
+              <span className="text-emerald-500 font-bold text-lg">✓</span>
             </div>
           </div>
         </Card>
         
-        <Card className="p-4 bg-gradient-to-r from-yellow-50 to-yellow-100 border-yellow-200">
+        <Card className="p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-emerald-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-yellow-600">Inactive Drivers</p>
-              <p className="text-2xl font-bold text-yellow-800">
+              <p className="text-sm font-medium text-emerald-500">Inactive Drivers</p>
+              <p className="text-2xl font-bold text-emerald-800">
                 {filteredDrivers.filter(driver => driver.status === 'Inactive').length}
               </p>
             </div>
-            <div className="w-10 h-10 bg-yellow-200 rounded-full flex items-center justify-center">
-              <span className="text-yellow-600 font-bold text-lg">⏸</span>
+            <div className="w-10 h-10 bg-emerald-200 rounded-full flex items-center justify-center">
+              <span className="text-emerald-500 font-bold text-lg">⏸</span>
             </div>
           </div>
         </Card>
         
-        <Card className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
+        <Card className="p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-emerald-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-purple-600">Total Salary</p>
-              <p className="text-2xl font-bold text-purple-800">
+              <p className="text-sm font-medium text-emerald-500">Total Salary</p>
+              <p className="text-2xl font-bold text-emerald-800">
                 Rs. {filteredDrivers.reduce((total, driver) => total + (parseFloat(driver.salary) || 0), 0).toLocaleString()}
               </p>
             </div>
-            <div className="w-10 h-10 bg-purple-200 rounded-full flex items-center justify-center">
-              <span className="text-purple-600 font-bold text-lg">💰</span>
+            <div className="w-10 h-10 bg-emerald-200 rounded-full flex items-center justify-center">
+              <span className="text-emerald-500 font-bold text-lg">💰</span>
             </div>
           </div>
         </Card>
@@ -678,7 +676,7 @@ const DriverManagement = () => {
                   type="date"
                   value={formData.hireDate}
                   onChange={(e) => handleInputChange('hireDate', e.target.value)}
-                  className={`pr-10 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`pr-10 transition-all duration-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
                     validationErrors.hireDate 
                       ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
                       : 'border-gray-300 hover:border-gray-400'
@@ -687,7 +685,7 @@ const DriverManagement = () => {
                   placeholder="Select hire date"
                 />
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <Calendar className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" />
+                  <Calendar className="h-4 w-4 text-gray-400 group-hover:text-emerald-500 transition-colors duration-200" />
                 </div>
               </div>
               {validationErrors.hireDate && (
@@ -733,7 +731,7 @@ const DriverManagement = () => {
           <div className="flex justify-end">
             <Button 
               type="submit" 
-              className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitting}
             >
               {isSubmitting ? 'Saving...' : 'Add Driver'}
@@ -749,7 +747,7 @@ const DriverManagement = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search drivers..."
+                placeholder="Search by first letter of name..."
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="pl-10"
@@ -837,17 +835,17 @@ const DriverManagement = () => {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <div className="flex flex-col">
-                        <span className="font-medium text-blue-600">{driver.email}</span>
+                        <span className="font-medium text-emerald-500">{driver.email}</span>
                         <span className="text-xs text-gray-500">Driver Email</span>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => copyEmail(driver.email)}
-                        className="h-8 w-8 p-0 hover:bg-blue-50"
+                        className="h-8 w-8 p-0 hover:bg-emerald-50"
                         title="Copy email"
                       >
-                        <Copy className="h-4 w-4 text-blue-600" />
+                        <Copy className="h-4 w-4 text-emerald-500" />
                       </Button>
                     </div>
                   </TableCell>
@@ -865,9 +863,9 @@ const DriverManagement = () => {
                         size="sm"
                         onClick={() => handleEdit(driver)}
                         title="Edit driver"
-                        className="hover:bg-blue-50"
+                        className="hover:bg-emerald-50"
                       >
-                        <Edit className="h-4 w-4 text-blue-600" />
+                        <Edit className="h-4 w-4 text-emerald-500" />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -909,21 +907,36 @@ const DriverManagement = () => {
 
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Driver</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* First Row */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto bg-gradient-to-br from-white to-emerald-50 border-0 shadow-2xl">
+          <DialogHeader className="pb-6 border-b border-emerald-100">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+                <Edit className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <DialogTitle className="text-2xl font-bold text-gray-800">Edit Driver Information</DialogTitle>
+                <p className="text-gray-600 mt-1">Update driver details and save changes</p>
+              </div>
+            </div>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-6 pt-6">
+            {/* First Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  Full Name
+                </label>
                 <Input
                   value={formData.fullName}
                   onChange={(e) => handleInputChange('fullName', e.target.value)}
                   placeholder="Enter full name"
                   required
-                  className={validationErrors.fullName ? 'border-red-500' : ''}
+                  className={`h-12 transition-all duration-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
+                    validationErrors.fullName 
+                      ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                      : 'border-gray-300 hover:border-emerald-300'
+                  }`}
                   onKeyPress={(e) => {
                     if (!/^[a-zA-Z\s]$/.test(e.key)) {
                       e.preventDefault();
@@ -931,27 +944,45 @@ const DriverManagement = () => {
                   }}
                 />
                 {validationErrors.fullName && (
-                  <p className="text-red-500 text-sm mt-1">{validationErrors.fullName}</p>
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    <span className="text-red-500">⚠</span>
+                    {validationErrors.fullName}
+                  </p>
                 )}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">License Number</label>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  License Number
+                </label>
                 <Input
                   value={formData.licenseNumber}
                   onChange={(e) => setFormData({...formData, licenseNumber: e.target.value})}
                   placeholder="Enter license number"
                   required
+                  className="h-12 transition-all duration-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 hover:border-emerald-300"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+            </div>
+
+            {/* Second Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  Phone Number
+                </label>
                 <Input
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
                   placeholder="Enter 10-digit phone number"
                   required
                   maxLength={10}
-                  className={validationErrors.phone ? 'border-red-500' : ''}
+                  className={`h-12 transition-all duration-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
+                    validationErrors.phone 
+                      ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                      : 'border-gray-300 hover:border-emerald-300'
+                  }`}
                   onKeyPress={(e) => {
                     if (!/^[0-9]$/.test(e.key)) {
                       e.preventDefault();
@@ -959,18 +990,28 @@ const DriverManagement = () => {
                   }}
                 />
                 {validationErrors.phone && (
-                  <p className="text-red-500 text-sm mt-1">{validationErrors.phone}</p>
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    <span className="text-red-500">⚠</span>
+                    {validationErrors.phone}
+                  </p>
                 )}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  Email Address
+                </label>
                 <Input
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="Enter email address"
                   required
-                  className={validationErrors.email ? 'border-red-500' : ''}
+                  className={`h-12 transition-all duration-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
+                    validationErrors.email 
+                      ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                      : 'border-gray-300 hover:border-emerald-300'
+                  }`}
                   onKeyPress={(e) => {
                     if (!/^[a-zA-Z0-9.@]$/.test(e.key)) {
                       e.preventDefault();
@@ -978,24 +1019,32 @@ const DriverManagement = () => {
                   }}
                 />
                 {validationErrors.email && (
-                  <p className="text-red-500 text-sm mt-1">{validationErrors.email}</p>
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    <span className="text-red-500">⚠</span>
+                    {validationErrors.email}
+                  </p>
                 )}
               </div>
             </div>
 
-            {/* Second Row */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+            {/* Third Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  Address
+                </label>
                 <Input
                   value={formData.address}
                   onChange={(e) => setFormData({...formData, address: e.target.value})}
                   placeholder="Enter address"
                   required
+                  className="h-12 transition-all duration-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 hover:border-emerald-300"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
                   Hire Date
                   <span className="text-xs text-gray-500 ml-1">(Today or past)</span>
                 </label>
@@ -1004,16 +1053,16 @@ const DriverManagement = () => {
                     type="date"
                     value={formData.hireDate}
                     onChange={(e) => handleInputChange('hireDate', e.target.value)}
-                    className={`pr-10 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    className={`h-12 pr-10 transition-all duration-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
                       validationErrors.hireDate 
                         ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
-                        : 'border-gray-300 hover:border-gray-400'
+                        : 'border-gray-300 hover:border-emerald-300'
                     }`}
                     max={new Date().toISOString().split('T')[0]}
                     placeholder="Select hire date"
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <Calendar className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" />
+                    <Calendar className="h-4 w-4 text-gray-400 group-hover:text-emerald-500 transition-colors duration-200" />
                   </div>
                 </div>
                 {validationErrors.hireDate && (
@@ -1023,8 +1072,15 @@ const DriverManagement = () => {
                   </p>
                 )}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Salary (Rs)</label>
+            </div>
+
+            {/* Fourth Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  Salary (Rs)
+                </label>
                 <Input
                   type="number"
                   value={formData.salary}
@@ -1033,16 +1089,26 @@ const DriverManagement = () => {
                   required
                   min="0"
                   step="0.01"
-                  className={validationErrors.salary ? 'border-red-500' : ''}
+                  className={`h-12 transition-all duration-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
+                    validationErrors.salary 
+                      ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                      : 'border-gray-300 hover:border-emerald-300'
+                  }`}
                 />
                 {validationErrors.salary && (
-                  <p className="text-red-500 text-sm mt-1">{validationErrors.salary}</p>
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    <span className="text-red-500">⚠</span>
+                    {validationErrors.salary}
+                  </p>
                 )}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  Status
+                </label>
                 <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-12 transition-all duration-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 border-gray-300 hover:border-emerald-300">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1056,7 +1122,7 @@ const DriverManagement = () => {
             </div>
 
             {/* Form Actions */}
-            <div className="flex justify-end gap-4 pt-4 border-t">
+            <div className="flex justify-end gap-4 pt-6 border-t border-emerald-100">
               <Button 
                 type="button" 
                 variant="outline" 
@@ -1064,15 +1130,26 @@ const DriverManagement = () => {
                   setIsEditModalOpen(false);
                   resetForm();
                 }}
+                className="px-8 py-3 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-semibold"
               >
                 Cancel
               </Button>
               <Button 
                 type="submit" 
-                className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Updating...' : 'Update Driver'}
+                {isSubmitting ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Updating...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Edit className="h-4 w-4" />
+                    Update Driver
+                  </div>
+                )}
               </Button>
             </div>
           </form>

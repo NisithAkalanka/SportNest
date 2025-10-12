@@ -482,7 +482,7 @@ const EventPaymentPage = () => {
                               size="sm"
                               variant="destructive"
                               onClick={() => handleDeletePaymentMethod(method._id)}
-                              className="bg-red-500 hover:bg-red-600"
+                              className="bg-emerald-500 hover:bg-emerald-600"
                             >
                               <FontAwesomeIcon icon={faTrashAlt} className="h-3 w-3 mr-1" />
                               Delete
@@ -639,10 +639,10 @@ const EventPaymentPage = () => {
           </Card>
 
           {/* Additional Options */}
-          <Card className="shadow-lg border-2 border-purple-100">
-            <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b">
+          <Card className="shadow-lg border-2 border-emerald-100">
+            <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50 border-b">
               <CardTitle className="text-2xl font-bold text-gray-800 flex items-center">
-                <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center mr-3">
+                <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center mr-3">
                   <span className="text-white font-bold text-sm">3</span>
                 </div>
                 Additional Options
@@ -692,10 +692,10 @@ const EventPaymentPage = () => {
 
         {/* Right Column - Order Summary */}
         <div className="lg:col-span-1">
-          <Card className="shadow-lg border-2 border-orange-100 sticky top-4">
-            <CardHeader className="bg-gradient-to-r from-orange-50 to-red-50 border-b">
+          <Card className="shadow-lg border-2 border-emerald-100 sticky top-4">
+            <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50 border-b">
               <CardTitle className="text-2xl font-bold text-gray-800 flex items-center">
-                <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center mr-3">
+                <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center mr-3">
                   <span className="text-white font-bold text-sm">4</span>
                 </div>
                 Event Registration

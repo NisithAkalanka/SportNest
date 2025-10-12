@@ -181,6 +181,7 @@ const RenewMembershipPage = () => {
                                 <option value="Student Membership">Student Membership - Rs. 20,000</option>
                                 <option value="Ordinary Membership">Ordinary Membership - Rs. 60,000</option>
                                 <option value="Life Membership">Life Membership - Rs. 100,000</option>
+                                <option value="Life Time Membership">Life Time Membership - Rs. 100,000</option>
                             </select>
                         </div>
 
