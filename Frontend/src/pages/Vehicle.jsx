@@ -76,9 +76,7 @@ const Vehicles = () => {
     return '';
   };
 
-<<<<<<< Updated upstream
   // Validate all fi
-=======
   const validateCapacityValue = (value) => {
     if (!value || value.toString().trim() === '') {
       return 'Capacity value is required';
@@ -113,7 +111,6 @@ const Vehicles = () => {
   };
 
   // Validate all fields
->>>>>>> Stashed changes
   const validateForm = () => {
     const errors = {};
     
