@@ -1,9 +1,9 @@
-// src/pages/ApprovedEvents.jsx
 import { useEffect, useState } from "react";
 import { listApproved } from "@/services/eventsApi";
 import { Link, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCreditCard } from "@fortawesome/free-solid-svg-icons";
+import axios from "axios";
 
 export default function ApprovedEvents() {
   const navigate = useNavigate();
@@ -11,7 +11,7 @@ export default function ApprovedEvents() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
-  const [sortBy, setSortBy] = useState("date-asc"); 
+  const [sortBy, setSortBy] = useState("date-asc");
 
   const load = async () => {
     try {
@@ -33,7 +33,6 @@ export default function ApprovedEvents() {
 
   const onKeyDown = (e) => e.key === "Enter" && load();
 
-  // Client-side sort (unchanged)
   const sortedItems = [...items].sort((a, b) => {
     if (sortBy === "name-asc") return (a.name || "").localeCompare(b.name || "");
     const ad = a.date ? new Date(a.date).getTime() : Infinity;
@@ -55,7 +54,6 @@ export default function ApprovedEvents() {
         role="img"
         aria-label="SportNest events hero"
       >
-        {/* subtle brand accent */}
         <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-orange-500 to-emerald-500" />
         <div className="container mx-auto px-4">
           <h1 className="text-white text-2xl md:text-3xl font-extrabold tracking-tight">
@@ -71,12 +69,6 @@ export default function ApprovedEvents() {
       <div className="container mx-auto px-4">
         <div className="relative z-10 -mt-10 grid gap-3 md:grid-cols-[1fr_auto_auto_auto]">
           {/* Search */}
-          <label
-            htmlFor="event-search"
-            className="sr-only"
-          >
-            Search events
-          </label>
           <div className="flex items-center bg-white rounded-2xl shadow-lg ring-1 ring-gray-200 p-2 pl-3 focus-within:ring-2 focus-within:ring-emerald-500">
             <input
               id="event-search"
@@ -94,8 +86,6 @@ export default function ApprovedEvents() {
                   load();
                 }}
                 className="px-2 text-slate-500 hover:text-slate-700"
-                aria-label="Clear search"
-                title="Clear"
               >
                 ×
               </button>
@@ -106,9 +96,14 @@ export default function ApprovedEvents() {
           <button
             onClick={load}
             className="inline-flex items-center justify-center gap-2 h-12 px-5 rounded-2xl border-2 border-emerald-600 bg-white text-emerald-700 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition hover:bg-emerald-600 hover:text-white"
-            title="Apply current filters"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
               <path
                 d="M3 6h18M6 12h12M10 18h4"
                 stroke="currentColor"
@@ -120,15 +115,11 @@ export default function ApprovedEvents() {
           </button>
 
           {/* Sort */}
-          <label className="sr-only" htmlFor="event-sort">
-            Sort events
-          </label>
           <select
             id="event-sort"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className="h-12 rounded-2xl border-2 border-slate-200 bg-white px-3 text-sm text-slate-700 hover:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            title="Sort events"
           >
             <option value="date-asc">Date: Soonest</option>
             <option value="date-desc">Date: Latest</option>
@@ -189,24 +180,23 @@ function EventRow({ ev, reload }) {
   const day = d ? d.getDate() : "";
   const time = `${ev.startTime || "--"} – ${ev.endTime || "--"}`;
   const cap = ev.capacity ?? 0;
-  const reg = Array.isArray(ev.registrations) ? ev.registrations.length : ev.registeredCount || 0;
+  const reg = Array.isArray(ev.registrations)
+    ? ev.registrations.length
+    : ev.registeredCount || 0;
   const pct = cap > 0 ? Math.min(100, Math.round((reg / cap) * 100)) : 0;
   const left = cap > 0 ? Math.max(0, cap - reg) : 0;
-
   const fee = ev.registrationFee ?? 200;
   const isFree = Number(fee) === 0;
 
   return (
-    <div
-      className="rounded-2xl border shadow-sm hover:shadow-lg transition-transform hover:-translate-y-1 bg-white ring-1 ring-slate-200/70"
-    >
-      {/* header strip */}
-      <div className="h-1.5 w-full rounded-t-2xl bg-gradient-to-r from-orange-500 to-emerald-500" aria-hidden="true" />
+    <div className="rounded-2xl border shadow-sm hover:shadow-lg transition-transform hover:-translate-y-1 bg-white ring-1 ring-slate-200/70">
+      <div className="h-1.5 w-full rounded-t-2xl bg-gradient-to-r from-orange-500 to-emerald-500" />
       <div className="p-5 md:p-6 grid md:grid-cols-3 gap-6">
-        {/* Left side info */}
         <div className="md:col-span-2 min-w-0">
           <div className="flex items-center justify-between gap-3">
-            <h3 className="text-lg font-semibold leading-tight truncate">{ev.name}</h3>
+            <h3 className="text-lg font-semibold leading-tight truncate">
+              {ev.name}
+            </h3>
             <div className="flex items-center gap-2">
               {isFree ? (
                 <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-md px-2 py-0.5">
@@ -240,7 +230,10 @@ function EventRow({ ev, reload }) {
             {cap > 0 && (
               <>
                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500" style={{ width: `${pct}%` }} />
+                  <div
+                    className="h-full bg-emerald-500"
+                    style={{ width: `${pct}%` }}
+                  />
                 </div>
                 <div className="mt-1 text-xs text-slate-600">
                   {reg} / {cap} registered · {left} left
@@ -251,15 +244,12 @@ function EventRow({ ev, reload }) {
               <Link
                 className="inline-flex items-center text-sm rounded-xl border border-emerald-600 text-emerald-700 px-3 py-1.5 hover:bg-emerald-50"
                 to={`/events/${ev._id}`}
-                aria-label={`View details for ${ev.name}`}
               >
                 View details
               </Link>
             </div>
           </div>
         </div>
-
-        {/* Right: Quick Register */}
         <div>
           <RegisterInline ev={ev} onDone={reload} />
         </div>
@@ -287,20 +277,30 @@ function RegisterInline({ ev, onDone }) {
   const [msg, setMsg] = useState("");
   const [saving, setSaving] = useState(false);
 
+<<<<<<< Updated upstream
   // validation helpers
+=======
+>>>>>>> Stashed changes
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePhone = (phone) => /^\d{10}$/.test(phone);
 
   const click = async () => {
     setMsg("");
-
     if (!name.trim()) return setMsg("⚠️ Please enter your name");
     if (!validateEmail(email)) return setMsg("⚠️ Please enter a valid email");
     if (!validatePhone(phone)) return setMsg("⚠️ Phone number must be 10 digits");
 
     try {
       setSaving(true);
+<<<<<<< Updated upstream
       // Go to payment page with event and registration data
+=======
+
+      // 🟢 real-time backend call for count update
+      await axios.patch(`/api/events/${ev._id}/preview-register`);
+      onDone?.();
+
+>>>>>>> Stashed changes
       navigate("/events/payment", {
         state: {
           eventData: ev,
@@ -308,8 +308,8 @@ function RegisterInline({ ev, onDone }) {
           amount: ev.registrationFee || 200,
         },
       });
-      onDone?.();
-    } catch {
+    } catch (err) {
+      console.error(err);
       setMsg("Failed to proceed to payment");
     } finally {
       setSaving(false);
@@ -327,7 +327,6 @@ function RegisterInline({ ev, onDone }) {
         placeholder="Name"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        aria-label="Your name"
       />
       <input
         type="email"
@@ -335,22 +334,19 @@ function RegisterInline({ ev, onDone }) {
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        aria-label="Your email"
       />
       <input
         className="w-full mb-3 rounded-xl border px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
         placeholder="Phone (10 digits)"
         value={phone}
-        onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-        inputMode="numeric"
-        maxLength={10}
-        aria-label="Your phone number"
+        onChange={(e) =>
+          setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
+        }
       />
       <button
         onClick={click}
         disabled={saving}
         className="w-full rounded-2xl px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-60 shadow hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition flex items-center justify-center"
-        aria-live="polite"
       >
         <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
         {saving ? "Processing…" : "Register"}
@@ -360,7 +356,7 @@ function RegisterInline({ ev, onDone }) {
   );
 }
 
-/* ---------- Skeletons ---------- */
+/* ---------- Skeleton ---------- */
 function EventSkeleton() {
   return (
     <div className="rounded-2xl border bg-white shadow-sm p-5 md:p-6 animate-pulse">
