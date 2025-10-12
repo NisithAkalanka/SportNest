@@ -1,12 +1,13 @@
 // src/pages/ApprovedEvents.jsx
 import { useEffect, useState } from "react";
 import { listApproved } from "@/services/eventsApi";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCreditCard } from "@fortawesome/free-solid-svg-icons";
 
 export default function ApprovedEvents() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [items, setItems] = useState([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
@@ -30,6 +31,22 @@ export default function ApprovedEvents() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Check for refresh flag when component mounts or location changes
+  useEffect(() => {
+    if (location.state?.shouldRefreshEvents) {
+      // Show success message if registration was successful
+      if (location.state?.registrationSuccess) {
+        setMsg(`✅ Successfully registered for ${location.state.eventName}! Registration count updated.`);
+        // Clear success message after 5 seconds
+        setTimeout(() => setMsg(""), 5000);
+      }
+      // Clear the state to prevent infinite refreshes
+      navigate(location.pathname, { replace: true, state: {} });
+      // Reload the events list
+      load();
+    }
+  }, [location.state, navigate, location.pathname]);
 
   const onKeyDown = (e) => e.key === "Enter" && load();
 
@@ -146,7 +163,11 @@ export default function ApprovedEvents() {
         {/* Messages */}
         <div className="mt-6">
           {msg && (
-            <div className="text-sm mb-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl px-3 py-2">
+            <div className={`text-sm mb-3 rounded-xl px-3 py-2 ${
+              msg.includes('✅') 
+                ? 'bg-green-50 text-green-700 border border-green-200' 
+                : 'bg-rose-50 text-rose-700 border border-rose-200'
+            }`}>
               {msg}
             </div>
           )}
@@ -306,6 +327,7 @@ function RegisterInline({ ev, onDone }) {
           eventData: ev,
           registrationData: { name, email, phone },
           amount: ev.registrationFee || 200,
+          returnToEvents: true, // Flag to indicate we should return to events after payment
         },
       });
       onDone?.();

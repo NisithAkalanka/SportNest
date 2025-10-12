@@ -3,11 +3,45 @@ const Event = require('../models/Event');
 const PaymentMethod = require('../models/PaymentMethod');
 const sendEmail = require('../utils/email');
 
+// @route   GET /api/events/payment/health
+// @desc    Health check for payment endpoint
+// @access  Public
+const healthCheck = async (req, res) => {
+  try {
+    console.log('🏥 Payment health check requested');
+    
+    // Test database connection
+    const eventCount = await Event.countDocuments();
+    const paymentCount = await EventPayment.countDocuments();
+    
+    res.json({
+      status: 'healthy',
+      message: 'Payment endpoint is working',
+      database: {
+        events: eventCount,
+        payments: paymentCount
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('💥 Health check failed:', error);
+    res.status(500).json({
+      status: 'unhealthy',
+      message: 'Payment endpoint has issues',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
 // @route   POST /api/events/payment
 // @desc    Process event registration payment
 // @access  Public
 const processEventPayment = async (req, res) => {
   try {
+    console.log('🔄 Processing event payment request...');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     const {
       eventId,
       amount,
@@ -20,18 +54,43 @@ const processEventPayment = async (req, res) => {
 
     // Validate required fields
     if (!eventId) {
+      console.log('❌ Missing eventId');
       return res.status(400).json({ message: 'Event ID is required' });
     }
 
+    // Validate eventId format (MongoDB ObjectId)
+    if (!/^[0-9a-fA-F]{24}$/.test(eventId)) {
+      console.log('❌ Invalid eventId format:', eventId);
+      return res.status(400).json({ message: 'Invalid event ID format' });
+    }
+
     if (!registrationData || !registrationData.name || !registrationData.email) {
+      console.log('❌ Missing registration data:', registrationData);
       return res.status(400).json({ message: 'Registration data is required' });
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(registrationData.email)) {
+      console.log('❌ Invalid email format:', registrationData.email);
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
+
     // Verify event exists and has capacity
-    const event = await Event.findById(eventId);
+    console.log('🔍 Looking for event with ID:', eventId);
+    let event;
+    try {
+      event = await Event.findById(eventId);
+    } catch (dbError) {
+      console.log('❌ Database error finding event:', dbError.message);
+      return res.status(500).json({ message: 'Database error occurred' });
+    }
+    
     if (!event) {
+      console.log('❌ Event not found with ID:', eventId);
       return res.status(404).json({ message: 'Event not found' });
     }
+    console.log('✅ Event found:', event.name);
 
     // Check if event is at capacity
     const currentRegistrations = await EventPayment.countDocuments({ 
@@ -75,8 +134,41 @@ const processEventPayment = async (req, res) => {
       paymentData.billingInfo = billingInfo;
     }
 
-    const payment = new EventPayment(paymentData);
-    await payment.save();
+    console.log('💾 Creating payment record...');
+    console.log('💾 Payment data:', JSON.stringify(paymentData, null, 2));
+    
+    let payment;
+    try {
+      payment = new EventPayment(paymentData);
+      await payment.save();
+      console.log('✅ Payment record created with ID:', payment._id);
+    } catch (saveError) {
+      console.error('❌ Error saving payment:', saveError);
+      console.error('❌ Save error details:', saveError.message);
+      console.error('❌ Save error stack:', saveError.stack);
+      return res.status(500).json({ 
+        message: 'Failed to save payment record',
+        error: process.env.NODE_ENV === 'development' ? saveError.message : 'Database save error'
+      });
+    }
+
+    // Update the event's registration count by adding to registrations array
+    console.log('📝 Updating event registration count...');
+    try {
+      event.registrations.push({
+        name: registrationData.name,
+        email: registrationData.email,
+        phone: registrationData.phone,
+        registeredAt: new Date()
+      });
+      await event.save();
+      console.log('✅ Event registration count updated');
+    } catch (eventSaveError) {
+      console.error('❌ Error updating event:', eventSaveError);
+      console.error('❌ Event save error details:', eventSaveError.message);
+      // Don't fail the payment if event update fails - payment is already saved
+      console.log('⚠️ Payment saved but event update failed');
+    }
 
     // Save payment method if requested, user is logged in, and payment info is provided
     if (savePaymentInfo && req.user?.id && paymentInfo) {
@@ -104,41 +196,51 @@ const processEventPayment = async (req, res) => {
       }
     }
 
-    // Send confirmation email
-    try {
-      const emailContent = `
-        <h2>Event Registration Confirmed!</h2>
-        <p>Dear ${registrationData.name},</p>
-        <p>Your registration for "${event.name}" has been confirmed.</p>
-        
-        <h3>Event Details:</h3>
-        <ul>
-          <li><strong>Event:</strong> ${event.name}</li>
-          <li><strong>Date:</strong> ${new Date(event.date).toLocaleDateString()}</li>
-          <li><strong>Time:</strong> ${event.startTime} - ${event.endTime}</li>
-          <li><strong>Venue:</strong> ${event.venue || 'TBD'}</li>
-        </ul>
-        
-        <h3>Registration Details:</h3>
-        <ul>
-          <li><strong>Name:</strong> ${registrationData.name}</li>
-          <li><strong>Email:</strong> ${registrationData.email}</li>
-          <li><strong>Phone:</strong> ${registrationData.phone}</li>
-        </ul>
-        
-        <p>Thank you for registering! We look forward to seeing you at the event.</p>
-      `;
+    // Send confirmation email (optional - don't fail payment if email fails)
+    // Move email sending to a separate async function to prevent blocking
+    setImmediate(async () => {
+      try {
+        // Check if email configuration is available
+        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+          const emailContent = `
+            <h2>Event Registration Confirmed!</h2>
+            <p>Dear ${registrationData.name},</p>
+            <p>Your registration for "${event.name}" has been confirmed.</p>
+            
+            <h3>Event Details:</h3>
+            <ul>
+              <li><strong>Event:</strong> ${event.name}</li>
+              <li><strong>Date:</strong> ${new Date(event.date).toLocaleDateString()}</li>
+              <li><strong>Time:</strong> ${event.startTime} - ${event.endTime}</li>
+              <li><strong>Venue:</strong> ${event.venue || 'TBD'}</li>
+            </ul>
+            
+            <h3>Registration Details:</h3>
+            <ul>
+              <li><strong>Name:</strong> ${registrationData.name}</li>
+              <li><strong>Email:</strong> ${registrationData.email}</li>
+              <li><strong>Phone:</strong> ${registrationData.phone}</li>
+            </ul>
+            
+            <p>Thank you for registering! We look forward to seeing you at the event.</p>
+          `;
 
-      await sendEmail({
-        to: registrationData.email,
-        subject: `Event Registration Confirmed - ${event.name}`,
-        html: emailContent
-      });
-    } catch (error) {
-      console.error('Error sending confirmation email:', error);
-      // Don't fail the payment if email fails
-    }
+          await sendEmail({
+            to: registrationData.email,
+            subject: `Event Registration Confirmed - ${event.name}`,
+            html: emailContent
+          });
+          console.log('✅ Confirmation email sent successfully');
+        } else {
+          console.log('⚠️ Email configuration not available - skipping email notification');
+        }
+      } catch (error) {
+        console.error('❌ Error sending confirmation email:', error.message);
+        // Don't fail the payment if email fails - this is optional
+      }
+    });
 
+    console.log('🎉 Payment processed successfully!');
     res.status(201).json({
       message: 'Payment processed successfully',
       paymentId: payment._id,
@@ -146,10 +248,12 @@ const processEventPayment = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error processing event payment:', error);
+    console.error('💥 Error processing event payment:', error);
+    console.error('Error stack:', error.stack);
     
     // Provide more specific error messages
     if (error.name === 'ValidationError') {
+      console.log('❌ Validation error:', error.message);
       return res.status(400).json({ 
         message: 'Validation error', 
         details: error.message 
@@ -157,11 +261,21 @@ const processEventPayment = async (req, res) => {
     }
     
     if (error.name === 'CastError') {
+      console.log('❌ Cast error:', error.message);
       return res.status(400).json({ 
         message: 'Invalid data format' 
       });
     }
     
+    if (error.name === 'MongoError' || error.name === 'MongoServerError') {
+      console.log('❌ Database error:', error.message);
+      return res.status(500).json({ 
+        message: 'Database error occurred',
+        error: process.env.NODE_ENV === 'development' ? error.message : 'Database error'
+      });
+    }
+    
+    console.log('❌ Unknown error:', error.message);
     res.status(500).json({ 
       message: 'Server error processing payment',
       error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -324,6 +438,7 @@ const deletePayment = async (req, res) => {
 };
 
 module.exports = {
+  healthCheck,
   processEventPayment,
   getEventPayments,
   getAllEventPayments,

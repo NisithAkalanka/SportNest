@@ -10,7 +10,7 @@ import jsPDF from "jspdf";
 const EventTicketPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { eventData, registrationData, paymentId } = location.state || {};
+  const { eventData, registrationData, paymentId, returnToEvents } = location.state || {};
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
@@ -231,7 +231,13 @@ const EventTicketPage = () => {
           <div className="text-sm text-gray-600">
             <Button
               variant="outline"
-              onClick={() => navigate("/events")}
+              onClick={() => navigate("/events", {
+                state: returnToEvents ? {
+                  shouldRefreshEvents: true,
+                  registrationSuccess: true,
+                  eventName: eventData.name
+                } : {}
+              })}
               className="mr-4"
             >
               Back to Events
