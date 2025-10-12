@@ -8,19 +8,19 @@ const Delivery = require('../models/Delivery');
 // @access  Public
 const checkout = async (req, res) => {
   try {
-    // දැනට තියෙන එකම cart එක හොයාගන්නවා
+    // denata thiyena cart eka hoyagannawa
     const cart = await Cart.findOne().populate('items.item');
 
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ msg: 'Cart is empty' });
     }
 
-    // මුළු මුදල ගණනය කිරීම
+    //calculate total amount
     const totalAmount = cart.items.reduce((sum, cartItem) => {
       return sum + cartItem.item.price * cartItem.quantity;
     }, 0);
 
-    // අලුත් Order එකක් නිර්මාණය කිරීම
+    // aluth order ekak hadanawa
     const order = new Order({
       userId: cart.userId,
       items: cart.items.map(cartItem => ({
@@ -51,7 +51,7 @@ const checkout = async (req, res) => {
       // Don't fail the order creation if delivery creation fails
     }
 
-    // Order එක සෑදූ පසු, Cart එක හිස් කිරීම
+    // order ekak create karapu nisa cart eka clear karanawa
     cart.items = [];
     await cart.save();
 
