@@ -51,6 +51,11 @@ const OrderHistory = () => {
     }
   };
 
+  // Check if user has any approved refunds
+  const hasApprovedRefunds = refunds.some(refund => 
+    refund.status === 'approved' || refund.status === 'completed'
+  );
+
   const handleRequestRefund = (order) => {
     setSelectedOrder(order);
     setShowRefundForm(true);
@@ -78,8 +83,6 @@ const OrderHistory = () => {
         return 'bg-blue-100 text-blue-800';
       case 'processing':
         return 'bg-yellow-100 text-yellow-800';
-      case 'pending':
-        return 'bg-gray-100 text-gray-800';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
       default:
@@ -139,7 +142,7 @@ const OrderHistory = () => {
           }`}
         >
           <FontAwesomeIcon icon={faShoppingBag} className="mr-2" />
-          My Orders ({orders.length})
+          My Orders ({orders.filter(order => order.status !== 'pending').length})
         </button>
         <button
           onClick={() => setActiveTab('refunds')}
@@ -157,7 +160,7 @@ const OrderHistory = () => {
       {/* Orders Tab */}
       {activeTab === 'orders' && (
         <div className="space-y-4">
-          {orders.length === 0 ? (
+          {orders.filter(order => order.status !== 'pending').length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
                 <FontAwesomeIcon icon={faShoppingBag} className="h-12 w-12 text-gray-300 mb-4" />
@@ -166,7 +169,7 @@ const OrderHistory = () => {
               </CardContent>
             </Card>
           ) : (
-            orders.map((order) => (
+            orders.filter(order => order.status !== 'pending').map((order) => (
               <Card key={order._id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
                   <div className="flex justify-between items-start">

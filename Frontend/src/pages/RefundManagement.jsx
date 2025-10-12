@@ -122,7 +122,7 @@ const RefundManagement = () => {
   };
 
   const handleCompleteRefund = async (refundId) => {
-    if (window.confirm('Are you sure you want to mark this refund as completed?')) {
+    if (window.confirm('Are you sure you want to mark this refund as approved?')) {
       try {
         setProcessingRefund(refundId);
         await api.put(`/refunds/${refundId}/complete`);
@@ -130,9 +130,9 @@ const RefundManagement = () => {
         setSelectedRefund(null);
         fetchRefunds();
         fetchStats();
-        alert('Refund marked as completed successfully');
+        alert('Refund marked as approved successfully');
       } catch (err) {
-        alert(err.response?.data?.msg || 'Failed to complete refund');
+        alert(err.response?.data?.msg || 'Failed to approve refund');
       } finally {
         setProcessingRefund(null);
       }
@@ -149,8 +149,6 @@ const RefundManagement = () => {
     switch (status) {
       case 'approved':
         return 'bg-green-100 text-green-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
       case 'rejected':
@@ -165,7 +163,6 @@ const RefundManagement = () => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'approved':
-      case 'completed':
         return faCheck;
       case 'rejected':
         return faTimes;
@@ -289,7 +286,6 @@ const RefundManagement = () => {
                   <SelectItem value="approved">Approved</SelectItem>
                   <SelectItem value="rejected">Rejected</SelectItem>
                   <SelectItem value="processing">Processing</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -402,7 +398,7 @@ const RefundManagement = () => {
                         ) : (
                           <FontAwesomeIcon icon={faCheck} className="mr-2" />
                         )}
-                        Mark Complete
+                        Mark Approved
                       </Button>
                     )}
                   </div>
@@ -538,12 +534,6 @@ const RefundManagement = () => {
                 {selectedRefund.status === 'pending' && (
                   <div className="flex justify-end space-x-4 pt-4 border-t">
                     <Button
-                      variant="outline"
-                      onClick={() => setShowDetailsModal(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
                       variant="destructive"
                       onClick={() => handleRejectRefund(selectedRefund._id)}
                       disabled={processingRefund === selectedRefund._id}
@@ -573,12 +563,6 @@ const RefundManagement = () => {
                 {selectedRefund.status === 'approved' && (
                   <div className="flex justify-end space-x-4 pt-4 border-t">
                     <Button
-                      variant="outline"
-                      onClick={() => setShowDetailsModal(false)}
-                    >
-                      Close
-                    </Button>
-                    <Button
                       className="bg-blue-600 hover:bg-blue-700 text-white"
                       onClick={() => handleCompleteRefund(selectedRefund._id)}
                       disabled={processingRefund === selectedRefund._id}
@@ -588,19 +572,14 @@ const RefundManagement = () => {
                       ) : (
                         <FontAwesomeIcon icon={faCheck} className="mr-2" />
                       )}
-                      Mark as Completed
+                      Mark as Approved
                     </Button>
                   </div>
                 )}
 
                 {!['pending', 'approved'].includes(selectedRefund.status) && (
                   <div className="flex justify-end pt-4 border-t">
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowDetailsModal(false)}
-                    >
-                      Close
-                    </Button>
+                    {/* No action buttons for approved/rejected refunds */}
                   </div>
                 )}
               </CardContent>

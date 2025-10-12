@@ -436,10 +436,22 @@ const confirmDelivery = async (req, res) => {
   const { token } = req.params;
   
   try {
+    console.log('Confirming delivery for token:', token);
+    
+    // Validate token format
+    if (!token || typeof token !== 'string' || !/^[a-f0-9]+$/i.test(token)) {
+      console.log('Invalid token format for confirmation:', token);
+      return res.status(400).json({ 
+        msg: 'Invalid token format' 
+      });
+    }
+    
     const delivery = await Delivery.findOne({ 
       confirmationToken: token,
       driverConfirmed: false 
     }).populate('driver', 'fullName email');
+    
+    console.log('Found delivery for confirmation:', delivery ? 'Yes' : 'No');
     
     if (!delivery) {
       return res.status(404).json({ 
@@ -463,6 +475,44 @@ const confirmDelivery = async (req, res) => {
     delivery.status = 'Delivered';
     await delivery.save();
     
+    console.log('Delivery confirmed successfully:', delivery.orderId);
+    
+    // Send email notification to admin
+    try {
+      const adminEmail = process.env.ADMIN_EMAIL || 'nethmin703@gmail.com';
+      const emailSubject = `Delivery Confirmed - Order ${delivery.orderId}`;
+      const emailContent = `
+        <h2>Delivery Confirmation Notification</h2>
+        <p>Hello Admin,</p>
+        <p>A delivery has been confirmed by the assigned driver.</p>
+        
+        <h3>Delivery Details:</h3>
+        <ul>
+          <li><strong>Order ID:</strong> ${delivery.orderId}</li>
+          <li><strong>Customer:</strong> ${delivery.customer}</li>
+          <li><strong>Address:</strong> ${delivery.address}</li>
+          <li><strong>Driver:</strong> ${delivery.driver ? delivery.driver.fullName : 'Not assigned'}</li>
+          <li><strong>Driver Email:</strong> ${delivery.driver ? delivery.driver.email : 'N/A'}</li>
+          <li><strong>Delivery Date:</strong> ${new Date(delivery.deliveryDate).toLocaleString()}</li>
+          <li><strong>Confirmed At:</strong> ${new Date().toLocaleString()}</li>
+        </ul>
+        
+        <p>You can view the updated delivery status in the admin dashboard.</p>
+        
+        <p>Best regards,<br>SportNest Delivery System</p>
+      `;
+      
+      await sendEmail({
+        to: adminEmail,
+        subject: emailSubject,
+        html: emailContent
+      });
+      console.log('Admin notification email sent successfully for delivery:', delivery.orderId);
+    } catch (emailError) {
+      console.error('Failed to send admin notification email:', emailError);
+      // Don't fail the confirmation if email fails
+    }
+    
     return res.json({
       success: true,
       message: 'Delivery confirmed successfully',
@@ -476,8 +526,26 @@ const confirmDelivery = async (req, res) => {
     });
     
   } catch (err) {
-    console.error('Confirm Delivery Error:', err.message);
-    return res.status(500).send('Server Error');
+    console.error('Confirm Delivery Error:', err);
+    console.error('Error details:', {
+      message: err.message,
+      stack: err.stack,
+      token: token
+    });
+    
+    // Check if it's a database connection error
+    if (err.name === 'MongoNetworkError' || err.name === 'MongoServerError') {
+      console.error('Database connection error detected in confirmation');
+      return res.status(500).json({ 
+        msg: 'Database connection error',
+        error: process.env.NODE_ENV === 'development' ? err.message : 'Database unavailable'
+      });
+    }
+    
+    return res.status(500).json({ 
+      msg: 'Server Error',
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+    });
   }
 };
 
@@ -487,6 +555,7 @@ const getConfirmationStatus = async (req, res) => {
   
   try {
     console.log('Getting confirmation status for token:', token);
+    console.log('Token length:', token ? token.length : 'undefined');
     
     // Validate token format (should be a hex string)
     if (!token || typeof token !== 'string' || !/^[a-f0-9]+$/i.test(token)) {
@@ -496,10 +565,28 @@ const getConfirmationStatus = async (req, res) => {
       });
     }
     
+    // Check if Delivery model is properly loaded
+    if (!Delivery) {
+      console.error('Delivery model is not loaded');
+      return res.status(500).json({ 
+        msg: 'Database model error' 
+      });
+    }
+    
+    console.log('Searching for delivery with token...');
     const delivery = await Delivery.findOne({ confirmationToken: token })
-      .populate('driver', 'fullName email');
+      .populate('driver', 'fullName email')
+      .lean(); // Use lean() for better performance and to avoid mongoose document issues
     
     console.log('Found delivery:', delivery ? 'Yes' : 'No');
+    if (delivery) {
+      console.log('Delivery details:', {
+        orderId: delivery.orderId,
+        customer: delivery.customer,
+        driverConfirmed: delivery.driverConfirmed,
+        hasDriver: !!delivery.driver
+      });
+    }
     
     if (!delivery) {
       return res.status(404).json({ 
@@ -523,8 +610,20 @@ const getConfirmationStatus = async (req, res) => {
     console.error('Error details:', {
       message: err.message,
       stack: err.stack,
-      token: token
+      token: token,
+      tokenType: typeof token,
+      tokenLength: token ? token.length : 'undefined'
     });
+    
+    // Check if it's a database connection error
+    if (err.name === 'MongoNetworkError' || err.name === 'MongoServerError') {
+      console.error('Database connection error detected');
+      return res.status(500).json({ 
+        msg: 'Database connection error',
+        error: process.env.NODE_ENV === 'development' ? err.message : 'Database unavailable'
+      });
+    }
+    
     return res.status(500).json({ 
       msg: 'Server Error',
       error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
@@ -566,21 +665,68 @@ const testDrivers = async (req, res) => {
   }
 };
 
+// GET /api/deliveries/test-database (Debug endpoint)
+const testDatabase = async (req, res) => {
+  try {
+    console.log('Testing database connection and models...');
+    
+    // Test Delivery model
+    const deliveryCount = await Delivery.countDocuments();
+    console.log('Delivery count:', deliveryCount);
+    
+    // Test Driver model
+    const driverCount = await Driver.countDocuments();
+    console.log('Driver count:', driverCount);
+    
+    // Test a simple query
+    const recentDeliveries = await Delivery.find({}).limit(3).lean();
+    console.log('Recent deliveries:', recentDeliveries.length);
+    
+    return res.json({
+      success: true,
+      deliveryCount,
+      driverCount,
+      recentDeliveries: recentDeliveries.length,
+      message: 'Database connection and models are working',
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Test Database Error:', err);
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+      stack: err.stack,
+      message: 'Database test failed'
+    });
+  }
+};
+
 // POST /api/deliveries/test-email (Debug endpoint)
 const testEmail = async (req, res) => {
   try {
     console.log('Testing email functionality...');
     
-    const { to = 'test@example.com' } = req.body;
+    const adminEmail = process.env.ADMIN_EMAIL || 'nisithakalanka15@gmail.com';
+    const { to = adminEmail } = req.body;
     
     const emailOptions = {
       to: to,
-      subject: 'Test Email from SportNest',
+      subject: 'Test Email from SportNest Delivery System',
       html: `
-        <h2>Test Email</h2>
-        <p>This is a test email from SportNest delivery system.</p>
-        <p>If you receive this email, the email configuration is working correctly.</p>
-        <p>Time: ${new Date().toLocaleString()}</p>
+        <h2>Test Email - SportNest Delivery System</h2>
+        <p>Hello Admin,</p>
+        <p>This is a test email to verify that the email configuration is working correctly.</p>
+        
+        <h3>Configuration Details:</h3>
+        <ul>
+          <li><strong>Admin Email:</strong> ${adminEmail}</li>
+          <li><strong>Test Time:</strong> ${new Date().toLocaleString()}</li>
+          <li><strong>System:</strong> SportNest Delivery Management</li>
+        </ul>
+        
+        <p>If you receive this email, the admin notification system is working properly.</p>
+        
+        <p>Best regards,<br>SportNest Delivery System</p>
       `,
       message: 'This is a test email from SportNest delivery system.'
     };
@@ -589,8 +735,9 @@ const testEmail = async (req, res) => {
     
     return res.json({
       success: true,
-      message: 'Test email sent successfully',
+      message: `Test email sent successfully to ${to}`,
       to: to,
+      adminEmail: adminEmail,
       timestamp: new Date().toISOString()
     });
   } catch (err) {
@@ -599,6 +746,7 @@ const testEmail = async (req, res) => {
       success: false,
       error: err.message,
       message: 'Email test failed. Check email configuration.',
+      adminEmail: process.env.ADMIN_EMAIL || 'nisithakalanka15@gmail.com',
       stack: err.stack
     });
   }
@@ -618,5 +766,6 @@ module.exports = {
   confirmDelivery,
   getConfirmationStatus,
   testDrivers,
+  testDatabase,
   testEmail
 };

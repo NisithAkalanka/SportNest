@@ -1,3 +1,4 @@
+//NETH
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
@@ -46,6 +47,8 @@ const Vehicles = () => {
       setVehicles(response.data.vehicles || response.data || []);
     } catch (error) {
       console.error("Error fetching vehicles:", error);
+      showToastMessage("Error loading vehicles. Please try again ❌");
+      setVehicles([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -75,11 +78,48 @@ const Vehicles = () => {
   };
 
   // Validate all fi
+  const validateCapacityValue = (value) => {
+    if (!value || value.toString().trim() === '') {
+      return 'Capacity value is required';
+    }
+    const numValue = Number(value);
+    if (isNaN(numValue) || numValue <= 0) {
+      return 'Capacity value must be a positive number';
+    }
+    return '';
+  };
+
+  const validateFuelType = (fuelType) => {
+    const validFuelTypes = ['Petrol', 'Diesel', 'Electric', 'Hybrid'];
+    if (!fuelType || fuelType.trim() === '') {
+      return 'Fuel type is required';
+    }
+    if (!validFuelTypes.includes(fuelType)) {
+      return 'Please select a valid fuel type';
+    }
+    return '';
+  };
+
+  const validateCapacityUnit = (unit) => {
+    const validUnits = ['Kg', 'Ton', 'Litre'];
+    if (!unit || unit.trim() === '') {
+      return 'Capacity unit is required';
+    }
+    if (!validUnits.includes(unit)) {
+      return 'Please select a valid capacity unit';
+    }
+    return '';
+  };
+
+  // Validate all fields
   const validateForm = () => {
     const errors = {};
     
     errors.vehicleType = validateVehicleType(formData.vehicleType);
     errors.licensePlate = validateLicensePlate(formData.licensePlate);
+    errors.fuelType = validateFuelType(formData.fuelType);
+    errors.capacityValue = validateCapacityValue(formData.capacityValue);
+    errors.capacityUnit = validateCapacityUnit(formData.capacityUnit);
     
     setValidationErrors(errors);
     return !Object.values(errors).some(error => error !== '');
@@ -123,14 +163,20 @@ const Vehicles = () => {
     setIsSubmitting(true);
     
     try {
-      console.log("Submitting vehicle data:", formData);
+      // Convert capacityValue to number before sending
+      const submitData = {
+        ...formData,
+        capacityValue: Number(formData.capacityValue)
+      };
+      
+      console.log("Submitting vehicle data:", submitData);
       
       if (editingId) {
-        const response = await axios.put(`http://localhost:5002/api/vehicles/${editingId}`, formData);
+        const response = await axios.put(`http://localhost:5002/api/vehicles/${editingId}`, submitData);
         console.log("Update response:", response.data);
         showToastMessage("Vehicle updated successfully ✅");
       } else {
-        const response = await axios.post("http://localhost:5002/api/vehicles", formData);
+        const response = await axios.post("http://localhost:5002/api/vehicles", submitData);
         console.log("Create response:", response.data);
         showToastMessage("Vehicle added successfully 🚗");
       }
@@ -347,7 +393,7 @@ const Vehicles = () => {
           className={`mt-4 sm:mt-0 inline-flex items-center px-4 py-2 rounded-lg transition-colors ${
             isGeneratingPDF 
               ? 'bg-gray-400 cursor-not-allowed' 
-              : 'bg-green-600 hover:bg-green-700'
+              : 'bg-emerald-500 hover:bg-emerald-600'
           } text-white`}
           onClick={downloadPDF}
           disabled={isGeneratingPDF}
@@ -362,7 +408,7 @@ const Vehicles = () => {
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-6 gap-4">
           <div>
             <select
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                 validationErrors.vehicleType ? 'border-red-500' : 'border-gray-300'
               }`}
               name="vehicleType"
@@ -383,7 +429,7 @@ const Vehicles = () => {
           <div>
             <input
               type="text"
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                 validationErrors.licensePlate ? 'border-red-500' : 'border-gray-300'
               }`}
               name="licensePlate"
@@ -403,7 +449,9 @@ const Vehicles = () => {
           </div>
           <div>
             <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                validationErrors.fuelType ? 'border-red-500' : 'border-gray-300'
+              }`}
               name="fuelType"
               value={formData.fuelType}
               onChange={handleChange}
@@ -415,21 +463,31 @@ const Vehicles = () => {
               <option>Electric</option>
               <option>Hybrid</option>
             </select>
+            {validationErrors.fuelType && (
+              <p className="text-red-500 text-sm mt-1">{validationErrors.fuelType}</p>
+            )}
           </div>
           <div>
             <input
               type="number"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                validationErrors.capacityValue ? 'border-red-500' : 'border-gray-300'
+              }`}
               name="capacityValue"
               placeholder="Capacity"
               value={formData.capacityValue}
               onChange={handleChange}
               required
             />
+            {validationErrors.capacityValue && (
+              <p className="text-red-500 text-sm mt-1">{validationErrors.capacityValue}</p>
+            )}
           </div>
           <div>
             <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                validationErrors.capacityUnit ? 'border-red-500' : 'border-gray-300'
+              }`}
               name="capacityUnit"
               value={formData.capacityUnit}
               onChange={handleChange}
@@ -440,10 +498,13 @@ const Vehicles = () => {
               <option>Ton</option>
               <option>Litre</option>
             </select>
+            {validationErrors.capacityUnit && (
+              <p className="text-red-500 text-sm mt-1">{validationErrors.capacityUnit}</p>
+            )}
           </div>
           <div>
             <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
               name="status"
               value={formData.status}
               onChange={handleChange}
@@ -460,7 +521,7 @@ const Vehicles = () => {
               className={`px-6 py-2 rounded-md transition-colors ${
                 isSubmitting 
                   ? 'bg-gray-400 cursor-not-allowed' 
-                  : 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-emerald-500 hover:bg-emerald-600'
               } text-white`}
             >
               {isSubmitting ? "Saving..." : (editingId ? "Update Vehicle" : "Add Vehicle")}
@@ -475,7 +536,7 @@ const Vehicles = () => {
           <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
             placeholder="Search vehicles..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -483,7 +544,7 @@ const Vehicles = () => {
         </div>
         <div className="sm:w-64">
           <select
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >

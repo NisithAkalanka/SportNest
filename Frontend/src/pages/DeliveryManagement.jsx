@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTruck, faPlus, faEdit, faTrash, faDownload, faCalendarAlt, faFilePdf } from '@fortawesome/free-solid-svg-icons';
+import { faTruck, faPlus, faEdit, faTrash, faDownload, faCalendarAlt, faFilePdf, faSync, faCheckCircle, faSearch } from '@fortawesome/free-solid-svg-icons';
 import api from '@/api';
 import jsPDF from 'jspdf';
 
@@ -53,6 +53,7 @@ const DeliveryManagement = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [toast, setToast] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   
   // Form states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -208,10 +209,35 @@ const DeliveryManagement = () => {
     }
   };
 
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    try {
+      await Promise.all([
+        fetchDeliveries(),
+        fetchDrivers(),
+        fetchAvailableOrders()
+      ]);
+      setToast({ type: 'success', msg: 'Data refreshed successfully!' });
+    } catch (err) {
+      setToast({ type: 'error', msg: 'Failed to refresh data' });
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => setToast(null), 3000);
+    }
+  };
+
   useEffect(() => {
     fetchDeliveries();
     fetchDrivers();
     fetchAvailableOrders();
+    
+    // Set up auto-refresh every 30 seconds
+    const refreshInterval = setInterval(() => {
+      fetchDeliveries();
+    }, 30000); // 30 seconds
+    
+    // Cleanup interval on component unmount
+    return () => clearInterval(refreshInterval);
   }, []);
 
   const handleInputChange = (e) => {
@@ -527,10 +553,11 @@ const DeliveryManagement = () => {
       
       // Summary statistics
       const totalDeliveries = deliveries.length;
-      const pendingDeliveries = deliveries.filter(d => d.status === 'Pending').length;
-      const inTransitDeliveries = deliveries.filter(d => d.status === 'In Transit').length;
-      const deliveredDeliveries = deliveries.filter(d => d.status === 'Delivered').length;
+      const pendingDeliveries = deliveries.filter(d => d.status === 'Pending' && !d.driverConfirmed).length;
+      const inTransitDeliveries = deliveries.filter(d => d.status === 'In Transit' && !d.driverConfirmed).length;
+      const deliveredDeliveries = deliveries.filter(d => d.status === 'Delivered' && !d.driverConfirmed).length;
       const cancelledDeliveries = deliveries.filter(d => d.status === 'Cancelled').length;
+      const driverApprovedDeliveries = deliveries.filter(d => d.driverConfirmed).length;
       
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
@@ -542,7 +569,8 @@ const DeliveryManagement = () => {
       doc.text(`Pending: ${pendingDeliveries}`, 20, 95);
       doc.text(`In Transit: ${inTransitDeliveries}`, 20, 105);
       doc.text(`Delivered: ${deliveredDeliveries}`, 20, 115);
-      doc.text(`Cancelled: ${cancelledDeliveries}`, 20, 125);
+      doc.text(`Approved by Driver: ${driverApprovedDeliveries}`, 20, 125);
+      doc.text(`Cancelled: ${cancelledDeliveries}`, 20, 135);
       
       // Delivery details table
       if (deliveries.length > 0) {
@@ -551,7 +579,7 @@ const DeliveryManagement = () => {
         doc.text('Delivery Details', 20, 145);
         
         // Table headers
-        const tableStartY = 155;
+        const tableStartY = 165;
         const colWidths = [25, 30, 40, 25, 30, 20];
         const colPositions = [20, 45, 75, 115, 140, 170];
         
@@ -643,7 +671,8 @@ const DeliveryManagement = () => {
           doc.text(`${formattedTime}`, colPositions[4], currentY + 3);
           
           // Status
-          doc.text(delivery.status || 'N/A', colPositions[5], currentY);
+          const statusText = delivery.driverConfirmed ? 'Approved by driver' : (delivery.status || 'N/A');
+          doc.text(statusText, colPositions[5], currentY);
           
           currentY += 12;
           } catch (deliveryError) {
@@ -691,8 +720,14 @@ const DeliveryManagement = () => {
     });
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
+  const getStatusColor = (delivery) => {
+    // Check if driver has confirmed the delivery
+    if (delivery.driverConfirmed) {
+      return 'bg-emerald-100 text-emerald-800';
+    }
+    
+    // Otherwise use the regular status
+    switch (delivery.status) {
       case 'Pending': return 'bg-yellow-100 text-yellow-800';
       case 'Assigned': return 'bg-purple-100 text-purple-800';
       case 'In Transit': return 'bg-blue-100 text-blue-800';
@@ -701,6 +736,25 @@ const DeliveryManagement = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const getStatusText = (delivery) => {
+    // Check if driver has confirmed the delivery
+    if (delivery.driverConfirmed) {
+      return 'Approved by driver';
+    }
+    
+    // Otherwise use the regular status
+    return delivery.status;
+  };
+
+  // Filter deliveries based on search term
+  const filteredDeliveries = deliveries.filter(delivery => {
+    if (!searchTerm) return true;
+    
+    // Filter by first letter of customer's name when search term is provided
+    const searchLower = searchTerm.toLowerCase();
+    return delivery.customer?.toLowerCase().startsWith(searchLower);
+  });
 
   if (isLoading) return <div className="p-10">Loading deliveries...</div>;
   if (error) return <div className="p-10 text-red-600">{error}</div>;
@@ -719,10 +773,22 @@ const DeliveryManagement = () => {
           <FontAwesomeIcon icon={faTruck} className="text-2xl text-orange-600" />
           <div>
             <h1 className="text-4xl font-bold text-gray-800">Delivery Management</h1>
-            <p className="text-lg text-gray-500 mt-1">Track and manage all deliveries.</p>
+            <p className="text-lg text-gray-500 mt-1">
+              Track and manage all deliveries.
+              <span className="ml-2 text-sm text-blue-600">
+                (Auto-refreshes every 30 seconds)
+              </span>
+            </p>
           </div>
         </div>
         <div className="flex gap-2">
+          <Button onClick={handleRefresh} variant="outline" disabled={isLoading}>
+            <FontAwesomeIcon 
+              icon={faSync} 
+              className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} 
+            />
+            Refresh
+          </Button>
           <Button onClick={handleDownloadReport} variant="outline">
             <FontAwesomeIcon icon={faDownload} className="mr-2" />
             Download CSV
@@ -731,13 +797,109 @@ const DeliveryManagement = () => {
             <FontAwesomeIcon icon={faFilePdf} className="mr-2" />
             Download PDF
           </Button>
-          <Button onClick={() => setIsAddDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button onClick={() => setIsAddDialogOpen(true)} className="bg-emerald-500 hover:bg-emerald-600 text-white">
             <FontAwesomeIcon icon={faPlus} className="mr-2" />
             Add Delivery
           </Button>
         </div>
       </div>
 
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Deliveries</p>
+                <p className="text-2xl font-bold text-gray-900">{filteredDeliveries.length}</p>
+              </div>
+              <FontAwesomeIcon icon={faTruck} className="text-2xl text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Approved by Driver</p>
+                <p className="text-2xl font-bold text-emerald-600">
+                  {filteredDeliveries.filter(d => d.driverConfirmed).length}
+                </p>
+              </div>
+              <FontAwesomeIcon icon={faCheckCircle} className="text-2xl text-emerald-600" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pending</p>
+                <p className="text-2xl font-bold text-yellow-600">
+                  {filteredDeliveries.filter(d => d.status === 'Pending' && !d.driverConfirmed).length}
+                </p>
+              </div>
+              <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">In Transit</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {filteredDeliveries.filter(d => d.status === 'In Transit' && !d.driverConfirmed).length}
+                </p>
+              </div>
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Search Bar */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <FontAwesomeIcon 
+                  icon={faSearch} 
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" 
+                />
+                <Input
+                  placeholder="Search by first letter of customer name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 h-11 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 rounded-lg"
+                />
+              </div>
+            </div>
+            {searchTerm && (
+              <Button
+                variant="outline"
+                onClick={() => setSearchTerm('')}
+                className="h-11 px-4 border-gray-300 hover:bg-gray-50 rounded-lg"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+          {searchTerm && (
+            <p className="text-sm text-gray-600 mt-2">
+              Showing {filteredDeliveries.length} of {deliveries.length} deliveries
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Deliveries Table */}
       <Card>
@@ -746,11 +908,20 @@ const DeliveryManagement = () => {
           <CardDescription>All delivery entries and their current status</CardDescription>
         </CardHeader>
         <CardContent>
-          {deliveries.length === 0 ? (
+          {filteredDeliveries.length === 0 ? (
             <div className="text-center py-12">
               <FontAwesomeIcon icon={faTruck} className="text-4xl text-gray-300 mb-4" />
-              <p className="text-gray-500 text-lg">No deliveries yet.</p>
-              <p className="text-gray-400">Add your first delivery to get started.</p>
+              {searchTerm ? (
+                <>
+                  <p className="text-gray-500 text-lg">No deliveries found matching "{searchTerm}".</p>
+                  <p className="text-gray-400">Try adjusting your search terms.</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-gray-500 text-lg">No deliveries yet.</p>
+                  <p className="text-gray-400">Add your first delivery to get started.</p>
+                </>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -767,7 +938,7 @@ const DeliveryManagement = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {deliveries.map((delivery) => (
+                  {filteredDeliveries.map((delivery) => (
                     <TableRow key={delivery._id}>
                       <TableCell className="font-medium">{delivery.orderId}</TableCell>
                       <TableCell>{delivery.customer}</TableCell>
@@ -784,9 +955,19 @@ const DeliveryManagement = () => {
                       </TableCell>
                       <TableCell>{formatDate(delivery.deliveryDate)}</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(delivery.status)}`}>
-                          {delivery.status}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(delivery)}`}>
+                            {delivery.driverConfirmed && (
+                              <FontAwesomeIcon icon={faCheckCircle} className="mr-1" />
+                            )}
+                            {getStatusText(delivery)}
+                          </span>
+                        </div>
+                        {delivery.driverConfirmed && delivery.confirmationDate && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            Confirmed: {new Date(delivery.confirmationDate).toLocaleDateString()}
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
@@ -1062,7 +1243,7 @@ const DeliveryManagement = () => {
                 <Button 
                   type="submit" 
                   disabled={isSubmitting} 
-                  className="h-11 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                  className="h-11 px-6 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
                 >
                   <FontAwesomeIcon icon={faPlus} className="mr-2" />
                   {isSubmitting ? 'Adding...' : 'Add Delivery'}
@@ -1308,7 +1489,7 @@ const DeliveryManagement = () => {
                 <Button 
                   type="submit" 
                   disabled={isSubmitting} 
-                  className="h-11 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                  className="h-11 px-6 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
                 >
                   <FontAwesomeIcon icon={faEdit} className="mr-2" />
                   {isSubmitting ? 'Updating...' : 'Update Delivery'}
