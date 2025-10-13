@@ -48,7 +48,7 @@ const addToCart = async (req, res) => {
   }
 };
 
-// @route   GET /api/cart
+
 // @desc    Get current user's cart
 // @access  Private
 const getCartItems = async (req, res) => {
@@ -65,7 +65,7 @@ const getCartItems = async (req, res) => {
   }
 };
 
-// @route   DELETE /api/cart/:id
+
 // @desc    Remove one cart line item and restore inventory
 // @access  Private
 const removeCartItem = async (req, res) => {

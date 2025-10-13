@@ -90,21 +90,21 @@ const updateCartItemQuantityAndUpdate = async (cartItemId, newQuantity) => {////
   await fetchCart();
 };
 
-  // Cart එකේ තියෙන items list එක
+  // Carteke thiyena items list eka
   const cartItems = cart ? cart.items : [];
-  // මුළු item ගණන
+  // mulu cart eke item ganan eka
   const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   return (
     <CartContext.Provider 
         value={{ 
-            cartItems: cartItems, // CartPage එකේදී පාවිච්චි කරන්න 'cartItems' නමින් items ටික දෙනවා
+            cartItems: cartItems, // CartPage ekedi use karanna puluwan
             cartItemCount, 
             isLoading,
             fetchCart,
             addToCartAndUpdate,
-            removeFromCartAndUpdate, // අයින් කිරීම
-            updateCartItemQuantityAndUpdate // Quantity update function එකත් export කරනවා
+            removeFromCartAndUpdate, // 
+            updateCartItemQuantityAndUpdate // Quantity update function 
         }}
     >
       {children}

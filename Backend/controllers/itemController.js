@@ -184,8 +184,11 @@ const generateInventoryPdfReport = async (req, res) => {
 };
 
 
+<<<<<<< Updated upstream
 // ★★★ Newly added Function – Manual Stock Management ★★★
 
+=======
+>>>>>>> Stashed changes
 
 // @route   POST /api/items/managestock
 // @desc    Manually add or remove stock for an item

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// ★★★ සියලුම Icons නිවැරදිව import කර ඇත ★★★
+
 import { faSync, faFileDownload as faFileCsv, faPencilAlt, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import {
   Dialog,

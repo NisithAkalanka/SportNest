@@ -88,7 +88,7 @@ const AdminDashboard = () => {
     ...(otherSum > 0 ? [{ name: 'Others', value: otherSum }] : []),
   ];
 
-  const BAR_COLOR = '#10B981';
+  const BAR_COLOR = '#10B981';  //recharts ,fbchat emerald-500
 
   const openPreorder = (item) => {
     setSelectedItem(item);

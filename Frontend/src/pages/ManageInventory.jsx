@@ -154,7 +154,7 @@ const ManageInventory = () => {
       validateField('image', file);
     }
   };
-
+//sending both text and image files as multipart/form-data
   const handleSubmit = async (e) => {
     e.preventDefault();
     let isFormValid = true;
