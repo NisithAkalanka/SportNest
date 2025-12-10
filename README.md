@@ -68,7 +68,7 @@ Sports
 
 ⸻
 
-### 📅 Events Management Module
+### 📅 Events Management Module  Branch - Sujan_lakdin
 This module provides a complete lifecycle for managing club events, from submission by members to approval by admins and registration by the public.
 
 *   **Role-Based Access Control (RBAC):** A secure system where Admins have full control, while Members can only submit, view, and manage their own non-approved events.
@@ -76,7 +76,7 @@ This module provides a complete lifecycle for managing club events, from submiss
 *   **Advanced Reporting & Data Export:** An admin-facing reporting dashboard, powered by the **MongoDB Aggregation Pipeline**, provides key metrics and data visualizations. Admins can export these reports as professionally formatted **PDF** (`pdfkit`) or **CSV** (`json2csv`) files.
 *   **Robust Server-Side Validation:** The Mongoose model includes `pre('validate')` hooks to enforce critical business rules, such as preventing events from being scheduled in the past or ensuring end times are after start times.
 
-### 🏋️‍♂️ Training Sessions Module
+### 🏋️‍♂️ Training Sessions Module  Branch - Sujan_lakdin
 This module offers an intuitive and error-proof system for coaches to manage their training schedules and for players to register.
 
 *   **Automatic Scheduling Conflict Prevention (Core Feature):** This is the module's most critical feature. A `pre('save')` Mongoose middleware runs before any session is saved. It performs a database-level check to see if another session already exists at the **same venue, on the same date, and with an overlapping time**. This makes scheduling conflicts **impossible**, guaranteeing a reliable schedule.
@@ -97,7 +97,7 @@ This module offers an intuitive and error-proof system for coaches to manage the
     *   `json2csv` (for CSV export)
     *   `nodemailer` (for sending automated emails)
 
-## ⚙️ API Endpoints
+## ⚙️ API Endpoints Branch - Sujan_lakdin
 
 The system follows a RESTful API structure. Here are some key endpoints for these modules:
 
